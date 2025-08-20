@@ -1,0 +1,77 @@
+use std::io;
+
+fn main() {
+    // Чтение входных данных
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Ошибка при чтении ввода");
+    let parts: Vec<&str> = input.trim().split_whitespace().collect();
+
+    // Проверка количества аргументов
+    if parts.len() != 3 {
+        println!("Invalid input");
+        return;
+    }
+
+    // Парсинг N и M
+    let n: i32 = match parts[0].parse() {
+        Ok(num) => num,
+        Err(_) => {
+            println!("Invalid input");
+            return;
+        }
+    };
+    let m: i32 = match parts[1].parse() {
+        Ok(num) => num,
+        Err(_) => {
+            println!("Invalid input");
+            return;
+        }
+    };
+
+    // Проверка корректности размеров доски
+    if n < 1 || m < 1 {
+        println!("Invalid input");
+        return;
+    }
+
+    // Получение строки команд и проверка символов
+    let s = parts[2];
+    for c in s.chars() {
+        match c {
+            'L' | 'R' | 'U' | 'D' => (),
+            _ => {
+                println!("Invalid input");
+                return;
+            }
+        }
+    }
+
+    // Подсчет количества каждой команды
+    let (mut l, mut r, mut u, mut d) = (0, 0, 0, 0);
+    for c in s.chars() {
+        match c {
+            'L' => l += 1,
+            'R' => r += 1,
+            'U' => u += 1,
+            'D' => d += 1,
+            _ => unreachable!(), // Гарантировано корректные символы
+        }
+    }
+
+    // Вычисление смещения
+    let delta_x = r - l;
+    let delta_y = d - u;
+
+    // Определение допустимых границ для начальных координат
+    let min_x = std::cmp::max(1, 1 - delta_x);
+    let max_x = std::cmp::min(m, m - delta_x);
+    let min_y = std::cmp::max(1, 1 - delta_y);
+    let max_y = std::cmp::min(n, n - delta_y);
+
+    // Проверка существования решения и вывод результата
+    if min_x > max_x || min_y > max_y {
+        println!("No");
+    } else {
+        println!("({},{})", min_x, min_y);
+    }
+}

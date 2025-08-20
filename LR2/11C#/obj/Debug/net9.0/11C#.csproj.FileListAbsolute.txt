@@ -1,0 +1,15 @@
+C:\Users\DAR\Desktop\trash\LR2\11C#\bin\Debug\net9.0\11C#.exe
+C:\Users\DAR\Desktop\trash\LR2\11C#\bin\Debug\net9.0\11C#.deps.json
+C:\Users\DAR\Desktop\trash\LR2\11C#\bin\Debug\net9.0\11C#.runtimeconfig.json
+C:\Users\DAR\Desktop\trash\LR2\11C#\bin\Debug\net9.0\11C#.dll
+C:\Users\DAR\Desktop\trash\LR2\11C#\bin\Debug\net9.0\11C#.pdb
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.AssemblyInfoInputs.cache
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.AssemblyInfo.cs
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.csproj.CoreCompileInputs.cache
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.sourcelink.json
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.dll
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\refint\11C#.dll
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.pdb
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\11C#.genruntimeconfig.cache
+C:\Users\DAR\Desktop\trash\LR2\11C#\obj\Debug\net9.0\ref\11C#.dll

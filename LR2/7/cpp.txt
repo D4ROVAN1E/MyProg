@@ -1,0 +1,53 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+struct Rod {
+    bool hasR = false;
+    bool hasB = false;
+    bool hasW = false;
+};
+
+int countPoints(string rings) {
+    Rod rods[10]; // Инициализация 10 стержней с флагами false
+
+    for (int i = 0; i < static_cast<int>(rings.size()); i += 2) {
+        if (i + 1 >= static_cast<int>(rings.size())) { // Проверка на нечётную длину строки
+            break;
+        }
+
+        char color = rings[i];
+        char posChar = rings[i + 1];
+
+        if (posChar < '0' || posChar > '9') { // Пропуск недопустимых позиций
+            continue;
+        }
+
+        int pos = posChar - '0'; // Преобразование символа в число
+
+        switch (color) { // Обновление флагов цвета для стержня
+            case 'R': rods[pos].hasR = true; break;
+            case 'B': rods[pos].hasB = true; break;
+            case 'W': rods[pos].hasW = true; break;
+            default: break; // Игнорирование недопустимых цветов
+        }
+    }
+
+    int count = 0;
+    for (int i = 0; i < 10; ++i) { // Подсчёт стержней с тремя цветами
+        if (rods[i].hasR && rods[i].hasB && rods[i].hasW) {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
+int main(){
+    cout << "Input: \n";
+    string input;
+    cin >> input;
+    cout << countPoints(input) << endl;
+    return 0;
+}

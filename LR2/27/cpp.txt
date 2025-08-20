@@ -1,0 +1,55 @@
+#include <iostream>   
+#include <string>     
+#include <cctype>     // Для функции isdigit, используемой в проверке символов.
+#include <cstdlib>    // Для функции std::stoi, преобразующей строку в число.
+
+using namespace std;
+
+int main() {
+    string token; 
+    
+    // Цикл считывания входных данных до конца файла (EOF).
+    while (cin >> token) {
+        if (token == "q") // Выход из программы
+            break;
+        bool validInput = true; // Флаг корректности входного элемента.
+        
+        // проходим по каждому символу и убеждаемся, что это цифра.
+        for (char c : token) {
+            if (!isdigit(c)) {       
+                validInput = false;  
+                break;
+            }
+        }
+        
+        // Если входная строка не прошла проверку или содержит менее двух цифр, то вставить '/' невозможно.
+        if (!validInput || token.size() < 2) {
+            cout << "NO";
+            continue; 
+        }
+        
+        bool isCorrectDate = false; 
+        // Перебираем все возможные позиции для вставки символа '/', т.е. от 1 до token.size() - 1.
+        for (size_t i = 1; i < token.size(); ++i) {
+            // Разбиваем строку на две части.
+            string day_str = token.substr(0, i);       // Левая часть будет днём.
+            string month_str = token.substr(i);          // Правая часть – месяцом.
+            
+            // Преобразуем полученные подстроки в числа.
+            // stoi корректно работает, если строка состоит исключительно из цифр.
+            int day = stoi(day_str);
+            int month = stoi(month_str);
+            
+            // Проверка корректности даты:
+            // День должен быть от 1 до 31 включительно, месяц – от 1 до 12.
+            if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+                isCorrectDate = true;  // Найдена корректная запись, поэтому устанавливаем флаг.
+                break;  
+            }
+        }
+        
+        cout << (isCorrectDate ? "YES" : "NO");
+    }
+    
+    return 0; // Завершаем программу.
+}

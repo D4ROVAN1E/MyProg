@@ -1,0 +1,193 @@
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+
+using namespace std;
+
+class SierpinskiTriangle {
+private:
+    vector<vector<char>> canvas;
+    int size;
+
+    // Структура для представления точки
+    struct Point {
+        int x, y;
+        Point(int x = 0, int y = 0) : x(x), y(y) {}
+    };
+
+public:
+    SierpinskiTriangle(int n) {
+        // Размер холста зависит от уровня рекурсии
+        size = static_cast<int>(pow(2, n + 4));
+        canvas.assign(size, vector<char>(size, ' '));
+    }
+
+    // Функция для рисования линии между двумя точками (алгоритм Брезенхема)
+    void drawLine(Point p1, Point p2) {
+        int dx = abs(p2.x - p1.x);
+        int dy = abs(p2.y - p1.y);
+        int sx = (p1.x < p2.x) ? 1 : -1;
+        int sy = (p1.y < p2.y) ? 1 : -1;
+        int err = dx - dy;
+
+        int x = p1.x, y = p1.y;
+
+        while (true) {
+            if (x >= 0 && x < size && y >= 0 && y < size) {
+                canvas[y][x] = '*';
+            }
+
+            if (x == p2.x && y == p2.y) break;
+
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y += sy;
+            }
+        }
+    }
+
+    // Функция для заливки треугольника
+    void fillTriangle(Point p1, Point p2, Point p3) {
+        // Находим границы треугольника
+        int minY = min({ p1.y, p2.y, p3.y });
+        int maxY = max({ p1.y, p2.y, p3.y });
+
+        for (int y = minY; y <= maxY; y++) {
+            vector<int> intersections;
+
+            // Проверяем пересечения с каждой стороной треугольника
+            checkIntersection(p1, p2, y, intersections);
+            checkIntersection(p2, p3, y, intersections);
+            checkIntersection(p3, p1, y, intersections);
+
+            // Сортируем точки пересечения
+            sort(intersections.begin(), intersections.end());
+
+            // Заливаем между парами пересечений
+            for (size_t i = 0; i < intersections.size(); i += 2) {
+                if (i + 1 < intersections.size()) {
+                    for (int x = intersections[i]; x <= intersections[i + 1]; x++) {
+                        if (x >= 0 && x < size && y >= 0 && y < size) {
+                            canvas[y][x] = '*';
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Вспомогательная функция для проверки пересечения луча с отрезком
+    void checkIntersection(Point p1, Point p2, int y, vector<int>& intersections) {
+        if ((p1.y <= y && y < p2.y) || (p2.y <= y && y < p1.y)) {
+            if (p2.y != p1.y) {
+                int x = p1.x + (y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y);
+                intersections.push_back(x);
+            }
+        }
+    }
+
+    // Рекурсивная функция для построения треугольника Серпинского
+    void drawSierpinski(Point p1, Point p2, Point p3, int n) {
+        if (n == 0) {
+            // Базовый случай: рисуем заполненный треугольник
+            fillTriangle(p1, p2, p3);
+            return;
+        }
+
+        // Находим середины сторон
+        Point mid1((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+        Point mid2((p2.x + p3.x) / 2, (p2.y + p3.y) / 2);
+        Point mid3((p3.x + p1.x) / 2, (p3.y + p1.y) / 2);
+
+        // Рекурсивно рисуем три меньших треугольника
+        drawSierpinski(p1, mid1, mid3, n - 1);  // Левый треугольник
+        drawSierpinski(mid1, p2, mid2, n - 1);  // Правый треугольник
+        drawSierpinski(mid3, mid2, p3, n - 1);  // Нижний треугольник
+
+        // Средний треугольник остается пустым (не рисуем его)
+    }
+
+    // Функция для отображения треугольника
+    void display() {
+        // Находим границы рисунка для обрезки пустого пространства
+        int minY = size, maxY = -1;
+        int minX = size, maxX = -1;
+
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                if (canvas[y][x] == '*') {
+                    minY = min(minY, y);
+                    maxY = max(maxY, y);
+                    minX = min(minX, x);
+                    maxX = max(maxX, x);
+                }
+            }
+        }
+
+        // Выводим только область с рисунком
+        if (minY <= maxY && minX <= maxX) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int x = minX; x <= maxX; x++) {
+                    cout << canvas[y][x];
+                }
+                cout << endl;
+            }
+        }
+    }
+
+    // Главная функция для построения треугольника
+    void generate(int n) {
+        // Определяем размер треугольника
+        int triangleSize = size / 3;
+        int centerX = size / 2;
+        int startY = size / 4;
+
+        // Вершины равностороннего треугольника
+        Point top(centerX, startY);
+        Point left(centerX - triangleSize / 2, startY + triangleSize * 3 / 4);
+        Point right(centerX + triangleSize / 2, startY + triangleSize * 3 / 4);
+
+        // Строим треугольник Серпинского
+        drawSierpinski(top, left, right, n);
+    }
+};
+
+int main() {
+    cout << "=== Треугольник Серпинского ===" << endl;
+    cout << "Программа строит фрактальный треугольник Серпинского" << endl;
+    cout << "используя рекурсивный алгоритм." << endl << endl;
+
+    int n;
+
+    while (true) {
+        cout << "Введите уровень рекурсии (0-6, -1 для выхода): ";
+        cin >> n;
+
+        if (n == -1) {
+            cout << "До свидания!" << endl;
+            break;
+        }
+
+        if (n < 0 || n > 6) {
+            cout << "Ошибка: введите число от 0 до 6" << endl;
+            continue;
+        }
+
+        cout << endl << "Треугольник Серпинского уровня " << n << ":" << endl;
+        cout << string(50, '=') << endl;
+
+        SierpinskiTriangle triangle(n);
+        triangle.generate(n);
+        triangle.display();
+
+        cout << string(50, '=') << endl << endl;
+    }
+
+    return 0;
+}

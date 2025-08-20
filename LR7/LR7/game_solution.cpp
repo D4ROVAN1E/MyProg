@@ -1,0 +1,47 @@
+﻿#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <map>
+using namespace std;
+
+map<pair<int, int>, int> cash;
+
+int solve(vector<int>& nums, int left, int right) {
+    if (left == right) {
+        return nums[left];
+    }
+
+    if (cash.count({ left, right })) {
+        return cash[{left, right}];
+    }
+
+    int takeLeft = nums[left] - solve(nums, left + 1, right);
+    int takeRight = nums[right] - solve(nums, left, right - 1);
+
+    return cash[{left, right}] = max(takeLeft, takeRight);
+}
+
+bool predictTheWinner(vector<int>& nums) {
+    return solve(nums, 0, nums.size() - 1) >= 0;
+}
+
+int main() {
+    int n;
+    cout << "Введите размер массива: ";
+    cin >> n;
+
+    vector<int> nums(n);
+    cout << "Введите элементы массива: ";
+    for (int i = 0; i < n; i++) {
+        cin >> nums[i];
+    }
+
+    if (predictTheWinner(nums)) {
+        cout << "true" << endl;
+    }
+    else {
+        cout << "false" << endl;
+    }
+
+    return 0;
+}
