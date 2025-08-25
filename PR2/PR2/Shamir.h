@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <vector>
 #include <random>
-#include "ModuloComparison.h";
 #include "ExtendedEuclidean.h";
 
 using namespace std;

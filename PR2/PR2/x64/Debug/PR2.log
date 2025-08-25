@@ -1,7 +1,8 @@
-﻿  Fraction.cpp
-C:\Users\DAR\Desktop\trash\PR2\PR2\Fraction.cpp(1,10): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
-C:\Users\DAR\Desktop\trash\PR2\PR2\Fraction.h(6,10): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
-  (компиляция исходного файла "Fraction.cpp")
+﻿  Attack.cpp
+C:\Users\DAR\Desktop\trash\PR2\PR2\ExtendedEuclidean.h(7,10): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  (компиляция исходного файла "Attack.cpp")
   
-C:\Users\DAR\Desktop\trash\PR2\PR2\Fraction.cpp(73,11): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\DAR\Desktop\trash\PR2\PR2\Shamir.h(8,10): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
+  (компиляция исходного файла "Attack.cpp")
+  
   PR2.vcxproj -> C:\Users\DAR\Desktop\trash\PR2\x64\Debug\PR2.exe

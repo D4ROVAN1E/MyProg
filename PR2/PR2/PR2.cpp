@@ -1,8 +1,17 @@
 ﻿#include <windows.h>
-#include "ExtendedEuclidean.h";
-#include "ModuloComparison.h";
-#include "Shamir.h";
-#include "Fraction.h";
+#include "ExtendedEuclidean.h"
+#include "ModuloComparison.h"
+#include "Shamir.h"
+#include "Fraction.h"
+#include "Attack.h"
+
+// Перегрузка оператора для красивого вывода вектора uint8_t (как строку)
+ostream& operator<<(ostream& os, const vector<uint32_t>& vec) {
+	for (uint32_t element : vec) {
+		os << static_cast<char>(element);
+	}
+	return os;
+}
 
 template <typename T>
 ostream& operator<<(ostream& os, vector<T> vec) {
@@ -13,7 +22,6 @@ ostream& operator<<(ostream& os, vector<T> vec) {
 	return os;
 }
 
-
 int main() {
 	//SetConsoleOutputCP(1251);
 	//SetConsoleCP(1251);
@@ -21,6 +29,37 @@ int main() {
 	//uint64_t firstDegree, secondDegree;
 	//uint32_t firstBase, secondBase, primeNum;
 	try {
+		// --- Легитимный обмен ---
+		// Используем корректные параметры: p - простое, ключи взаимно просты с p-1
+		const uint32_t p = 4091;  // Простое число > 256
+		const uint32_t cA = 101;  // Секретный ключ Алисы
+		const uint32_t cB = 103;  // Секретный ключ Боба
+		/*const uint32_t p = 50423;  // Простое число > 256
+		const uint32_t cA = 50329;  // Секретный ключ Алисы
+		const uint32_t cB = 50221;  // Секретный ключ Боба*/
+
+		cout << "--- Легитимный протокол Шамира ---" << endl;
+		string msg_str = "This is a secret message.";
+		vector<uint8_t> msg(msg_str.begin(), msg_str.end());
+		cout << "Оригинальное сообщение: " << msg << endl;
+		cout << "Параметры: p=" << p << ", cA=" << cA << ", cB=" << cB << endl << endl;
+
+
+		// Шифруем сообщение
+		vector<uint32_t> cyphertext = encrypt(cA, cB, p, msg);
+		cout << "Зашифрованное сообщение (шифротекст): " << cyphertext << endl;
+
+		// Расшифровываем сообщение
+		vector<uint8_t> decrypted_msg = decrypt(cA, cB, p, cyphertext);
+		cout << "Расшифрованное сообщение: " << decrypted_msg << endl << endl;
+
+		// --- Атака на основе известного открытого текста ---
+		// Злоумышленник знает msg, cyphertext и p.
+
+		// Запускаем атаку, используя только первый символ сообщения/шифротекста.
+		// Предел поиска должен быть больше, чем реальные ключи.
+		meet_in_the_middle_attack(p, msg[0], cyphertext[0], 200);
+
 
 		//===============================================================
 		/*int a = 275;
@@ -34,6 +73,9 @@ int main() {
 		cout << msg << cyphertext;
 		msg = decrypt(1049, 1109, 311, cyphertext);
 		cout << msg;*/
+
+
+
 		//===============================================================
 		/*Input(firstBase, secondBase, primeNum, firstDegree, secondDegree);
 		cout << "--------------------- Вычисление по теореме Ферма ---------------------\n";
@@ -68,10 +110,18 @@ int main() {
 		cout << "Обратный элемент d = " << d << endl;
 		cout << firstNum << "^(-1) mod " << mod << " = " << mod + d << endl;
 		cout << firstNum << " * " << mod + d << " mod " << mod << " = 1";*/
+
+
+
 		return 0;
 	}
 
 	catch (const char* s) {
 		cerr << s;
+		return 1;
+	}
+	catch (const exception& e) {
+		cerr << "Произошла ошибка: " << e.what() << endl;
+		return 1;
 	}
 }

@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Attack.cpp" />
     <ClCompile Include="ExtendedEuclidean.cpp" />
     <ClCompile Include="Fraction.cpp" />
     <ClCompile Include="ModuloComparison.cpp" />

@@ -8,9 +8,6 @@
 
 using namespace std;
 
-template <typename T>
-ostream& operator<<(ostream& os, vector<T> vec);
-
 void CheckPositive(const int64_t& inputNum);
 
 void Input(uint32_t& firstBase, uint32_t& secondBase, uint32_t& primeNum, uint64_t& firstDegree, uint64_t& secondDegree);
