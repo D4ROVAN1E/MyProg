@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cstdint>
 #include <vector>
-#include "ExtendedEuclidean.h"
 
 using namespace std;
 
@@ -29,6 +28,8 @@ vector<uint8_t> DegreeToBin(uint64_t degree);
 void CheckLog(uint32_t& powersOfTwo, const uint64_t& degree);
 
 uint32_t DecompOfDegree(uint32_t base, uint64_t degree, uint32_t primeNum);
+
+uint32_t Gcd(uint32_t firstNum, uint32_t secondNum);
 
 
 #endif // MODULO_COMPARISON_H 

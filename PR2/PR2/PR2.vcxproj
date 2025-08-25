@@ -128,12 +128,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ExtendedEuclidean.cpp" />
+    <ClCompile Include="Fraction.cpp" />
     <ClCompile Include="ModuloComparison.cpp" />
     <ClCompile Include="PR2.cpp" />
     <ClCompile Include="Shamir.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExtendedEuclidean.h" />
+    <ClInclude Include="Fraction.h" />
     <ClInclude Include="ModuloComparison.h" />
     <ClInclude Include="Shamir.h" />
   </ItemGroup>

@@ -2,6 +2,7 @@
 #include "ExtendedEuclidean.h";
 #include "ModuloComparison.h";
 #include "Shamir.h";
+#include "Fraction.h";
 
 template <typename T>
 ostream& operator<<(ostream& os, vector<T> vec) {
@@ -20,12 +21,20 @@ int main() {
 	//uint64_t firstDegree, secondDegree;
 	//uint32_t firstBase, secondBase, primeNum;
 	try {
-		string msg_str = "Test string!!###&*$#@";
+
+		//===============================================================
+		/*int a = 275;
+		int b = 145;
+		int c = 10;
+		pair<int, int> answer = solve_diophantine(a, b, c);
+		cout << "\n\n\n\n" << answer.first << " " << answer.second << endl;*/
+		/*string msg_str = "Test string!!###&*$#@";
 		vector<uint8_t> msg(msg_str.begin(), msg_str.end());
 		vector<uint32_t> cyphertext = encrypt(1049, 1109, 311, msg);
 		cout << msg << cyphertext;
 		msg = decrypt(1049, 1109, 311, cyphertext);
-		cout << msg;
+		cout << msg;*/
+		//===============================================================
 		/*Input(firstBase, secondBase, primeNum, firstDegree, secondDegree);
 		cout << "--------------------- Вычисление по теореме Ферма ---------------------\n";
 		if (!WheelTest(primeNum)) {
