@@ -1,0 +1,101 @@
+int main() {
+	setlocale(LC_ALL, "Russian");
+	//uint64_t firstDegree, secondDegree;
+	//uint32_t firstBase, secondBase, primeNum;
+	try {
+		// --- Легитимный обмен ---
+		// Используем корректные параметры: p - простое, ключи взаимно просты с p-1
+		const uint32_t p = 4091;  // Простое число > 256
+		const uint32_t cA = 101;  // Секретный ключ Алисы
+		const uint32_t cB = 103;  // Секретный ключ Боба
+		/*const uint32_t p = 1051117307;  // Простое число > 256
+		const uint32_t cA = 1035792343;  // Секретный ключ Алисы
+		const uint32_t cB = 1032668809;  // Секретный ключ Боба*/
+
+		cout << "--- Легитимный протокол Шамира ---" << endl;
+		string msg_str = "This is a secret message.";
+		vector<uint8_t> msg(msg_str.begin(), msg_str.end());
+		cout << "Оригинальное сообщение: " << msg << endl;
+		cout << "Параметры: p=" << p << ", cA=" << cA << ", cB=" << cB << endl << endl;
+
+
+		// Шифруем сообщение
+		vector<uint32_t> cyphertext = encrypt(cA, cB, p, msg);
+		cout << "Зашифрованное сообщение (шифротекст): " << cyphertext << endl;
+
+		// Расшифровываем сообщение
+		vector<uint8_t> decrypted_msg = decrypt(cA, cB, p, cyphertext);
+		cout << "Расшифрованное сообщение: " << decrypted_msg << endl << endl;
+
+		// --- Атака на основе известного открытого текста ---
+		// Злоумышленник знает msg, cyphertext и p.
+
+		// Запускаем атаку, используя только первый символ сообщения/шифротекста.
+		// Предел поиска должен быть больше, чем реальные ключи.
+		meet_in_the_middle_attack(p, msg[0], cyphertext[0], 200);
+
+
+		//===============================================================
+		/*int a = 275;
+		int b = 145;
+		int c = 10;
+		pair<int, int> answer = solve_diophantine(a, b, c);
+		cout << "\n\n\n\n" << answer.first << " " << answer.second << endl;*/
+		/*string msg_str = "Test string!!###&*$#@";
+		vector<uint8_t> msg(msg_str.begin(), msg_str.end());
+		vector<uint32_t> cyphertext = encrypt(1049, 1109, 311, msg);
+		cout << msg << cyphertext;
+		msg = decrypt(1049, 1109, 311, cyphertext);
+		cout << msg;*/
+
+
+
+		//===============================================================
+		/*Input(firstBase, secondBase, primeNum, firstDegree, secondDegree);
+		cout << "--------------------- Вычисление по теореме Ферма ---------------------\n";
+		if (!WheelTest(primeNum)) {
+			cout << "Модуль не является простым\n";
+			return 0;
+		}
+		else if (!TheoremConditions(firstBase, primeNum) || !TheoremConditions(secondBase, primeNum)) {
+			cout << "Введённые условия не соответствуют условию теоремы Ферма\n";
+			return 0;
+		}
+		uint32_t Result1 = Ferm(firstBase, firstDegree, primeNum);
+		uint32_t Result2 = Ferm(secondBase, secondDegree, primeNum);
+		cout << firstBase << " в степени " << firstDegree << " по модулю " << primeNum << " = " << Result1 << endl;
+		cout << secondBase << " в степени " << secondDegree << " по модулю " << primeNum << " = " << Result2 << endl;
+		if (Result1 == Result2)
+			cout << "Числа равны\n";
+		else
+			cout << "Числа не равны\n";
+		cout << "--------------------- Вычисление по разложению степени ---------------------\n";
+		Result1 = DecompOfDegree(firstBase, firstDegree, primeNum);
+		Result2 = DecompOfDegree(secondBase, secondDegree, primeNum);
+		cout << firstBase << " в степени " << firstDegree << " по модулю " << primeNum << " = " << Result1 << endl;
+		cout << secondBase << " в степени " << secondDegree << " по модулю " << primeNum << " = " << Result2 << endl;
+		if (Result1 == Result2)
+			cout << "Числа равны\n";
+		else
+			cout << "Числа не равны\n";
+		int32_t firstNum, mod;
+		cin >> firstNum >> mod;
+		int32_t d = ExtendedEuclidean(firstNum, mod, mod);
+		cout << "Обратный элемент d = " << d << endl;
+		cout << firstNum << "^(-1) mod " << mod << " = " << mod + d << endl;
+		cout << firstNum << " * " << mod + d << " mod " << mod << " = 1";*/
+
+
+
+		return 0;
+	}
+
+	catch (const char* s) {
+		cerr << s;
+		return 1;
+	}
+	catch (const exception& e) {
+		cerr << "Произошла ошибка: " << e.what() << endl;
+		return 1;
+	}
+}
