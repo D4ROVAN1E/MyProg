@@ -1,4 +1,4 @@
-﻿#include "Fraction.h";
+﻿#include "Fraction.h"
 
 //Раскладывает отношение a/b в цепную дробь.
 vector<int> get_continued_fraction(int a, int b) {

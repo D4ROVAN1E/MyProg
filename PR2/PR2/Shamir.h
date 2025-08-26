@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 #include <random>
-#include "ExtendedEuclidean.h";
+#include "ExtendedEuclidean.h"
 
 using namespace std;
 

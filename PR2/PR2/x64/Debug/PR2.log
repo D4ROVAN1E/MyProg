@@ -1,8 +1,2 @@
-﻿  Attack.cpp
-C:\Users\DAR\Desktop\trash\PR2\PR2\ExtendedEuclidean.h(7,10): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
-  (компиляция исходного файла "Attack.cpp")
-  
-C:\Users\DAR\Desktop\trash\PR2\PR2\Shamir.h(8,10): warning C4067: непредвиденные лексемы за директивой препроцессора, требуется newline
-  (компиляция исходного файла "Attack.cpp")
-  
+﻿  Main.cpp
   PR2.vcxproj -> C:\Users\DAR\Desktop\trash\PR2\x64\Debug\PR2.exe

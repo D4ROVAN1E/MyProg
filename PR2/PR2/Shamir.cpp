@@ -1,4 +1,4 @@
-﻿#include "Shamir.h";
+﻿#include "Shamir.h"
 
 vector<uint32_t> textEncrypt(vector<uint32_t> cyphertext, uint32_t key, uint32_t p) {
     vector<uint32_t> newText;
@@ -36,10 +36,10 @@ vector<uint8_t> decrypt(const uint32_t cA, const uint32_t cB, const uint32_t p, 
 
 
     // Абонент A вычисляет секретное число DA, такое что (CA * DA) mod (P-1) = 1
-    uint32_t dA = ExtendedEuclidean(cA, p - 1, p - 1, 0) + (p - 1);
+    uint32_t dA = ExtendedEuclidean(cA, p - 1, 0) + (p - 1);
 
     // Абонент B вычисляет секретное число DB, такое что (CB * DB) mod (P-1) = 1
-    uint32_t dB = ExtendedEuclidean(cB, p - 1, p - 1, 0) + (p - 1);
+    uint32_t dB = ExtendedEuclidean(cB, p - 1, 0) + (p - 1);
 
     cyphertext = textEncrypt(cyphertext, dA, p);
     cyphertext = textEncrypt(cyphertext, dB, p);

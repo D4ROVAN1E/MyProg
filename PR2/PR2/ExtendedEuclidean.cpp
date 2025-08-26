@@ -1,6 +1,6 @@
 ﻿#include "ExtendedEuclidean.h"
 
-int32_t ExtendedEuclidean(int32_t firstNum, int32_t secondNum, const int32_t& mod, bool output) {
+int32_t ExtendedEuclidean(int32_t firstNum, int32_t secondNum, bool output) {
 
 	if (Gcd(firstNum, secondNum) != 1)
 		throw "Вводимые числа не взаимно простые \n";

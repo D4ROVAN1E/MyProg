@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <iomanip> 
-#include "ModuloComparison.h";
+#include "ModuloComparison.h"
 
 using namespace std;
 

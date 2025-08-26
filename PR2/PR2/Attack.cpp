@@ -30,8 +30,8 @@ void meet_in_the_middle_attack(const uint32_t p, const uint8_t M, const uint32_t
         }
 
         // Находим d_gB, такое что gB * d_gB = 1 mod (p-1)
-        int32_t d_gB_int = ExtendedEuclidean(gB, p - 1, p - 1, false);
-        uint32_t d_gB = (d_gB_int % static_cast<int32_t>(p - 1) + (p - 1)) % (p - 1);
+        int32_t d_gB_int = ExtendedEuclidean(gB, p - 1, false);
+        uint32_t d_gB = (d_gB_int + (p - 1)) % (p - 1);
 
         uint32_t decrypted_intermediate = DecompOfDegree(C, d_gB, p);
 
