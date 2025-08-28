@@ -20,7 +20,6 @@ string bifid_encrypt(const string& plaintext) {
         return "";
     }
 
-    // --- Шаг 1: Дробление ---
     // Используем векторы для хранения координат.
     vector<uint8_t> rows;
     vector<uint8_t> cols;
@@ -31,17 +30,13 @@ string bifid_encrypt(const string& plaintext) {
         cols.push_back(get_col_from_char(current_char_code));
     }
 
-    // --- Шаг 2: Перестановка ---
     // Объединяем координаты строк и столбцов в один вектор.
     vector<uint8_t> combined_coords;
-    combined_coords.reserve(len * 2);
     combined_coords.insert(combined_coords.end(), rows.begin(), rows.end());
     combined_coords.insert(combined_coords.end(), cols.begin(), cols.end());
 
-    // --- Шаг 3: Слияние ---
     // Читаем объединенные координаты парами для формирования новых символов.
     string ciphertext = "";
-    ciphertext.reserve(len);
 
     for (size_t i = 0; i < combined_coords.size(); i += 2) {
         uint8_t new_row = combined_coords[i];
@@ -49,7 +44,6 @@ string bifid_encrypt(const string& plaintext) {
         ciphertext += get_char_from_coords(new_row, new_col);
     }
 
-    // Очистка памяти не требуется, vector сделает это автоматически.
     return ciphertext;
 }
 
@@ -60,10 +54,8 @@ string bifid_decrypt(const string& ciphertext) {
         return "";
     }
 
-    // --- Шаг 1: Дробление ---
     // Преобразуем каждый символ шифротекста обратно в его пару координат.
     vector<uint8_t> coords;
-    coords.reserve(len * 2);
 
     for (char c : ciphertext) {
         uint8_t current_char_code = static_cast<uint8_t>(c);
@@ -71,9 +63,7 @@ string bifid_decrypt(const string& ciphertext) {
         coords.push_back(get_col_from_char(current_char_code));
     }
 
-    // --- Шаги 2 и 3: Обратная перестановка и слияние ---
     string plaintext = "";
-    plaintext.reserve(len);
 
     size_t midpoint = coords.size() / 2;
 
@@ -83,6 +73,5 @@ string bifid_decrypt(const string& ciphertext) {
         plaintext += get_char_from_coords(original_row, original_col);
     }
 
-    // Очистка памяти не требуется.
     return plaintext;
 }
