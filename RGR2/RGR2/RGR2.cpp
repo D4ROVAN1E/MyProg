@@ -4,6 +4,7 @@
 CP866*/
 #include "Bifid.h"
 #include "Affine.h"
+#include "Railway fence.h"
 
 using namespace std;
 
@@ -56,6 +57,7 @@ int main()
                 cout << "Расшифрованный текст: " << decrypted_message << endl;
 
                 cout << "\nПроверка: " << (message == decrypted_message ? "Успешно!" : "Ошибка!") << endl;
+                break;
             }
 
             case 2: {
@@ -85,6 +87,31 @@ int main()
 
                 string decrypted_text = decrypt(encrypted_text, a, b);
                 cout << "Расшифрованный текст: " << decrypted_text << endl;
+                break;
+            }
+
+            case 3: {
+                string text;
+                uint32_t key;
+
+                cout << "Введите текст для шифрования: ";
+                cin.ignore(1);
+                getline(cin, text);
+
+                cout << "Введите ключ (количество рельсов): ";
+                cin >> key;
+
+                // Проверка на корректность ввода ключа
+                if (cin.fail() || key <= 0) {
+                    cout << "Ошибка: Ключ должен быть положительным целым числом." << endl;
+                    return 1;
+                }
+
+                string encrypted_text = encryptRailFence(text, key);
+                cout << "Зашифрованный текст: " << encrypted_text << endl;
+
+                string decrypted_text = decryptRailFence(encrypted_text, key);
+                cout << "Расшифрованный текст: " << decrypted_text << endl;
             }
 
             case 0:
@@ -92,6 +119,7 @@ int main()
 
             default:
                 cout << endl << endl;
+                break;
         }
 
     }
