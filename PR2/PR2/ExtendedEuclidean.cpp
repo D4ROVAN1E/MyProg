@@ -1,7 +1,8 @@
 ﻿#include "ExtendedEuclidean.h"
 
+// Реализует расширенный алгоритм Евклида для нахождения модульного обратного.
+// Принимает два числа (firstNum, secondNum) и флаг для вывода промежуточных шагов.
 int32_t ExtendedEuclidean(int32_t firstNum, int32_t secondNum, bool output) {
-
 	if (Gcd(firstNum, secondNum) != 1)
 		throw "Вводимые числа не взаимно простые \n";
 

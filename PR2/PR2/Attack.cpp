@@ -1,7 +1,5 @@
 ﻿#include "Attack.h"
 
-
-
 // Функция, реализующая атаку "встреча посередине"
 void meet_in_the_middle_attack(const uint32_t p, const uint8_t M, const uint32_t C, const uint32_t key_limit) {
     cout << "--- Запуск атаки 'Встреча посередине' ---" << endl;
@@ -12,7 +10,7 @@ void meet_in_the_middle_attack(const uint32_t p, const uint8_t M, const uint32_t
 
     map<uint32_t, uint32_t> intermediate_values;
 
-    // Шаг 1: Сторона Алисы. Шифруем M всеми возможными ключами gA и сохраняем результаты.
+    //Сторона Алисы. Шифруем M всеми возможными ключами gA и сохраняем результаты.
     cout << "Фаза 1: Вычисление и сохранение M^gA для gA от 2 до " << key_limit << "..." << endl;
     for (uint32_t gA = 2; gA <= key_limit; ++gA) {
         if (Gcd(gA, p - 1) == 1) { // Ключ должен иметь обратный элемент
@@ -22,11 +20,11 @@ void meet_in_the_middle_attack(const uint32_t p, const uint8_t M, const uint32_t
     }
     cout << "Фаза 1 завершена. Сохранено " << intermediate_values.size() << " промежуточных значений." << endl << endl;
 
-    // Шаг 2: Сторона Боба. Расшифровываем C всеми возможными ключами gB и ищем совпадение.
+    //Сторона Боба. Расшифровываем C всеми возможными ключами gB и ищем совпадение.
     cout << "Фаза 2: Вычисление C^d_gB и поиск совпадения..." << endl;
     for (uint32_t gB = 2; gB <= key_limit; ++gB) {
         if (Gcd(gB, p - 1) != 1) {
-            continue; // gB должен иметь мультипликативный обратный элемент
+            continue; // gB должен иметь обратный элемент
         }
 
         // Находим d_gB, такое что gB * d_gB = 1 mod (p-1)

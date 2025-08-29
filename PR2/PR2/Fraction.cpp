@@ -73,10 +73,3 @@ pair<int, int> solve_diophantine(int orig_a, int orig_b, int c) {
     int b0 = -p_penultimate * multiplier;
     return { a0, b0 };
 }
-
-/*
-// Заданные коэффициенты уравнения
-int a = 275;
-int b = 145;
-int c = 10;
-*/

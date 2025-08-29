@@ -1,14 +1,58 @@
 ﻿#include "Shamir.h"
 
+uint64_t modular_multiply(uint64_t a, uint64_t b, uint64_t mod) {
+    uint64_t result = 0;
+    a %= mod;
+
+    while (b > 0) {
+        // Если текущий бит b равен 1, добавляем a к результату
+        if (b % 2 == 1) {
+            result = (result + a) % mod;
+        }
+
+        // Удваиваем a (с взятием по модулю)
+        a = (a * 2) % mod;
+
+        // Переходим к следующему биту b
+        b /= 2;
+    }
+
+    return result;
+}
+
+uint64_t power(uint64_t base, uint64_t exp, uint64_t mod) {
+    uint64_t result = 1;
+    base %= mod;
+
+    while (exp > 0) {
+        // Если текущий бит степени равен 1
+        if (exp % 2 == 1) {
+            // Используем безопасное модульное умножение
+            result = modular_multiply(result, base, mod);
+        }
+
+        // Возводим основание в квадрат
+        // Используем безопасное модульное умножение
+        base = modular_multiply(base, base, mod);
+
+        // Переходим к следующему биту
+        exp /= 2;
+    }
+
+    return result;
+}
+
+// Принимает вектор чисел, ключ и модуль, и шифрует каждое число в векторе.
 vector<uint32_t> textEncrypt(vector<uint32_t> cyphertext, uint32_t key, uint32_t p) {
     vector<uint32_t> newText;
     for (uint32_t symb : cyphertext) {
-        uint32_t x1 = DecompOfDegree(symb, key, p);
+        uint32_t x1 = power(symb, key, p);
         newText.push_back(x1);
     }
     return newText;
 }
 
+// Функция для шифрования сообщения по схеме Шамира.
 vector<uint32_t> encrypt(const uint32_t cA, const uint32_t cB, const uint32_t p, const vector<uint8_t>& message) {
 
     if (Gcd(cA, p) != 1 || Gcd(cB, p) != 1)
@@ -27,6 +71,7 @@ vector<uint32_t> encrypt(const uint32_t cA, const uint32_t cB, const uint32_t p,
     return cyphertext;
 }
 
+// Функция для расшифровки сообщения по схеме Шамира.
 vector<uint8_t> decrypt(const uint32_t cA, const uint32_t cB, const uint32_t p, vector<uint32_t> cyphertext) {
 
     if (Gcd(cA, p) != 1 || Gcd(cB, p) != 1)

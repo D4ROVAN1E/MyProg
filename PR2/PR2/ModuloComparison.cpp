@@ -1,5 +1,6 @@
 ﻿#include "ModuloComparison.h"
 
+// Проверяет, является ли входное число положительным и корректно ли оно введено.
 void CheckPositive(const int64_t& inputNum) {
     if (inputNum < 0) {
         throw "Введённое число должно быть положительным \n";
@@ -9,6 +10,7 @@ void CheckPositive(const int64_t& inputNum) {
     }
 }
 
+// Запрашивает у пользователя входные данные
 void Input(uint32_t& firstBase, uint32_t& secondBase, uint32_t& primeNum, uint64_t& firstDegree, uint64_t& secondDegree) {
 
     int64_t testInputFirst;
@@ -37,6 +39,8 @@ void Input(uint32_t& firstBase, uint32_t& secondBase, uint32_t& primeNum, uint64
     primeNum = static_cast<uint32_t>(testInputFirst);
 }
 
+// Реализует оптимизированный "колесообразный" тест на простоту.
+// Проверяет делимость числа на 2, 3, 5, а затем на числа вида 6k ± 1
 bool WheelTest(const uint32_t& primeNum) {
     if (primeNum == 2 || primeNum == 3 || primeNum == 5)
         return true;
@@ -61,6 +65,7 @@ bool WheelTest(const uint32_t& primeNum) {
     return true;
 }
 
+// Вычисляет остаток от деления A^B mod M с использованием теоремы Ферма.
 uint32_t Ferm(const uint32_t& base, uint64_t degree, const uint32_t& primeNum) {
     degree %= primeNum - 1;
     uint64_t result = 1;
@@ -73,6 +78,7 @@ uint32_t Ferm(const uint32_t& base, uint64_t degree, const uint32_t& primeNum) {
     return static_cast<uint32_t>(result);
 }
 
+// Вычисляет наибольший общий делитель
 uint32_t Gcd(uint32_t firstNum, uint32_t secondNum) {
     while (secondNum != 0) {
         uint32_t remains = firstNum % secondNum;
@@ -82,10 +88,13 @@ uint32_t Gcd(uint32_t firstNum, uint32_t secondNum) {
     return firstNum;
 }
 
+// Проверяет, применимы ли условия теоремы Ферма.
 bool TheoremConditions(uint32_t base, uint32_t primeNum) {
     return Gcd(base, primeNum) == 1 && Ferm(base, primeNum - 1, primeNum) == 1;
 }
 
+// Вычисляет степени двойки от основания по модулю.
+// Используется для быстрого возведения в степень.
 vector<uint64_t> SquaresOfBase(const uint32_t& base, const uint32_t& powersOfTwo, const uint32_t& primeNum) {
     vector<uint64_t> baseSquares;
     baseSquares.push_back(static_cast<uint64_t>(base) % primeNum);
@@ -97,6 +106,7 @@ vector<uint64_t> SquaresOfBase(const uint32_t& base, const uint32_t& powersOfTwo
     return baseSquares;
 }
 
+// Преобразует степень в двоичное представление (в виде вектора).
 vector<uint8_t> DegreeToBin(uint64_t degree) {
     vector<uint8_t> binaryDegree;
 
@@ -108,6 +118,7 @@ vector<uint8_t> DegreeToBin(uint64_t degree) {
     return binaryDegree;
 }
 
+// Проверяет и корректирует количество степеней двойки.
 void CheckLog(uint32_t& powersOfTwo, const uint64_t& degree) {
     uint64_t fullDegree = pow(2, powersOfTwo);
 
@@ -115,6 +126,7 @@ void CheckLog(uint32_t& powersOfTwo, const uint64_t& degree) {
         powersOfTwo--;
 }
 
+// Вычисляет остаток от деления A^B mod M с помощью метода разложения степени.
 uint32_t DecompOfDegree(uint32_t base, uint64_t degree, uint32_t primeNum) {
     uint32_t powersOfTwo = floor(log2(degree));
     CheckLog(powersOfTwo, degree);
@@ -123,6 +135,7 @@ uint32_t DecompOfDegree(uint32_t base, uint64_t degree, uint32_t primeNum) {
     vector<uint8_t> binaryDegree = DegreeToBin(degree);
     uint64_t result = 1;
 
+    // Перемножаем нужные множители (те, где бит в двоичной степени равен 1)
     for (uint64_t i = 0; i <= powersOfTwo; ++i) {
         if (binaryDegree[i] == 1) {
             result = (result * baseSquares[i]) % primeNum;

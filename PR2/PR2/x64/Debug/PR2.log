@@ -1,2 +1,6 @@
-﻿  Main.cpp
+﻿  Attack.cpp
+  Main.cpp
+  Shamir.cpp
+  Создание кода...
+C:\Users\DAR\Desktop\trash\PR2\PR2\Shamir.cpp(49,21): warning C4244: инициализация: преобразование "uint64_t" в "uint32_t", возможна потеря данных
   PR2.vcxproj -> C:\Users\DAR\Desktop\trash\PR2\x64\Debug\PR2.exe
