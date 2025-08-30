@@ -9,16 +9,12 @@ uint8_t get_col_from_char(uint8_t char_code) {
     return (char_code % 16) + 1;
 }
 
-char get_char_from_coords(uint8_t row, uint8_t col) {
+uint8_t get_char_from_coords(uint8_t row, uint8_t col) {
     uint8_t char_code = (row - 1) * 16 + (col - 1);
-    return static_cast<char>(char_code);
+    return char_code;
 }
 
-string bifid_encrypt(const string& plaintext) {
-    size_t len = plaintext.length();
-    if (len == 0) {
-        return "";
-    }
+vector<uint8_t> bifid_encrypt(const vector<uint8_t>& plaintext) {
 
     // Используем векторы для хранения координат.
     vector<uint8_t> rows;
@@ -36,23 +32,19 @@ string bifid_encrypt(const string& plaintext) {
     combined_coords.insert(combined_coords.end(), cols.begin(), cols.end());
 
     // Читаем объединенные координаты парами для формирования новых символов.
-    string ciphertext = "";
+    vector<uint8_t> ciphertext;
 
     for (size_t i = 0; i < combined_coords.size(); i += 2) {
         uint8_t new_row = combined_coords[i];
         uint8_t new_col = combined_coords[i + 1];
-        ciphertext += get_char_from_coords(new_row, new_col);
+        ciphertext.push_back(get_char_from_coords(new_row, new_col));
     }
 
     return ciphertext;
 }
 
 //Расшифровывает строку, зашифрованную шифром Бифида.
-string bifid_decrypt(const string& ciphertext) {
-    size_t len = ciphertext.length();
-    if (len == 0) {
-        return "";
-    }
+vector<uint8_t> bifid_decrypt(const vector<uint8_t>& ciphertext) {
 
     // Преобразуем каждый символ шифротекста обратно в его пару координат.
     vector<uint8_t> coords;
@@ -63,14 +55,14 @@ string bifid_decrypt(const string& ciphertext) {
         coords.push_back(get_col_from_char(current_char_code));
     }
 
-    string plaintext = "";
+    vector<uint8_t> plaintext;
 
     size_t midpoint = coords.size() / 2;
 
     for (size_t i = 0; i < midpoint; ++i) {
         uint8_t original_row = coords[i];
         uint8_t original_col = coords[i + midpoint];
-        plaintext += get_char_from_coords(original_row, original_col);
+        plaintext.push_back(get_char_from_coords(original_row, original_col));
     }
 
     return plaintext;

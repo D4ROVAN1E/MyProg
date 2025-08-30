@@ -37,10 +37,9 @@ int modInverse(int a, int m) {
 }
 
 //Шифрует текст с использованием аффинного шифра.
-vector<uint8_t> encrypt(string text, int a, int b) {
+vector<uint8_t> affine_encrypt(const vector<uint8_t>& plaintext, int a, int b) {
     vector<uint8_t> cyphertext;
     const int m = 256;
-    vector<uint8_t> plaintext(text.begin(), text.end());
 
     for (int c : plaintext) {
         int encrypted_char = (a * c + b) % m;
@@ -51,15 +50,15 @@ vector<uint8_t> encrypt(string text, int a, int b) {
 }
 
 //Дешифрует текст, зашифрованный аффинным шифром.
-string decrypt(vector<uint8_t> cipher, int a, int b) {
-    string result = "";
+vector<uint8_t> affine_decrypt(const vector<uint8_t>& cipher, int a, int b) {
+    vector<uint8_t> result;
     const int m = 256;
 
     int a_inv = modInverse(a, m);
 
     for (int c : cipher) {
         char decrypted_char = a_inv * (c - b);
-        result += decrypted_char;
+        result.push_back(decrypted_char);
     }
 
     return result;

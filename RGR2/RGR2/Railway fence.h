@@ -7,7 +7,6 @@
 
 using namespace std;
 
-string encryptRailFence(string text, uint32_t key);
+vector<uint8_t> railFence_encrypt(vector<uint8_t> text, uint32_t key);
 
-string decryptRailFence(string cipher, uint32_t key);
-
+vector<uint8_t> railFence_decrypt(vector<uint8_t> cipher, uint32_t key);
