@@ -4,9 +4,14 @@
 CP866*/
 #include <fstream>
 #include <iterator>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cstdint>
+#include <numeric>
 #include "Bifid.h"
 #include "Affine.h"
-#include "Railway fence.h"
+#include "Railway_fence.h"
 
 using namespace std;
 
@@ -81,6 +86,7 @@ int main()
                 cout << "Введите полный путь до файла для шифрования: ";
                 getline(cin, in_filename);
 
+                
                 cout << "Введите полный путь для сохранения результата: ";
                 getline(cin, out_filename);
 
