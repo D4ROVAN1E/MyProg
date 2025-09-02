@@ -59,12 +59,7 @@ pair<int, int> solve_diophantine(int orig_a, int orig_b, int c) {
     int p_penultimate = P[P.size() - 2];
     int q_penultimate = Q[P.size() - 2];
 
-    // Используем фундаментальное свойство: a*Q_{k-1} - b*P_{k-1} = (-1)^{k-1}
-    int k = coeffs.size() - 1;
-    int sign = ((k - 1) % 2 == 0) ? 1 : -1; // (-1)^{k-1}    
-
     // Мы имеем решение для a*x + b*y = sign
-    // x0 = q_penultimate, y0 = -p_penultimate
 
     // Умножаем x0 и y0 на c_prime и на знак, чтобы правая часть стала c_prime
     int multiplier = c_prime * (a * q_penultimate - b * p_penultimate);

@@ -16,7 +16,7 @@ void Input(uint32_t& firstBase, uint32_t& secondBase, uint32_t& primeNum, uint64
     int64_t testInputFirst;
     int64_t testInputSecond;
 
-    cout << "Введите первое число и его степень\n";
+    cout << "Введите первое число и его степень через пробел\n";
     cin >> testInputFirst >> testInputSecond;
     CheckPositive(testInputFirst);
     CheckPositive(testInputSecond);
@@ -24,7 +24,7 @@ void Input(uint32_t& firstBase, uint32_t& secondBase, uint32_t& primeNum, uint64
     firstBase = static_cast<uint32_t>(testInputFirst);
     firstDegree = testInputSecond;
 
-    cout << "Введите второе число и его степень\n";
+    cout << "Введите второе число и его степень через пробел\n";
     cin >> testInputFirst >> testInputSecond;
     CheckPositive(testInputFirst);
     CheckPositive(testInputSecond);

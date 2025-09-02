@@ -11,7 +11,3 @@ using namespace std;
 vector<uint32_t> encrypt(const uint32_t cA, const uint32_t cB, const uint32_t p, const vector<uint8_t>& message);
 
 vector<uint8_t> decrypt(const uint32_t cA, const uint32_t cB, const uint32_t p, vector<uint32_t> cyphertext);
-
-uint64_t modular_multiply(uint64_t a, uint64_t b, uint64_t mod);
-
-uint64_t power(uint64_t base, uint64_t exp, uint64_t mod);
