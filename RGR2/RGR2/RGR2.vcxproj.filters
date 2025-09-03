@@ -24,7 +24,7 @@
     <ClCompile Include="Affine.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
-    <ClCompile Include="Railway fence.cpp">
+    <ClCompile Include="Railway_fence.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,7 +35,7 @@
     <ClInclude Include="Affine.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Railway fence.h">
+    <ClInclude Include="Railway_fence.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

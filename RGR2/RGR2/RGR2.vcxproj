@@ -125,13 +125,13 @@
   <ItemGroup>
     <ClCompile Include="Affine.cpp" />
     <ClCompile Include="Bifid.cpp" />
-    <ClCompile Include="Railway fence.cpp" />
+    <ClCompile Include="Railway_fence.cpp" />
     <ClCompile Include="RGR2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Affine.h" />
     <ClInclude Include="Bifid.h" />
-    <ClInclude Include="Railway fence.h" />
+    <ClInclude Include="Railway_fence.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

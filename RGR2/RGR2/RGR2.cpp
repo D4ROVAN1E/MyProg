@@ -233,6 +233,8 @@ int main()
                     decrypted_data = railFence_decrypt(cypherdata, key);
                     break;
                 }
+                default:
+                    cout << "\n\nВведено неверное значение. Введите номер опции:\t";
 
                 }
 
@@ -248,7 +250,7 @@ int main()
                 return 0;
 
             default:
-                cout << endl << endl;
+                cout << "\n\nВведено неверное значение. Введите номер опции:\t";
                 break;
             }
 
