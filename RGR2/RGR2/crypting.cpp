@@ -59,6 +59,8 @@ pair<int, int> menu() {
         cout << "Ваш выбор: ";
         cin >> choise.second;
     }
+    if (cin.fail())
+        throw "Вы ввели не корректное значение. Для обозначения выбора необходимо использовать число\n";
 
     return choise;
 }
