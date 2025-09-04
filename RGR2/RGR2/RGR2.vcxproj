@@ -126,7 +126,7 @@
     <ClCompile Include="Affine.cpp" />
     <ClCompile Include="Bifid.cpp" />
     <ClCompile Include="Railway_fence.cpp" />
-    <ClCompile Include="RGR2.cpp" />
+    <ClCompile Include="crypting.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Affine.h" />

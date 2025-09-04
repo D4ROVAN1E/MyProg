@@ -12,11 +12,11 @@ LDFLAGS = -L. -Wl,-rpath,.
 LIBS = -lbifid -laffine -lrailway
 
 # Цель по умолчанию
-all: RGR2
+all: crypting
 
-# Правило для создания исполняемого файла RGR2
-RGR2: RGR2.o libbifid.so libaffine.so librailway.so
-	$(CXX) $(CXXFLAGS) -o $@ RGR2.o $(LDFLAGS) $(LIBS)
+# Правило для создания исполняемого файла crypting
+crypting: crypting.o libbifid.so libaffine.so librailway.so
+	$(CXX) $(CXXFLAGS) -o $@ crypting.o $(LDFLAGS) $(LIBS)
 
 # Правила для создания библиотек
 libbifid.so: Bifid.cpp Bifid.h
@@ -34,4 +34,4 @@ librailway.so: Railway_fence.cpp Railway_fence.h
 
 # Цель для очистки
 clean:
-	rm -f *.o *.so RGR2
+	rm -f *.o *.so crypting
