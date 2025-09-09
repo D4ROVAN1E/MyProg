@@ -7,10 +7,9 @@
 #include <random>
 #include <algorithm>
 
-// Использовать стандартное пространство имен
 using namespace std;
 
-// --- Константы и таблицы для AES ---
+//Константы и таблицы для AES
 
 // Таблица подстановок S-box
 const uint8_t s_box[256] = {
@@ -54,7 +53,7 @@ const uint8_t inv_s_box[256] = {
 const uint8_t Rcon[11] = {
     0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36 };
 
-// --- Вспомогательные функции ---
+//Вспомогательные функции
 
 // Функция для печати байтового массива в HEX формате
 void print_hex(const string& label, const uint8_t* data, int len) {
@@ -78,7 +77,7 @@ void print_state(const string& label, const uint8_t state[16]) {
     cout << dec << "--------------------" << endl;
 }
 
-// --- Основные операции AES ---
+//Основные операции AES
 
 // SubBytes: Замена каждого байта в state, используя s_box
 void sub_bytes(uint8_t state[16]) {
@@ -185,7 +184,7 @@ void add_round_key(uint8_t state[16], const uint8_t* round_key) {
     }
 }
 
-// --- Расширение ключа ---
+//Расширение ключа
 
 // Функция расширения ключа AES-128
 void key_expansion(const uint8_t* key, uint8_t* expanded_keys) {
@@ -230,7 +229,7 @@ void key_expansion(const uint8_t* key, uint8_t* expanded_keys) {
     }
 }
 
-// --- Шифрование и дешифрование одного блока ---
+//Шифрование и дешифрование одного блока
 
 void encrypt_block(uint8_t block[16], const uint8_t* expanded_keys) {
     print_state("Исходное состояние блока", block);
@@ -284,7 +283,7 @@ void decrypt_block(uint8_t block[16], const uint8_t* expanded_keys) {
 }
 
 
-// --- Режим CBC ---
+//Режим CBC
 
 // Дополнение PKCS#7
 void pad_pkcs7(vector<uint8_t>& data) {
@@ -387,8 +386,7 @@ int main() {
     setlocale(LC_ALL, "Russian");
 
     // 1. Исходные данные
-    //string plain_text_str = "Тестовое сообщение для AES CBC. Test message for AES CBC!";
-    string plain_text_str = "Я люблю илюшу он плюшка";
+    string plain_text_str = "Тестовое сообщение для AES CBC. Test message for AES CBC!";
     vector<uint8_t> plaintext(plain_text_str.begin(), plain_text_str.end());
 
     // 2. Генерация случайного ключа и вектора инициализации (IV)
@@ -417,9 +415,7 @@ int main() {
     }
 
 
-    cout << "====================================================================\n";
-    cout << "                    AES-128 CBC ДЕМОНСТРАЦИЯ                      \n";
-    cout << "====================================================================\n\n";
+    cout << "\t\tAES-128 CBC ДЕМОНСТРАЦИЯ\n\n\n";
 
     cout << "Исходный текст: " << plain_text_str << endl;
     print_hex("Исходный ключ (128 бит)", key, 16);
@@ -428,23 +424,21 @@ int main() {
 
     // 4. Шифрование
     vector<uint8_t> ciphertext = aes_cbc_encrypt(plaintext, key, iv);
-    cout << "\n================== РЕЗУЛЬТАТ ШИФРОВАНИЯ ==================\n";
+    cout << "\n\t\tРЕЗУЛЬТАТ ШИФРОВАНИЯ\n";
     cout << "Зашифрованный текст (HEX):" << endl;
     for (size_t i = 0; i < ciphertext.size(); ++i) {
         cout << hex << setfill('0') << setw(2) << static_cast<int>(ciphertext[i]) << " ";
         if ((i + 1) % 16 == 0) cout << endl;
     }
     cout << dec << "\n--------------------------------------------------------------------\n";
-    int a;
-    cin >> a;
 
     // 5. Дешифрование
     vector<uint8_t> decryptedtext = aes_cbc_decrypt(ciphertext, key, iv);
     string decrypted_str(decryptedtext.begin(), decryptedtext.end());
-    cout << "\n================== РЕЗУЛЬТАТ ДЕШИФРОВАНИЯ ==================\n";
+    cout << "\n\t\tРЕЗУЛЬТАТ ДЕШИФРОВАНИЯ\n";
     cout << "Расшифрованный текст: " << decrypted_str << endl;
 
-    cout << "\n====================================================================\n";
+    cout << "\n--------------------------------------------------------------------\n";
 
     // 6. Проверка
     if (plain_text_str == decrypted_str) {

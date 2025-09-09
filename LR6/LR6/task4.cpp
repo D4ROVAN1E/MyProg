@@ -16,7 +16,6 @@ map<int, int> find_next_states(int start_pos, int end_pos, const map<int, int>& 
     vector<vector<int>> min_moves(end_pos + 1, vector<int>(MAX_SPEED, -1));
 
     // Заполняем очередь начальными состояниями для текущего сегмента
-    // ИСПРАВЛЕНО: Замена структурированной привязки на стандартный доступ к паре
     for (auto const& state_pair : current_states) {
         int speed = state_pair.first;
         int moves = state_pair.second;
@@ -35,7 +34,7 @@ map<int, int> find_next_states(int start_pos, int end_pos, const map<int, int>& 
 
         int current_total_moves = min_moves[pos][speed];
 
-        // --- Обработка изменения скорости и перемещения ---
+        //Обработка изменения скорости и перемещения
         if (speed == 0) {
             int new_speed = 1;
             int new_pos = pos + new_speed;
@@ -98,7 +97,6 @@ int main() {
         min_total_moves = (k > 0) ? INF : 0;
     }
     else {
-        // ИСПРАВЛЕНО: Замена структурированной привязки на стандартный доступ к паре
         for (auto const& state_pair : states) {
             min_total_moves = min(min_total_moves, state_pair.second);
         }

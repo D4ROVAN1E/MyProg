@@ -3,13 +3,10 @@
 #include <cmath>
 #include <iomanip>
 
-// Используем стандартное пространство имен для удобства
 using namespace std;
 
 // Константа для размера матрицы
 const int N = 4;
-
-// ----- ОБЩИЕ ФУНКЦИИ -----
 
 // Функция для вывода вектора
 void printVector(const vector<double>& vec) {
@@ -17,8 +14,6 @@ void printVector(const vector<double>& vec) {
         cout << "x" << i + 1 << " = " << fixed << setprecision(8) << vec[i] << endl;
     }
 }
-
-// ----- РЕАЛИЗАЦИЯ МЕТОДА LU-РАЗЛОЖЕНИЯ -----
 
 // Функция для выполнения LU-разложения матрицы A
 // A = L * U, где L - нижняя треугольная, U - верхняя треугольная
@@ -90,9 +85,6 @@ vector<double> solveWithLU(const vector<vector<double>>& A, const vector<double>
 
     return x;
 }
-
-
-// ----- РЕАЛИЗАЦИЯ МЕТОДА ЗЕЙДЕЛЯ -----
 
 // Функция для проверки условия сходимости (диагональное преобладание)
 // Возвращает true, если условие выполняется, иначе false.
@@ -176,10 +168,7 @@ vector<double> seidelMethod(const vector<vector<double>>& A, const vector<double
     return x;
 }
 
-// ----- ГЛАВНАЯ ФУНКЦИЯ -----
-
 int main() {
-    // Установка русской локали для корректного вывода в консоли Windows
      setlocale(LC_ALL, "Russian");
 
     // Исходные данные для варианта 11 (M=0.89, N=0.08, P=-1.21)
@@ -193,9 +182,6 @@ int main() {
     vector<double> b = { -1.24, -1.21, 2.56, 0.89 };
 
     double epsilon = 1e-3;
-
-    cout << "****** ЗАДАНИЕ 3: РЕШЕНИЕ СИСТЕМ ЛИНЕЙНЫХ АЛГЕБРАИЧЕСКИХ УРАВНЕНИЙ ******" << endl;
-    cout << "--------------------------- Вариант 11 -----------------------------" << endl << endl;
 
     // --- Решение прямым методом (LU-разложение) ---
     cout << "1. Прямой метод: LU-разложение" << endl;
@@ -211,13 +197,14 @@ int main() {
     cout << "2. Итерационный метод: Метод Зейделя" << endl;
 
     // Проверка сходимости для исходной матрицы
-    checkConvergence(A);
+    if (checkConvergence(A)) {
 
-    /*vector<double> x_seidel = seidelMethod(A, b, epsilon);
-    if (!x_seidel.empty()) {
-        cout << "\nНайденные корни системы (с точностью Epsilon = " << epsilon << "):" << endl;
-        printVector(x_seidel);
-    }*/
+        vector<double> x_seidel = seidelMethod(A, b, epsilon);
+        if (!x_seidel.empty()) {
+            cout << "\nНайденные корни системы (с точностью Epsilon = " << epsilon << "):" << endl;
+            printVector(x_seidel);
+        }
+    }
 
     return 0;
 }
