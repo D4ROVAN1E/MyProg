@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <vector>
 
-// Директива using namespace std для удобства, как было указано в требованиях.
 using namespace std;
 
 //наибольший общий делитель двух чисел
@@ -25,8 +24,8 @@ uint64_t power(uint64_t base, int exp) {
     return res;
 }
 
-//Основная функция для решения задачи.
-void solve() {
+
+int main() {
     int a;
     uint64_t b;
     cin >> a >> b;
@@ -34,7 +33,7 @@ void solve() {
     // Согласно условию, ряд расходится, если b=1 
     if (b == 1) {
         cout << "infinity" << endl;
-        return;
+        return 0;
     }
 
     // При целых a > 0 и b > 1 сумма всегда является рациональным числом.
@@ -73,10 +72,6 @@ void solve() {
 
     // Выводим несократимую дробь 
     cout << final_numerator / common_divisor << "/" << final_denominator / common_divisor << endl;
-}
-
-int main() {
-    solve();
 
     return 0;
 }
