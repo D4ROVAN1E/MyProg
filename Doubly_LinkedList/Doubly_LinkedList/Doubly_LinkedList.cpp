@@ -19,14 +19,14 @@ struct DoublyList
 };
 
 //Создает список с начальным элементом
-void createDL(DoublyList& dList, int keyBegin) {
+void LCREATE(DoublyList& dList, int keyBegin) {
     Node* newNode = new Node{ keyBegin, nullptr, nullptr };
     dList.head = newNode;
     dList.tail = newNode;
 }
 
 //Добавление элемента в НАЧАЛО списка
-void push_front(DoublyList& dList, int key) {
+void LPUSH_HEAD(DoublyList& dList, int key) {
     Node* newNode = new Node{ key, dList.head, nullptr };
 
     if (dList.head) { // Если список не пуст
@@ -39,7 +39,7 @@ void push_front(DoublyList& dList, int key) {
 }
 
 //Добавление элемента в КОНЕЦ списка
-void push_back(DoublyList& dList, int key) {
+void LPUSH_BACK(DoublyList& dList, int key) {
     Node* newNode = new Node{ key, nullptr, dList.tail };
 
     if (dList.tail) { // Если список не пуст
@@ -52,7 +52,7 @@ void push_back(DoublyList& dList, int key) {
 }
 
 //Удаление первого элемента (головы) списка
-void pop_front(DoublyList& dList) {
+void LDEL_HEAD(DoublyList& dList) {
     if (!dList.head) return; // Список пуст
 
     Node* temp = dList.head;
@@ -68,7 +68,7 @@ void pop_front(DoublyList& dList) {
 }
 
 //Удаление последнего элемента списка
-void pop_back(DoublyList& dList) {
+void LDEL_BACK(DoublyList& dList) {
     if (!dList.tail) return; // Список пуст
 
     Node* temp = dList.tail;
@@ -84,7 +84,7 @@ void pop_back(DoublyList& dList) {
 }
 
 //Чтение (поиск) элемента по значению
-Node* find_by_value(const DoublyList& dList, int key) {
+Node* LGET_BY_VALUE(const DoublyList& dList, int key) {
     Node* current = dList.head;
     while (current != nullptr) {
         if (current->key == key) {
@@ -96,12 +96,12 @@ Node* find_by_value(const DoublyList& dList, int key) {
 }
 
 //Добавление элемента ДО узла с заданным значением
-void add_before(DoublyList& dList, int targetKey, int newKey) {
-    Node* targetNode = find_by_value(dList, targetKey);
+void LPUSH_BEFORE (DoublyList& dList, int targetKey, int newKey) {
+    Node* targetNode = LGET_BY_VALUE(dList, targetKey);
     if (!targetNode) return; // Элемент, перед которым нужно вставить, не найден
 
     if (targetNode == dList.head) { // Если вставляем перед головой
-        push_front(dList, newKey);
+        LPUSH_HEAD(dList, newKey);
         return;
     }
 
@@ -111,15 +111,15 @@ void add_before(DoublyList& dList, int targetKey, int newKey) {
 }
 
 //Удаление узла по значению (первое вхождение)
-void delete_by_value(DoublyList& dList, int key) {
-    Node* targetNode = find_by_value(dList, key);
+void LDEL_BY_VALUE(DoublyList& dList, int key) {
+    Node* targetNode = LGET_BY_VALUE(dList, key);
     if (!targetNode) return; // Узел для удаления не найден
 
     if (targetNode == dList.head) {
-        pop_front(dList);
+        LDEL_HEAD(dList);
     }
     else if (targetNode == dList.tail) {
-        pop_back(dList);
+        LDEL_BACK(dList);
     }
     else {
         // Связываем предыдущий и следующий узлы между собой
@@ -132,11 +132,11 @@ void delete_by_value(DoublyList& dList, int key) {
 //Выводит список в консоль от начала до конца
 void print_forward(const DoublyList& dList) {
     if (!dList.head) {
-        cout << "List is empty." << endl;
+        cout << "Список пуст." << endl;
         return;
     }
     Node* current = dList.head;
-    cout << "Head -> ";
+    cout << "Голова -> ";
     while (current != nullptr)
     {
         cout << current->key << " <-> ";
@@ -148,11 +148,11 @@ void print_forward(const DoublyList& dList) {
 //Выводит список в консоль от конца до начала (для проверки)
 void print_backward(const DoublyList& dList) {
     if (!dList.tail) {
-        cout << "List is empty." << endl;
+        cout << "Список пуст." << endl;
         return;
     }
     Node* current = dList.tail;
-    cout << "Tail -> ";
+    cout << "Хвост -> ";
     while (current != nullptr)
     {
         cout << current->key << " <-> ";
@@ -164,55 +164,56 @@ void print_backward(const DoublyList& dList) {
 //Очищает всю память, занятую списком
 void clean(DoublyList& dList) {
     while (dList.head) {
-        pop_front(dList);
+        LDEL_HEAD(dList);
     }
 }
 
 int main() {
+    setlocale(LC_ALL, "ru");
     DoublyList list;
 
-    cout << "--- Initial list creation ---" << endl;
-    createDL(list, 10);
+    cout << "Создание списка" << endl;
+    LCREATE(list, 10);
     print_forward(list);
 
-    cout << "\n--- Adding elements ---" << endl;
-    push_back(list, 20);      // в конец
-    push_back(list, 30);      // в конец
-    push_front(list, 5);      // в начало
-    add_before(list, 20, 15); // до 20
-    add_before(list, 5, 2);   // до головы
+    cout << "\nДобавление элементов" << endl;
+    LPUSH_BACK(list, 20);      // в конец
+    LPUSH_BACK(list, 30);      // в конец
+    LPUSH_HEAD(list, 5);      // в начало
+    LPUSH_BEFORE(list, 20, 15); // до 20
+    LPUSH_BEFORE(list, 5, 2);   // до головы
     print_forward(list);
-    cout << "Verification print backward:" << endl;
+    cout << "Проверка вывода в обратном порядке:" << endl;
     print_backward(list);
 
-    cout << "\n--- Deleting elements ---" << endl;
-    pop_front(list); // удаляем 2
-    cout << "After pop_front(): ";
+    cout << "\nУдаление элементов" << endl;
+    LDEL_HEAD(list); // удаляем 2
+    cout << "После LDEL_HEAD(): ";
     print_forward(list);
 
-    pop_back(list);  // удаляем 30
-    cout << "After pop_back(): ";
+    LDEL_BACK(list);  // удаляем 30
+    cout << "После LDEL_BACK(): ";
     print_forward(list);
 
-    delete_by_value(list, 15); // удаляем 15 (из середины)
-    cout << "After delete_by_value(15): ";
+    LDEL_BY_VALUE(list, 15); // удаляем 15 (из середины)
+    cout << "После LDEL_BY_VALUE(15): ";
     print_forward(list);
-    cout << "Verification print backward:" << endl;
+    cout << "Проверка вывода в обратном порядке:" << endl;
     print_backward(list);
 
-    cout << "\n--- Finding element by value ---" << endl;
+    cout << "\nНахождение элемента по значению" << endl;
     int value_to_find = 20;
-    Node* found_node = find_by_value(list, value_to_find);
+    Node* found_node = LGET_BY_VALUE(list, value_to_find);
     if (found_node) {
-        cout << "Node with value " << value_to_find << " found. Prev: "
+        cout << "Узел со значением " << value_to_find << " найден. Предыдущий: "
             << (found_node->prev ? to_string(found_node->prev->key) : "null")
-            << ", Next: " << (found_node->next ? to_string(found_node->next->key) : "null") << endl;
+            << ", Следующий: " << (found_node->next ? to_string(found_node->next->key) : "null") << endl;
     }
     else {
-        cout << "Node with value " << value_to_find << " not found." << endl;
+        cout << "Узел со значением " << value_to_find << " не найден." << endl;
     }
 
-    cout << "\n--- Cleaning up list ---" << endl;
+    cout << "\nОчистка списка" << endl;
     clean(list);
     print_forward(list);
 

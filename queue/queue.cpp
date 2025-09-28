@@ -4,12 +4,12 @@
 using namespace std;
 
 template <typename T>
-struct Array {
+struct Queue {
     T* data;
     uint32_t capacity;
     uint32_t size;
 
-    Array(const uint32_t cap) { //Конструктор (инициализация и создание)
+    Queue(const uint32_t cap) { //Конструктор (инициализация и создание)
         capacity = cap;
         size = 0;
         data = new T[cap];
@@ -18,11 +18,11 @@ struct Array {
         }
     }
 
-    ~Array() { //Деструктор (очищает помять когда выходим из области видимости с массивом)
+    ~Queue() { //Деструктор (очищает помять когда выходим из области видимости с массивом)
         delete[] data;
     }
 
-    Array(const Array<T>& other) { //Копирующий конструктор (Если создаём новый массив на основе предыдущего)
+    Queue(const Queue<T>& other) { //Копирующий конструктор (Если создаём новый массив на основе предыдущего)
         capacity = other.capacity;
         size = other.size;
         data = new T[capacity];
@@ -31,7 +31,7 @@ struct Array {
         }
     }
 
-    Array<T>& operator=(const Array<T>& other) { //Копирующий оператор присваивания (Если имеем два массива с данными и присваиваем один другому)
+    Queue<T>& operator=(const Queue<T>& other) { //Копирующий оператор присваивания (Если имеем два массива с данными и присваиваем один другому)
         if (this == &other) { //Защита от a = a
             return *this;
         }
@@ -48,7 +48,7 @@ struct Array {
 };
 
 template <typename T>
-void doubleArray(Array<T>& ar) { //Удвоение массива при достижении лимита capacity
+void doubleQueue(Queue<T>& ar) { //Удвоение массива при достижении лимита capacity
     uint32_t cap = ar.capacity;
     T* newData = new T[cap * 2];
     ar.capacity = cap * 2;
@@ -60,17 +60,17 @@ void doubleArray(Array<T>& ar) { //Удвоение массива при дос
 }
 
 template <typename T>
-void MPUSH_BACK(Array<T>& ar, T value) { //Добавление элемента в конец массива
+void QPUSH_BACK(Queue<T>& ar, T value) { //Добавление элемента в конец массива
     if (ar.size >= ar.capacity) {
-        doubleArray(ar);
+        doubleQueue(ar);
     }
     ar.data[ar.size++] = value;
 }
 
 template <typename T>
-void MPUSH_BY_IND(Array<T>& ar, uint32_t index, T value) { //Добавление элемента по индексу
+void QPUSH_BY_IND(Queue<T>& ar, uint32_t index, T value) { //Добавление элемента по индексу
     if (ar.size >= ar.capacity) {
-        doubleArray(ar);
+        doubleQueue(ar);
     }
     if (index >= 0 && index < ar.capacity) {
         if (index < ar.size) {
@@ -84,13 +84,13 @@ void MPUSH_BY_IND(Array<T>& ar, uint32_t index, T value) { //Добавлени�
 }
 
 template <typename T>
-T MGET_BY_IND(Array<T>& ar, uint32_t index) { //Получение элемента по индексу
+T QGET_BY_IND(Queue<T>& ar, uint32_t index) { //Получение элемента по индексу
     if (index >= 0 && index < ar.size)
         return ar.data[index];
 }
 
 template <typename T>
-void MDEL_BY_IND(Array<T>& ar, uint32_t index) {
+void QDEL_BY_IND(Queue<T>& ar, uint32_t index) {
     if (index >= 0 && index < ar.size) {
         for (uint32_t i = index; i < ar.size; i++) {
             ar.data[i] = ar.data[i + 1];
@@ -100,7 +100,7 @@ void MDEL_BY_IND(Array<T>& ar, uint32_t index) {
 }
 
 template <typename T>
-void MSWAP_BY_IND(Array<T>& ar, uint32_t index, T value) {
+void QSWAP_BY_IND(Queue<T>& ar, uint32_t index, T value) {
     if (index >= 0 && index < ar.size) {
         ar.data[index] = value;
     }
@@ -108,7 +108,7 @@ void MSWAP_BY_IND(Array<T>& ar, uint32_t index, T value) {
 
 
 template <typename T>
-void readArray(Array<T>& ar) {
+void readQueue(Queue<T>& ar) {
     for (uint32_t i = 0; i < ar.size; i++) {
         cout << ar.data[i] << " ";
     }
@@ -118,10 +118,10 @@ void readArray(Array<T>& ar) {
 int main()
 {
     setlocale(LC_ALL, "ru");
-    Array<int> test(12);
-    MPUSH_BY_IND(test, 2, 11);
-    MPUSH_BACK(test, 12);
-    readArray(test);
+    Queue<int> test(12);
+    QPUSH_BY_IND(test, 2, 11);
+    QPUSH_BACK(test, 12);
+    readQueue(test);
     cout << test.size;
     return 0;
 }
