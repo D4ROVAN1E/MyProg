@@ -1,128 +1,149 @@
 ﻿#include <iostream>
 #include <cstdint>
+#include <stdexcept> // Для генерации исключений
 
 using namespace std;
 
 template <typename T>
 struct Queue {
-    T* data;
-    uint32_t capacity;
-    uint32_t size;
+    T* data;         // Указатель на динамический массив для хранения данных
+    uint32_t capacity; // Общая вместимость массива
+    uint32_t size;     // Текущее количество элементов в очереди
 
-    Queue(const uint32_t cap) { //Конструктор (инициализация и создание)
-        capacity = cap;
+    uint32_t head;     // Индекс "головы" очереди (первого элемента для извлечения)
+    uint32_t tail;     // Индекс для вставки следующего элемента ("хвост")
+
+    // Конструктор: инициализирует очередь с заданной вместимостью
+    Queue(const uint32_t cap) {
+        capacity = cap > 0 ? cap : 1; // Минимальная вместимость - 1
         size = 0;
-        data = new T[cap];
-        for (uint32_t i = 0; i < cap; i++) {
-            data[i] = 0;
-        }
+        head = 0;
+        tail = 0;
+        data = new T[capacity];
     }
 
-    ~Queue() { //Деструктор (очищает помять когда выходим из области видимости с массивом)
+    // Деструктор: освобождает выделенную память
+    ~Queue() {
         delete[] data;
     }
 
-    Queue(const Queue<T>& other) { //Копирующий конструктор (Если создаём новый массив на основе предыдущего)
-        capacity = other.capacity;
-        size = other.size;
-        data = new T[capacity];
-        for (uint32_t i = 0; i < size; i++) {
-            data[i] = other.data[i];
-        }
-    }
-
-    Queue<T>& operator=(const Queue<T>& other) { //Копирующий оператор присваивания (Если имеем два массива с данными и присваиваем один другому)
-        if (this == &other) { //Защита от a = a
-            return *this;
-        }
-        delete[] data;
-
-        capacity = other.capacity;
-        size = other.size;
-        data = new T[capacity];
-        for (uint32_t i = 0; i < size; i++) {
-            data[i] = other.data[i];
-        }
-        return *this;
-    }
 };
 
+// Вспомогательная функция для расширения массива 
 template <typename T>
-void doubleQueue(Queue<T>& ar) { //Удвоение массива при достижении лимита capacity
-    uint32_t cap = ar.capacity;
-    T* newData = new T[cap * 2];
-    ar.capacity = cap * 2;
-    for (uint32_t i = 0; i < ar.size; i++) {
-        newData[i] = ar.data[i];
+void resize(Queue<T>& q) {
+    uint32_t newCapacity = q.capacity * 2;
+    T* newData = new T[newCapacity];
+
+    // Копируем элементы из старого массива в новый, "распрямляя" кольцевой буфер
+    for (uint32_t i = 0; i < q.size; ++i) {
+        newData[i] = q.data[(q.head + i) % q.capacity];
     }
-    delete[] ar.data;
-    ar.data = newData;
+
+    delete[] q.data; // Освобождаем старую память
+
+    q.data = newData;
+    q.capacity = newCapacity;
+    q.head = 0;       // Голова теперь в начале нового массива
+    q.tail = q.size;    // Хвост следует за последним элементом
 }
 
+// Добавление элемента в конец очереди (enqueue)
 template <typename T>
-void QPUSH_BACK(Queue<T>& ar, T value) { //Добавление элемента в конец массива
-    if (ar.size >= ar.capacity) {
-        doubleQueue(ar);
+void enqueue(Queue<T>& q, T value) {
+    if (q.size >= q.capacity) {
+        resize(q); // Если места нет, расширяем массив
     }
-    ar.data[ar.size++] = value;
+    q.data[q.tail] = value;
+    q.tail = (q.tail + 1) % q.capacity; // Сдвигаем хвост по кругу
+    q.size++;
 }
 
+// Извлечение элемента из начала очереди (dequeue)
 template <typename T>
-void QPUSH_BY_IND(Queue<T>& ar, uint32_t index, T value) { //Добавление элемента по индексу
-    if (ar.size >= ar.capacity) {
-        doubleQueue(ar);
+T dequeue(Queue<T>& q) {
+    if (q.size == 0) {
+        throw out_of_range("Очередь пуста!");
     }
-    if (index >= 0 && index < ar.capacity) {
-        if (index < ar.size) {
-            for (uint32_t j = ar.size - 1; j >= index; j--) {
-                ar.data[j + 1] = ar.data[j];
-            }
+    T value = q.data[q.head];
+    q.head = (q.head + 1) % q.capacity; // Сдвигаем голову по кругу
+    q.size--;
+    return value;
+}
+
+// Получение первого элемента без его извлечения (peek/front)
+template <typename T>
+T front(Queue<T>& q) {
+    if (q.size == 0) {
+        throw out_of_range("Очередь пуста!");
+    }
+    return q.data[q.head];
+}
+
+// Проверка, пуста ли очередь
+template <typename T>
+bool isEmpty(Queue<T>& q) {
+    return q.size == 0;
+}
+
+// Получение текущего размера очереди
+template <typename T>
+uint32_t getSize(Queue<T>& q) {
+    return q.size;
+}
+
+
+// Функция для печати содержимого очереди (для демонстрации)
+template <typename T>
+void printQueue(Queue<T>& q) {
+    cout << "Содержимое очереди (от головы к хвосту): ";
+    if (isEmpty(q)) {
+        cout << "пусто";
+    }
+    else {
+        for (uint32_t i = 0; i < getSize(q); ++i) {
+            cout << q.data[(q.head + i) % q.capacity] << " ";
         }
-        ar.data[index] = value;
-        ar.size = ++index;
-    }
-}
-
-template <typename T>
-T QGET_BY_IND(Queue<T>& ar, uint32_t index) { //Получение элемента по индексу
-    if (index >= 0 && index < ar.size)
-        return ar.data[index];
-}
-
-template <typename T>
-void QDEL_BY_IND(Queue<T>& ar, uint32_t index) {
-    if (index >= 0 && index < ar.size) {
-        for (uint32_t i = index; i < ar.size; i++) {
-            ar.data[i] = ar.data[i + 1];
-        }
-        ar.size--;
-    }
-}
-
-template <typename T>
-void QSWAP_BY_IND(Queue<T>& ar, uint32_t index, T value) {
-    if (index >= 0 && index < ar.size) {
-        ar.data[index] = value;
-    }
-}
-
-
-template <typename T>
-void readQueue(Queue<T>& ar) {
-    for (uint32_t i = 0; i < ar.size; i++) {
-        cout << ar.data[i] << " ";
     }
     cout << endl;
 }
 
-int main()
-{
+
+int main() {
     setlocale(LC_ALL, "ru");
-    Queue<int> test(12);
-    QPUSH_BY_IND(test, 2, 11);
-    QPUSH_BACK(test, 12);
-    readQueue(test);
-    cout << test.size;
+
+    cout << "Создаем очередь с начальной вместимостью 3..." << endl;
+    Queue<int> myQueue(3);
+
+    cout << "Добавляем элементы: 10, 20, 30" << endl;
+    enqueue(myQueue, 10);
+    enqueue(myQueue, 20);
+    enqueue(myQueue, 30);
+    printQueue(myQueue);
+    cout << "Размер: " << getSize(myQueue) << ", Вместимость: " << myQueue.capacity << endl;
+    cout << "------------------------------------" << endl;
+
+    cout << "Добавляем элемент 40. Это вызовет расширение массива." << endl;
+    enqueue(myQueue, 40);
+    printQueue(myQueue);
+    cout << "Размер: " << getSize(myQueue) << ", Вместимость: " << myQueue.capacity << endl;
+    cout << "------------------------------------" << endl;
+
+    cout << "Извлекаем два элемента:" << endl;
+    cout << "Извлечено: " << dequeue(myQueue) << endl;
+    cout << "Извлечено: " << dequeue(myQueue) << endl;
+    printQueue(myQueue);
+    cout << "Первый в очереди сейчас: " << front(myQueue) << endl;
+    cout << "Размер: " << getSize(myQueue) << endl;
+    cout << "------------------------------------" << endl;
+
+    cout << "Добавляем еще три элемента: 50, 60, 70" << endl;
+    enqueue(myQueue, 50);
+    enqueue(myQueue, 60);
+    enqueue(myQueue, 70);
+    printQueue(myQueue);
+    cout << "Размер: " << getSize(myQueue) << ", Вместимость: " << myQueue.capacity << endl;
+    cout << "------------------------------------" << endl;
+
     return 0;
 }
-
