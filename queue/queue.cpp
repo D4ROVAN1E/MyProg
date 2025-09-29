@@ -20,11 +20,44 @@ struct Queue {
         head = 0;
         tail = 0;
         data = new T[capacity];
+        for (uint32_t i = 0; i < capacity; i++) {
+            data[i] = NULL;
+        }
     }
 
     // Деструктор: освобождает выделенную память
     ~Queue() {
         delete[] data;
+    }
+
+    //Копирующий конструктор
+    Queue(const Queue<T>& other) {
+        capacity = other.capacity;
+        size = other.size;
+        head = other.head;
+        tail = other.tail;
+        data = new T[capacity];
+        for (uint32_t i = 0; i < capacity; i++) {
+            data[i] = other.data[i];
+        }
+    }
+
+	//Копирующий оператор присваивания
+    Queue<T>& operator=(const Queue<T>& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+		delete[] data; // Освобождаем старую память
+        capacity = other.capacity;
+        size = other.size;
+        head = other.head;
+        tail = other.tail;
+        data = new T[capacity];
+        for (uint32_t i = 0; i < capacity; i++) {
+            data[i] = other.data[i];
+        }
+        return *this;
     }
 
 };
@@ -48,9 +81,9 @@ void resize(Queue<T>& q) {
     q.tail = q.size;    // Хвост следует за последним элементом
 }
 
-// Добавление элемента в конец очереди (enqueue)
+// Добавление элемента в конец очереди
 template <typename T>
-void enqueue(Queue<T>& q, T value) {
+void QPUSH(Queue<T>& q, T value) {
     if (q.size >= q.capacity) {
         resize(q); // Если места нет, расширяем массив
     }
@@ -59,9 +92,9 @@ void enqueue(Queue<T>& q, T value) {
     q.size++;
 }
 
-// Извлечение элемента из начала очереди (dequeue)
+// Извлечение элемента из начала очереди
 template <typename T>
-T dequeue(Queue<T>& q) {
+T QPOP(Queue<T>& q) {
     if (q.size == 0) {
         throw out_of_range("Очередь пуста!");
     }
@@ -71,9 +104,9 @@ T dequeue(Queue<T>& q) {
     return value;
 }
 
-// Получение первого элемента без его извлечения (peek/front)
+// Получение первого элемента без его извлечения 
 template <typename T>
-T front(Queue<T>& q) {
+T QGET(Queue<T>& q) {
     if (q.size == 0) {
         throw out_of_range("Очередь пуста!");
     }
@@ -116,31 +149,31 @@ int main() {
     Queue<int> myQueue(3);
 
     cout << "Добавляем элементы: 10, 20, 30" << endl;
-    enqueue(myQueue, 10);
-    enqueue(myQueue, 20);
-    enqueue(myQueue, 30);
+    QPUSH(myQueue, 10);
+    QPUSH(myQueue, 20);
+    QPUSH(myQueue, 30);
     printQueue(myQueue);
     cout << "Размер: " << getSize(myQueue) << ", Вместимость: " << myQueue.capacity << endl;
     cout << "------------------------------------" << endl;
 
     cout << "Добавляем элемент 40. Это вызовет расширение массива." << endl;
-    enqueue(myQueue, 40);
+    QPUSH(myQueue, 40);
     printQueue(myQueue);
     cout << "Размер: " << getSize(myQueue) << ", Вместимость: " << myQueue.capacity << endl;
     cout << "------------------------------------" << endl;
 
     cout << "Извлекаем два элемента:" << endl;
-    cout << "Извлечено: " << dequeue(myQueue) << endl;
-    cout << "Извлечено: " << dequeue(myQueue) << endl;
+    cout << "Извлечено: " << QPOP(myQueue) << endl;
+    cout << "Извлечено: " << QPOP(myQueue) << endl;
     printQueue(myQueue);
-    cout << "Первый в очереди сейчас: " << front(myQueue) << endl;
+    cout << "Первый в очереди сейчас: " << QGET(myQueue) << endl;
     cout << "Размер: " << getSize(myQueue) << endl;
     cout << "------------------------------------" << endl;
 
     cout << "Добавляем еще три элемента: 50, 60, 70" << endl;
-    enqueue(myQueue, 50);
-    enqueue(myQueue, 60);
-    enqueue(myQueue, 70);
+    QPUSH(myQueue, 50);
+    QPUSH(myQueue, 60);
+    QPUSH(myQueue, 70);
     printQueue(myQueue);
     cout << "Размер: " << getSize(myQueue) << ", Вместимость: " << myQueue.capacity << endl;
     cout << "------------------------------------" << endl;

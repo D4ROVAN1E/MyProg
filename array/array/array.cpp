@@ -9,12 +9,19 @@ struct Array {
     uint32_t capacity;
     uint32_t size;
 
-    Array(const uint32_t cap) { //Конструктор (инициализация и создание)
-        capacity = cap;
-        size = 0;
+	Array() { //Конструктор для пустого массива
+        size = capacity = 1;
+        data = new T[capacity];
+        for (uint32_t i = 0; i < capacity; i++) {
+            data[i] = NULL;
+        }
+    }
+
+    Array(const uint32_t cap) { //Конструктор
+        size = capacity = cap - 1;
         data = new T[cap];
         for (uint32_t i = 0; i < cap; i++) {
-            data[i] = 0;
+            data[i] = NULL;
         }
     }
 
@@ -61,15 +68,16 @@ void doubleArray(Array<T>& ar) { //Удвоение массива при дос
 
 template <typename T>
 void MPUSH_BACK(Array<T>& ar, T value) { //Добавление элемента в конец массива
-    if (ar.size >= ar.capacity) {
+    if (ar.size + 1 > ar.capacity) {
         doubleArray(ar);
     }
-    ar.data[ar.size++] = value;
+    ar.data[ar.size] = value;
+	ar.size++;
 }
 
 template <typename T>
 void MPUSH_BY_IND(Array<T>& ar, uint32_t index, T value) { //Добавление элемента по индексу
-    if (ar.size >= ar.capacity) {
+    if (ar.size + 1 > ar.capacity) {
         doubleArray(ar);
     }
     if (index >= 0 && index < ar.capacity) {
@@ -79,7 +87,10 @@ void MPUSH_BY_IND(Array<T>& ar, uint32_t index, T value) { //Добавлени�
             }
         }
         ar.data[index] = value;
-        ar.size = ++index;
+        ar.size++;
+    }
+    else {
+		cout << "Error: Index out of bounds" << endl;
     }
 }
 
@@ -87,6 +98,10 @@ template <typename T>
 T MGET_BY_IND(Array<T>& ar, uint32_t index) { //Получение элемента по индексу
     if (index >= 0 && index < ar.size)
         return ar.data[index];
+	else { 
+        cout << "Error: Index out of bounds" << endl;
+        return NULL;
+	}
 }
 
 template <typename T>
@@ -97,12 +112,18 @@ void MDEL_BY_IND(Array<T>& ar, uint32_t index) {
         }
         ar.size--;
     }
+    else {
+        cout << "Error: Index out of bounds" << endl;
+	}
 }
 
 template <typename T>
 void MSWAP_BY_IND(Array<T>& ar, uint32_t index, T value) {
     if (index >= 0 && index < ar.size) {
         ar.data[index] = value;
+    }
+    else {
+        cout << "Error: Index out of bounds" << endl;
     }
 }
 
@@ -118,9 +139,10 @@ void readArray(Array<T>& ar) {
 int main()
 {
     setlocale(LC_ALL, "ru");
-    Array<int> test(12);
+    Array<int> test(5);
     MPUSH_BY_IND(test, 2, 11);
     MPUSH_BACK(test, 12);
+    MPUSH_BACK(test, 22);
     readArray(test);
     cout << test.size;
     return 0;
