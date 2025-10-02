@@ -143,6 +143,9 @@ int main()
     MPUSH_BY_IND(test, 2, 11);
     MPUSH_BACK(test, 12);
     MPUSH_BACK(test, 22);
+    MPUSH_BACK(test, 23);
+    MPUSH_BACK(test, 24);
+	MDEL_BY_IND(test, 2);
     readArray(test);
     cout << test.size;
     return 0;

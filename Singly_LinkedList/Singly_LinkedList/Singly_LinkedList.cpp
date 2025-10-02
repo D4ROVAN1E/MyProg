@@ -1,51 +1,91 @@
 ﻿#include <iostream>
+#include <utility> // Для std::swap
 
 using namespace std;
 
+template <typename T>
 struct Node
 {
-    int key;
-    Node* next; // указатель на следующий элемент
+    T key;
+    Node<T>* next; // указатель на следующий элемент
 };
 
+template <typename T>
 struct ForwardList
 {
-    Node* head = nullptr;
+    Node<T>* head;
+
+    // Конструктор по умолчанию
+    ForwardList() {
+		head = nullptr;
+    }
+
+    // Копирующий конструктор (создает глубокую копию)
+    ForwardList(const ForwardList& other) {
+        head = nullptr;
+        if (!other.head) {
+            return;
+        }
+        head = new Node<T>{ other.head->key, nullptr };
+        Node<T>* current_this = head;
+        Node<T>* current_other = other.head->next;
+        while (current_other) {
+            current_this->next = new Node<T>{ current_other->key, nullptr };
+            current_this = current_this->next;
+            current_other = current_other->next;
+        }
+    }
+
+    // Копирующий оператор присваивания 
+    ForwardList& operator=(const ForwardList& other) {
+        if (this != &other) {
+            ForwardList temp(other);
+            swap(head, temp.head);
+        }
+        return *this;
+    }
+
+    // Деструктор (очищает память)
+    ~ForwardList() {
+        while (head != nullptr) {
+            Node<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
 };
 
+
 // Добавляет узел ПОСЛЕ указанного узла ptr
-void FPUSH_FORWARD(Node* ptr, int key) {
-    if (!ptr) return; // Нельзя добавить после nullptr
-    Node* newNode = new Node{ key, nullptr };
-    newNode->next = ptr->next; // передаем указатель на следующий элемент для вставки
-    ptr->next = newNode; // создаем связь с новым элементом
+template <typename T>
+void FPUSH_FORWARD(Node<T>* ptr, T key) {
+    if (!ptr) return;
+    Node<T>* newNode = new Node<T>{ key, nullptr };
+    newNode->next = ptr->next;
+    ptr->next = newNode;
 }
 
 // Создает список с начальным элементом
-void FCREATE(ForwardList& fList, int keyBegin) {
-    fList.head = new Node{ keyBegin, nullptr };
-}
-
-// Удаляет узел ПОСЛЕ указанного узла ptr
-void FDEL_FORWARD(Node* ptr) {
-    if (!ptr || !ptr->next)
-    {
-        return;
+template <typename T>
+void FCREATE(ForwardList<T>& fList, T keyBegin) {
+    // Очистим список, если он уже был не пуст
+    while (fList.head) {
+        Node<T>* temp = fList.head;
+        fList.head = fList.head->next;
+        delete temp;
     }
-
-    Node* deleteNode = ptr->next;
-    ptr->next = deleteNode->next;
-
-    delete deleteNode;
+    fList.head = new Node<T>{ keyBegin, nullptr };
 }
+
 
 // Выводит список в консоль
-void print(const ForwardList& fList) {
+template <typename T>
+void print(const ForwardList<T>& fList) {
     if (!fList.head) {
         cout << "Список пуст" << endl;
         return;
     }
-    Node* current = fList.head;
+    Node<T>* current = fList.head;
     while (current != nullptr)
     {
         cout << current->key << " -> ";
@@ -54,33 +94,25 @@ void print(const ForwardList& fList) {
     cout << "nullptr" << endl;
 }
 
-// Очищает всю память, занятую списком
-void clean(ForwardList& fList) {
-    while (fList.head)
-    {
-        Node* temp = fList.head;
-        fList.head = fList.head->next;
-        delete temp;
-    }
-}
-
 //Добавление элемента в НАЧАЛО списка
-void FPUSH_HEAD(ForwardList& fList, int key) {
-    Node* newNode = new Node{ key, nullptr };
+template <typename T>
+void FPUSH_HEAD(ForwardList<T>& fList, T key) {
+    Node<T>* newNode = new Node<T>{ key, nullptr };
     newNode->next = fList.head;
     fList.head = newNode;
 }
 
 //Добавление элемента в КОНЕЦ списка
-void FPUSH_BACK(ForwardList& fList, int key) {
-    Node* newNode = new Node{ key, nullptr };
+template <typename T>
+void FPUSH_BACK(ForwardList<T>& fList, T key) {
+    Node<T>* newNode = new Node<T>{ key, nullptr };
 
     if (fList.head == nullptr) { // Если список пуст
         fList.head = newNode;
         return;
     }
 
-    Node* current = fList.head;
+    Node<T>* current = fList.head;
     while (current->next != nullptr) { // Идем до последнего элемента
         current = current->next;
     }
@@ -88,135 +120,139 @@ void FPUSH_BACK(ForwardList& fList, int key) {
 }
 
 //Добавление элемента ДО узла с заданным значением
-void FPUSH_BEFORE(ForwardList& fList, int targetKey, int newKey) {
+template <typename T>
+void FPUSH_BEFORE(ForwardList<T>& fList, T targetKey, T newKey) {
     if (!fList.head) return; // Список пуст
 
-    // Если искомый элемент - голова списка, используем FPUSH_HEAD
     if (fList.head->key == targetKey) {
         FPUSH_HEAD(fList, newKey);
         return;
     }
 
-    Node* current = fList.head;
-    // Ищем узел, ПОСЛЕ которого нужно вставить новый (т.е. предшествующий target)
+    Node<T>* current = fList.head;
     while (current->next != nullptr && current->next->key != targetKey) {
         current = current->next;
     }
 
-    if (current->next != nullptr) { // Если нашли узел с targetKey
-        FPUSH_FORWARD(current, newKey); // Используем уже существующую функцию добавления после
+    if (current->next != nullptr) {
+        FPUSH_FORWARD(current, newKey);
     }
 }
 
 //Удаление первого элемента (головы) списка
-void FDEL_HEAD(ForwardList& fList) {
+template <typename T>
+void FDEL_HEAD(ForwardList<T>& fList) {
     if (!fList.head) return; // Список уже пуст
 
-    Node* temp = fList.head;
+    Node<T>* temp = fList.head;
     fList.head = fList.head->next;
     delete temp;
 }
 
 //Удаление последнего элемента списка
-void FDEL_BACK(ForwardList& fList) {
-    if (!fList.head) return; // Список пуст
+template <typename T>
+void FDEL_BACK(ForwardList<T>& fList) {
+    if (!fList.head) return;
 
-    if (fList.head->next == nullptr) { // В списке только один элемент
+    if (fList.head->next == nullptr) {
         delete fList.head;
         fList.head = nullptr;
         return;
     }
 
-    Node* current = fList.head;
-    // Идем до предпоследнего элемента
+    Node<T>* current = fList.head;
     while (current->next->next != nullptr) {
         current = current->next;
     }
 
-    delete current->next; // Удаляем последний элемент
-    current->next = nullptr; // Предыдущий теперь последний
+    delete current->next;
+    current->next = nullptr;
 }
 
 //Удаление узла по значению (первое вхождение)
-void FDEL_BY_VALUE(ForwardList& fList, int key) {
-    if (!fList.head) return; // Список пуст
+template <typename T>
+void FDEL_BY_VALUE(ForwardList<T>& fList, T key) {
+    if (!fList.head) return;
 
-    // Если удаляемый элемент - голова
     if (fList.head->key == key) {
         FDEL_HEAD(fList);
         return;
     }
 
-    Node* current = fList.head;
-    // Ищем узел, который стоит ПЕРЕД удаляемым
+    Node<T>* current = fList.head;
     while (current->next != nullptr && current->next->key != key) {
         current = current->next;
     }
 
-    if (current->next != nullptr) { // Если нашли такой узел
-        FDEL_FORWARD(current); // Используем существующую функцию удаления после
+    if (current->next != nullptr) {
+        Node<T>* deleteNode = current->next;
+        current->next = deleteNode->next;
+        delete deleteNode;
     }
 }
 
+
 //Чтение (поиск) элемента по значению
-Node* FGET_BY_VALUE(ForwardList& fList, int key) {
-    Node* current = fList.head;
+template <typename T>
+Node<T>* FGET_BY_VALUE(ForwardList<T>& fList, T key) {
+    Node<T>* current = fList.head;
     while (current != nullptr) {
         if (current->key == key) {
             return current;
         }
         current = current->next;
     }
-    return nullptr; // Элемент не найден
+    return nullptr;
 }
-
 
 int main() {
     setlocale(LC_ALL, "ru");
-    ForwardList list;
+    ForwardList<int> list;
 
     cout << "Создание списка" << endl;
     FCREATE(list, 10);
     print(list);
 
     cout << "\nДобавление элементов" << endl;
-    FPUSH_BACK(list, 20); // в конец
-    FPUSH_BACK(list, 30); // в конец
-    FPUSH_HEAD(list, 5); // в начало
-    FPUSH_BEFORE(list, 20, 15); // до 20
-    FPUSH_BEFORE(list, 5, 2); // до головы
+    FPUSH_BACK(list, 20);
+    FPUSH_BACK(list, 30);
+    FPUSH_HEAD(list, 5);
+    FPUSH_BEFORE(list, 20, 15);
+    FPUSH_BEFORE(list, 5, 2);
     print(list);
 
-    cout << "\nУдаление элементов" << endl;
+    cout << "\nПроверка копирования:" << endl;
+    ForwardList<int> list2 = list; // Вызов копирующего конструктора
+    cout << "Оригинал: ";
+    print(list);
+    cout << "Копия:    ";
+    print(list2);
+
+    cout << "\nУдаляем узел из оригинала:" << endl;
+    FDEL_BY_VALUE(list, 15);
+    cout << "Оригинал: ";
+    print(list);
+    cout << "Копия:    ";
+    print(list2); // Копия осталась неизменной!
+
+    cout << "\nПроверка присваивания:" << endl;
+    ForwardList<int> list3;
+    FPUSH_BACK(list3, 99);
+    FPUSH_BACK(list3, 100);
+    cout << "List3 до присваивания: ";
+    print(list3);
+    list3 = list; // Вызов оператора присваивания
+    cout << "List3 после присваивания: ";
+    print(list3);
+
+    cout << "\nВозвращаемся к основному списку и удаляем элементы" << endl;
     FDEL_HEAD(list); // удаляем 2
     print(list);
     FDEL_BACK(list); // удаляем 30
     print(list);
-    FDEL_BY_VALUE(list, 15); // удаляем 15
+    FDEL_BY_VALUE(list, 20);
     print(list);
 
-    cout << "\nНахождение по значению" << endl;
-    int value_to_find = 20;
-    Node* found_node = FGET_BY_VALUE(list, value_to_find);
-    if (found_node) {
-        cout << "Узел со значением " << value_to_find << " найден по адресу: " << found_node << endl;
-    }
-    else {
-        cout << "Узел со значением " << value_to_find << " не найден." << endl;
-    }
-
-    value_to_find = 99;
-    found_node = FGET_BY_VALUE(list, value_to_find);
-    if (found_node) {
-        cout << "Узел со значением " << value_to_find << " найден по адресу: " << found_node << endl;
-    }
-    else {
-        cout << "Узел со значением " << value_to_find << " не найден." << endl;
-    }
-
-    cout << "\nОчистка списка" << endl;
-    clean(list);
-    print(list);
-
+    cout << "\nКонец main. Объекты будут уничтожены автоматически." << endl;
     return 0;
 }

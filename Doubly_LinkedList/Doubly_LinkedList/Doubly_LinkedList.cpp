@@ -1,33 +1,79 @@
 ﻿#include <iostream>
 #include<string>
+#include <utility>
 
 using namespace std;
 
 // Структура узла для двусвязного списка
+template <typename T>
 struct Node
 {
-    int key;
-    Node* next; // Указатель на следующий элемент
-    Node* prev; // Указатель на предыдущий элемент
+    T key;
+    Node<T>* next; // Указатель на следующий элемент
+    Node<T>* prev; // Указатель на предыдущий элемент
 };
 
 // Структура двусвязного списка
+template <typename T>
 struct DoublyList
 {
-    Node* head = nullptr;
-    Node* tail = nullptr;
+    Node<T>* head = nullptr;
+    Node<T>* tail = nullptr;
+
+    DoublyList() {
+		head = nullptr;
+		tail = nullptr;
+    }
+
+    // Деструктор (очищает всю память)
+    ~DoublyList() {
+        while (head) {
+            Node<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+
+    // Копирующий конструктор (создает глубокую копию)
+    DoublyList(const DoublyList& other) {
+        head = nullptr;
+		tail = nullptr;
+        if (!other.head) {
+            return;
+        }
+        Node<T>* current_other = other.head;
+        while (current_other) {
+            this->push_back(current_other->key);
+            current_other = current_other->next;
+        }
+    }
+
+    DoublyList& operator=(const DoublyList& other) {
+        if (this != &other) {
+            //Создание глубокой копии 
+            DoublyList temp(other);
+
+            // Используем swap.
+            swap(head, temp.head);
+            swap(tail, temp.tail);
+        }
+
+        return *this;
+    }
 };
 
 //Создает список с начальным элементом
-void LCREATE(DoublyList& dList, int keyBegin) {
-    Node* newNode = new Node{ keyBegin, nullptr, nullptr };
+template <typename T>
+void LCREATE(DoublyList<T>& dList, T keyBegin) {
+    Node<T>* newNode = new Node<T>{ keyBegin, nullptr, nullptr };
     dList.head = newNode;
     dList.tail = newNode;
 }
 
 //Добавление элемента в НАЧАЛО списка
-void LPUSH_HEAD(DoublyList& dList, int key) {
-    Node* newNode = new Node{ key, dList.head, nullptr };
+template <typename T>
+void LPUSH_HEAD(DoublyList<T>& dList, T key) {
+    Node<T>* newNode = new Node<T>{ key, dList.head, nullptr };
 
     if (dList.head) { // Если список не пуст
         dList.head->prev = newNode;
@@ -39,8 +85,9 @@ void LPUSH_HEAD(DoublyList& dList, int key) {
 }
 
 //Добавление элемента в КОНЕЦ списка
-void LPUSH_BACK(DoublyList& dList, int key) {
-    Node* newNode = new Node{ key, nullptr, dList.tail };
+template <typename T>
+void LPUSH_BACK(DoublyList<T>& dList, T key) {
+    Node<T>* newNode = new Node<T>{ key, nullptr, dList.tail };
 
     if (dList.tail) { // Если список не пуст
         dList.tail->next = newNode;
@@ -52,10 +99,11 @@ void LPUSH_BACK(DoublyList& dList, int key) {
 }
 
 //Удаление первого элемента (головы) списка
-void LDEL_HEAD(DoublyList& dList) {
+template <typename T>
+void LDEL_HEAD(DoublyList<T>& dList) {
     if (!dList.head) return; // Список пуст
 
-    Node* temp = dList.head;
+    Node<T>* temp = dList.head;
     dList.head = dList.head->next;
 
     if (dList.head) { // Если в списке остались элементы
@@ -68,10 +116,11 @@ void LDEL_HEAD(DoublyList& dList) {
 }
 
 //Удаление последнего элемента списка
-void LDEL_BACK(DoublyList& dList) {
+template <typename T>
+void LDEL_BACK(DoublyList<T>& dList) {
     if (!dList.tail) return; // Список пуст
 
-    Node* temp = dList.tail;
+    Node<T>* temp = dList.tail;
     dList.tail = dList.tail->prev;
 
     if (dList.tail) { // Если в списке остались элементы
@@ -84,8 +133,9 @@ void LDEL_BACK(DoublyList& dList) {
 }
 
 //Чтение (поиск) элемента по значению
-Node* LGET_BY_VALUE(const DoublyList& dList, int key) {
-    Node* current = dList.head;
+template <typename T>
+Node<T>* LGET_BY_VALUE(const DoublyList<T>& dList, T key) {
+    Node<T>* current = dList.head;
     while (current != nullptr) {
         if (current->key == key) {
             return current;
@@ -96,8 +146,9 @@ Node* LGET_BY_VALUE(const DoublyList& dList, int key) {
 }
 
 //Добавление элемента ДО узла с заданным значением
-void LPUSH_BEFORE (DoublyList& dList, int targetKey, int newKey) {
-    Node* targetNode = LGET_BY_VALUE(dList, targetKey);
+template <typename T>
+void LPUSH_BEFORE (DoublyList<T>& dList, T targetKey, T newKey) {
+    Node<T>* targetNode = LGET_BY_VALUE(dList, targetKey);
     if (!targetNode) return; // Элемент, перед которым нужно вставить, не найден
 
     if (targetNode == dList.head) { // Если вставляем перед головой
@@ -105,14 +156,15 @@ void LPUSH_BEFORE (DoublyList& dList, int targetKey, int newKey) {
         return;
     }
 
-    Node* newNode = new Node{ newKey, targetNode, targetNode->prev };
+    Node<T>* newNode = new Node<T>{ newKey, targetNode, targetNode->prev };
     targetNode->prev->next = newNode;
     targetNode->prev = newNode;
 }
 
 //Удаление узла по значению (первое вхождение)
-void LDEL_BY_VALUE(DoublyList& dList, int key) {
-    Node* targetNode = LGET_BY_VALUE(dList, key);
+template <typename T>
+void LDEL_BY_VALUE(DoublyList<T>& dList, T key) {
+    Node<T>* targetNode = LGET_BY_VALUE(dList, key);
     if (!targetNode) return; // Узел для удаления не найден
 
     if (targetNode == dList.head) {
@@ -130,12 +182,13 @@ void LDEL_BY_VALUE(DoublyList& dList, int key) {
 }
 
 //Выводит список в консоль от начала до конца
-void print_forward(const DoublyList& dList) {
+template <typename T>
+void print_forward(const DoublyList<T>& dList) {
     if (!dList.head) {
         cout << "Список пуст." << endl;
         return;
     }
-    Node* current = dList.head;
+    Node<T>* current = dList.head;
     cout << "Голова -> ";
     while (current != nullptr)
     {
@@ -146,12 +199,13 @@ void print_forward(const DoublyList& dList) {
 }
 
 //Выводит список в консоль от конца до начала (для проверки)
-void print_backward(const DoublyList& dList) {
+template <typename T>
+void print_backward(const DoublyList<T>& dList) {
     if (!dList.tail) {
         cout << "Список пуст." << endl;
         return;
     }
-    Node* current = dList.tail;
+    Node<T>* current = dList.tail;
     cout << "Хвост -> ";
     while (current != nullptr)
     {
@@ -162,7 +216,8 @@ void print_backward(const DoublyList& dList) {
 }
 
 //Очищает всю память, занятую списком
-void clean(DoublyList& dList) {
+template <typename T>
+void clean(DoublyList<T>& dList) {
     while (dList.head) {
         LDEL_HEAD(dList);
     }
@@ -170,7 +225,7 @@ void clean(DoublyList& dList) {
 
 int main() {
     setlocale(LC_ALL, "ru");
-    DoublyList list;
+    DoublyList<int> list;
 
     cout << "Создание списка" << endl;
     LCREATE(list, 10);
@@ -203,7 +258,7 @@ int main() {
 
     cout << "\nНахождение элемента по значению" << endl;
     int value_to_find = 20;
-    Node* found_node = LGET_BY_VALUE(list, value_to_find);
+    Node<int>* found_node = LGET_BY_VALUE(list, value_to_find);
     if (found_node) {
         cout << "Узел со значением " << value_to_find << " найден. Предыдущий: "
             << (found_node->prev ? to_string(found_node->prev->key) : "null")
@@ -214,7 +269,6 @@ int main() {
     }
 
     cout << "\nОчистка списка" << endl;
-    clean(list);
     print_forward(list);
 
     return 0;
