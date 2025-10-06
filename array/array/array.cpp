@@ -13,7 +13,7 @@ struct Array {
         size = capacity = 1;
         data = new T[capacity];
         for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = NULL;
+            data[i] = T();
         }
     }
 
@@ -21,7 +21,7 @@ struct Array {
         size = capacity = cap - 1;
         data = new T[cap];
         for (uint32_t i = 0; i < cap; i++) {
-            data[i] = NULL;
+            data[i] = T();
         }
     }
 
@@ -145,7 +145,7 @@ int main()
     MPUSH_BACK(test, 22);
     MPUSH_BACK(test, 23);
     MPUSH_BACK(test, 24);
-	MDEL_BY_IND(test, 2);
+	//MDEL_BY_IND(test, 2);
     readArray(test);
     cout << test.size;
     return 0;

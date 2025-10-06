@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <cstdint>
+#include <string>
 
 using namespace std;
 
@@ -9,12 +10,21 @@ struct Stack {
     uint32_t capacity;
     uint32_t size;
 
+    Stack() {
+        size = 0;
+        capacity = 1;
+        data = new T[capacity];
+        for (uint32_t i = 0; i < capacity; i++) {
+            data[i] = T();
+        }
+    }
+
     Stack(const uint32_t cap) { //Конструктор (инициализация и создание)
         capacity = cap;
         size = 0;
-        data = new T[cap];
-        for (uint32_t i = 0; i < cap; i++) {
-            data[i] = 0;
+        data = new T[capacity];
+        for (uint32_t i = 0; i < capacity; i++) {
+            data[i] = T();
         }
     }
 
@@ -84,11 +94,11 @@ void readStack(Stack<T>& ar) {
 int main()
 {
     setlocale(LC_ALL, "ru");
-    Stack<int> test(12);
-    SPUSH(test, 10);
-    SPUSH(test, 20);
-    SPUSH(test, 30);
-    SPUSH(test, 40);
+    Stack<string> test(12);
+    SPUSH(test, string("Hi"));
+    SPUSH(test, string("Hello"));
+    SPUSH(test, string("There"));
+    SPUSH(test, string("Boy"));
     readStack(test);
     SPOP(test);
     SPOP(test);

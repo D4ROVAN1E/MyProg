@@ -13,6 +13,16 @@ struct Queue {
     uint32_t head;     // Индекс "головы" очереди (первого элемента для извлечения)
     uint32_t tail;     // Индекс для вставки следующего элемента ("хвост")
 
+    Queue() {
+        capacity = 1;
+        size = 0;
+        head = 0;
+        tail = 0;
+        for (uint32_t i = 0; i < capacity; i++) {
+            data[i] = T();
+        }
+    }
+
     // Конструктор: инициализирует очередь с заданной вместимостью
     Queue(const uint32_t cap) {
         capacity = cap > 0 ? cap : 1; // Минимальная вместимость - 1
@@ -21,7 +31,7 @@ struct Queue {
         tail = 0;
         data = new T[capacity];
         for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = NULL;
+            data[i] = T();
         }
     }
 
