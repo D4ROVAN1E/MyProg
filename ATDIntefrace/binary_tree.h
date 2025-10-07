@@ -7,6 +7,10 @@
 
 using namespace std;
 
+// Константы для форматирования вывода
+const string branch_right = "|--- "; // Ветка к правому потомку
+const string branch_left = "|___ ";  // Ветка к левому потомку
+
 // Структура узла 
 template<typename T>
 struct TreeNode {
@@ -74,6 +78,37 @@ struct FullBinaryTree {
         return *this;
     }
 };
+
+// Вспомогательная рекурсивная функция для красивой печати
+template<typename T>
+void print_tree_recursive(TreeNode<T>* node, const string& prefix, bool isLeft) {
+    if (node != nullptr) {
+        cout << prefix;
+        // Используем разные символы для левой и правой ветки
+        cout << (isLeft ? branch_left : branch_right);
+        // Выводим значение узла
+        cout << node->key << endl;
+
+        // Рекурсивно вызываем для потомков, увеличивая отступ
+        // Правый потомок идет первым, чтобы дерево "росло" слева направо
+        print_tree_recursive(node->right, prefix + (isLeft ? "|   " : "    "), false);
+        print_tree_recursive(node->left, prefix + (isLeft ? "|   " : "    "), true);
+    }
+}
+
+// Главная функция для красивой печати дерева
+template<typename T>
+void printTreeVisual(TreeNode<T>* root) {
+    if (root == nullptr) {
+        cout << "Дерево пустое." << endl;
+        return;
+    }
+    // Начинаем печать с корневого узла
+    cout << root->key << endl;
+    // Вызываем рекурсивную функцию для потомков
+    print_tree_recursive(root->right, "", false);
+    print_tree_recursive(root->left, "", true);
+}
 
 // Рекурсивные функцияы для обходов
 template<typename T>
@@ -212,6 +247,9 @@ void PRINT(FullBinaryTree<T>& tree, int choise) {
     case 4:
 		printPostorder(tree);
 		break;
+    case 5:
+        printTreeVisual(tree.root);
+        break;
     default:
         break;
     }

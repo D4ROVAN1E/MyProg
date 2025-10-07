@@ -519,8 +519,9 @@ void binaryTreeMenu() {
         cout << "4. Показать дерево (прямой обход)" << endl;
         cout << "5. Показать дерево (центрированный обход)" << endl;
         cout << "6. Показать дерево (обратный обход)" << endl;
-        cout << "7. Сохранить в файл" << endl;
-        cout << "8. Загрузить из файла" << endl;
+        cout << "7. Паказать дерево наглядно" << endl;
+        cout << "8. Сохранить в файл" << endl;
+        cout << "9. Загрузить из файла" << endl;
         cout << "0. Назад" << endl;
         cout << "Выбор: ";
 
@@ -564,11 +565,15 @@ void binaryTreeMenu() {
 			PRINT(tree, 4);
             break;
         case 7:
+            cout << "Наглядный вывод: \n";
+            PRINT(tree, 5);
+            break;
+        case 8:
             cout << "Введите имя файла: ";
             cin >> filename;
             TSAVE(tree, filename);
             break;
-        case 8:
+        case 9:
             cout << "Введите имя файла: ";
             cin >> filename;
             TLOAD(tree, filename);
