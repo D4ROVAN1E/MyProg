@@ -1,0 +1,1058 @@
+package main
+
+import (
+	"bufio"
+	"errors"
+	"fmt"
+	"os"
+	"strconv"
+)
+
+// ==================== МАССИВ ====================
+type Array[T any] struct {
+	data     []T
+	capacity uint32
+	size     uint32
+}
+
+func NewArray[T any]() *Array[T] {
+	arr := &Array[T]{
+		capacity: 1,
+		size:     1,
+		data:     make([]T, 1),
+	}
+	var zero T
+	for i := range arr.data {
+		arr.data[i] = zero
+	}
+	return arr
+}
+
+func NewArrayWithCapacity[T any](cap uint32) *Array[T] {
+	arr := &Array[T]{
+		capacity: cap - 1,
+		size:     cap - 1,
+		data:     make([]T, cap),
+	}
+	var zero T
+	for i := range arr.data {
+		arr.data[i] = zero
+	}
+	return arr
+}
+
+func doubleArray[T any](ar *Array[T]) {
+	newCap := ar.capacity * 2
+	newData := make([]T, newCap)
+	var zero T
+	for i := range newData {
+		newData[i] = zero
+	}
+	for i := uint32(0); i < ar.size; i++ {
+		newData[i] = ar.data[i]
+	}
+	ar.data = newData
+	ar.capacity = newCap
+}
+
+func MPUSH_BACK[T any](ar *Array[T], value T) {
+	if ar.size+1 > ar.capacity {
+		doubleArray(ar)
+	}
+	ar.data[ar.size] = value
+	ar.size++
+}
+
+func MPUSH_BY_IND[T any](ar *Array[T], index uint32, value T) {
+	if ar.size+1 > ar.capacity {
+		doubleArray(ar)
+	}
+	if index < ar.capacity {
+		if index < ar.size {
+			for j := ar.size; j > index; j-- {
+				if j-1 < ar.capacity {
+					ar.data[j] = ar.data[j-1]
+				}
+			}
+		}
+		ar.data[index] = value
+		ar.size++
+	} else {
+		fmt.Println("Error: Index out of bounds")
+	}
+}
+
+func MGET_BY_IND[T any](ar *Array[T], index uint32) T {
+	var zero T
+	if index < ar.size {
+		return ar.data[index]
+	} else {
+		fmt.Println("Error: Index out of bounds")
+		return zero
+	}
+}
+
+func MDEL_BY_IND[T any](ar *Array[T], index uint32) {
+	if index < ar.size {
+		for i := index; i < ar.size-1; i++ {
+			ar.data[i] = ar.data[i+1]
+		}
+		ar.size--
+	} else {
+		fmt.Println("Error: Index out of bounds")
+	}
+}
+
+func MSWAP_BY_IND[T any](ar *Array[T], index uint32, value T) {
+	if index < ar.size {
+		ar.data[index] = value
+	} else {
+		fmt.Println("Error: Index out of bounds")
+	}
+}
+
+func PRINT_ARRAY[T any](ar *Array[T]) {
+	for i := uint32(0); i < ar.size; i++ {
+		fmt.Print(ar.data[i], " ")
+	}
+	fmt.Println()
+}
+
+//====================== Двусвязынй список ======================
+
+// DNode - узел двусвязного списка
+type DNode[T comparable] struct {
+	key  T
+	next *DNode[T]
+	prev *DNode[T]
+}
+
+// DoublyList - двусвязный список
+type DoublyList[T comparable] struct {
+	head *DNode[T]
+	tail *DNode[T]
+}
+
+// NewDoublyList создает новый пустой список
+func NewDoublyList[T comparable]() *DoublyList[T] {
+	return &DoublyList[T]{head: nil, tail: nil}
+}
+
+// LCREATE создает список с начальным элементом
+func LCREATE[T comparable](dList *DoublyList[T], keyBegin T) {
+	newDNode := &DNode[T]{key: keyBegin, next: nil, prev: nil}
+	dList.head = newDNode
+	dList.tail = newDNode
+}
+
+// LPUSH_HEAD добавляет элемент в НАЧАЛО списка
+func LPUSH_HEAD[T comparable](dList *DoublyList[T], key T) {
+	newDNode := &DNode[T]{key: key, next: dList.head, prev: nil}
+
+	if dList.head != nil {
+		dList.head.prev = newDNode
+	} else {
+		dList.tail = newDNode
+	}
+	dList.head = newDNode
+}
+
+// LPUSH_BACK добавляет элемент в КОНЕЦ списка
+func LPUSH_BACK[T comparable](dList *DoublyList[T], key T) {
+	newDNode := &DNode[T]{key: key, next: nil, prev: dList.tail}
+
+	if dList.tail != nil {
+		dList.tail.next = newDNode
+	} else {
+		dList.head = newDNode
+	}
+	dList.tail = newDNode
+}
+
+// LDEL_HEAD удаляет первый элемент (голову) списка
+func LDEL_HEAD[T comparable](dList *DoublyList[T]) {
+	if dList.head == nil {
+		return
+	}
+
+	dList.head = dList.head.next
+
+	if dList.head != nil {
+		dList.head.prev = nil
+	} else {
+		dList.tail = nil
+	}
+}
+
+// LDEL_BACK удаляет последний элемент списка
+func LDEL_BACK[T comparable](dList *DoublyList[T]) {
+	if dList.tail == nil {
+		return
+	}
+
+	dList.tail = dList.tail.prev
+
+	if dList.tail != nil {
+		dList.tail.next = nil
+	} else {
+		dList.head = nil
+	}
+}
+
+// LGET_BY_VALUE чтение (поиск) элемента по значению
+func LGET_BY_VALUE[T comparable](dList *DoublyList[T], key T) *DNode[T] {
+	current := dList.head
+	for current != nil {
+		if current.key == key {
+			return current
+		}
+		current = current.next
+	}
+	return nil // Элемент не найден
+}
+
+// LPUSH_BEFORE добавляет элемент ДО узла с заданным значением
+func LPUSH_BEFORE[T comparable](dList *DoublyList[T], targetKey T, newKey T) {
+	targetDNode := LGET_BY_VALUE(dList, targetKey)
+	if targetDNode == nil {
+		return
+	}
+
+	if targetDNode == dList.head {
+		LPUSH_HEAD(dList, newKey)
+		return
+	}
+
+	newDNode := &DNode[T]{key: newKey, next: targetDNode, prev: targetDNode.prev}
+	targetDNode.prev.next = newDNode
+	targetDNode.prev = newDNode
+}
+
+// LPUSH_AFTER добавляет элемент ПОСЛЕ узла с заданным значением
+func LPUSH_AFTER[T comparable](dList *DoublyList[T], targetKey T, newKey T) {
+	targetDNode := LGET_BY_VALUE(dList, targetKey)
+	if targetDNode == nil {
+		return
+	}
+	if targetDNode == dList.tail {
+		LPUSH_BACK(dList, newKey)
+		return
+	}
+	newDNode := &DNode[T]{key: newKey, next: targetDNode.next, prev: targetDNode}
+	targetDNode.next.prev = newDNode
+	targetDNode.next = newDNode
+}
+
+// LDEL_BY_VALUE удаляет узел по значению (первое вхождение)
+func LDEL_BY_VALUE[T comparable](dList *DoublyList[T], key T) {
+	targetDNode := LGET_BY_VALUE(dList, key)
+	if targetDNode == nil {
+		return
+	}
+
+	if targetDNode == dList.head {
+		LDEL_HEAD(dList)
+	} else if targetDNode == dList.tail {
+		LDEL_BACK(dList)
+	} else {
+		targetDNode.prev.next = targetDNode.next
+		targetDNode.next.prev = targetDNode.prev
+		targetDNode = nil
+	}
+}
+
+// print_forward выводит список в консоль от начала до конца
+func print_forward[T comparable](dList *DoublyList[T]) {
+	if dList.head == nil {
+		fmt.Println("Список пуст.")
+		return
+	}
+	current := dList.head
+	fmt.Print("Голова -> ")
+	for current != nil {
+		fmt.Printf("%v <-> ", current.key)
+		current = current.next
+	}
+	fmt.Println("nil")
+}
+
+// print_backward выводит список в консоль от конца до начала
+func print_backward[T comparable](dList *DoublyList[T]) {
+	if dList.tail == nil {
+		fmt.Println("Список пуст.")
+		return
+	}
+	current := dList.tail
+	fmt.Print("Хвост -> ")
+	for current != nil {
+		fmt.Printf("%v <-> ", current.key)
+		current = current.prev
+	}
+	fmt.Println("nil")
+}
+
+// PRINT выводит список в зависимости от выбора направления
+func PRINT_DL[T comparable](dList *DoublyList[T], choice int) {
+	switch choice {
+	case 1:
+		print_forward(dList)
+	case 2:
+		print_backward(dList)
+	default:
+		break
+	}
+}
+
+// clean очищает всю память, занятую списком
+func clean[T comparable](dList *DoublyList[T]) {
+	for dList.head != nil {
+		LDEL_HEAD(dList)
+	}
+}
+
+//====================== ОЧЕРЕДЬ ======================
+
+type Queue[T any] struct {
+	Data     []T
+	Capacity uint32
+	Size     uint32
+	Head     uint32
+	Tail     uint32
+}
+
+func QueueNew[T any]() *Queue[T] {
+	q := &Queue[T]{
+		Capacity: 1,
+		Size:     0,
+		Head:     0,
+		Tail:     0,
+		Data:     make([]T, 1),
+	}
+	var zero T
+	for i := range q.Data {
+		q.Data[i] = zero
+	}
+	return q
+}
+
+func QueueNewWithCapacity[T any](capacity uint32) *Queue[T] {
+	cap := capacity
+	if cap == 0 {
+		cap = 1
+	}
+	q := &Queue[T]{
+		Capacity: cap,
+		Size:     0,
+		Head:     0,
+		Tail:     0,
+		Data:     make([]T, cap),
+	}
+	var zero T
+	for i := range q.Data {
+		q.Data[i] = zero
+	}
+	return q
+}
+
+func (q *Queue[T]) Copy() *Queue[T] {
+	newQueue := &Queue[T]{
+		Capacity: q.Capacity,
+		Size:     q.Size,
+		Head:     q.Head,
+		Tail:     q.Tail,
+		Data:     make([]T, q.Capacity),
+	}
+	copy(newQueue.Data, q.Data)
+	return newQueue
+}
+
+func resize[T any](q *Queue[T]) {
+	newCapacity := q.Capacity * 2
+	newData := make([]T, newCapacity)
+
+	for i := uint32(0); i < q.Size; i++ {
+		newData[i] = q.Data[(q.Head+i)%q.Capacity]
+	}
+
+	q.Data = newData
+	q.Capacity = newCapacity
+	q.Head = 0
+	q.Tail = q.Size
+}
+
+func QPUSH[T any](q *Queue[T], value T) {
+	if q.Size >= q.Capacity {
+		resize(q)
+	}
+	q.Data[q.Tail] = value
+	q.Tail = (q.Tail + 1) % q.Capacity
+	q.Size++
+}
+
+func QPOP[T any](q *Queue[T]) (T, error) {
+	var zero T
+	if q.Size == 0 {
+		return zero, errors.New("Очередь пуста!")
+	}
+	value := q.Data[q.Head]
+	q.Head = (q.Head + 1) % q.Capacity
+	q.Size--
+	return value, nil
+}
+
+func QGET[T any](q *Queue[T]) (T, error) {
+	var zero T
+	if q.Size == 0 {
+		return zero, errors.New("Очередь пуста!")
+	}
+	return q.Data[q.Head], nil
+}
+
+func isEmpty[T any](q *Queue[T]) bool {
+	return q.Size == 0
+}
+
+func getSize[T any](q *Queue[T]) uint32 {
+	return q.Size
+}
+
+func PRINT_QUEUE[T any](q *Queue[T]) {
+	fmt.Print("Содержимое очереди (от головы к хвосту): ")
+	if isEmpty(q) {
+		fmt.Print("пусто")
+	} else {
+		for i := uint32(0); i < getSize(q); i++ {
+			fmt.Printf("%v ", q.Data[(q.Head+i)%q.Capacity])
+		}
+	}
+	fmt.Println()
+}
+
+//====================== ОДНОСВЯЗНЫЙ СПИСОК ======================
+
+type SNode struct {
+	key  interface{}
+	next *SNode
+}
+
+type ForwardList struct {
+	head *SNode
+}
+
+// Конструктор по умолчанию
+func NewForwardList() *ForwardList {
+	return &ForwardList{head: nil}
+}
+
+// Копирующий конструктор (создает глубокую копию)
+func NewForwardListCopy(other *ForwardList) *ForwardList {
+	newList := NewForwardList()
+	if other.head == nil {
+		return newList
+	}
+
+	newList.head = &SNode{key: other.head.key, next: nil}
+	currentThis := newList.head
+	currentOther := other.head.next
+
+	for currentOther != nil {
+		currentThis.next = &SNode{key: currentOther.key, next: nil}
+		currentThis = currentThis.next
+		currentOther = currentOther.next
+	}
+
+	return newList
+}
+
+// Копирующий оператор присваивания
+func (fl *ForwardList) Assign(other *ForwardList) *ForwardList {
+	if fl != other {
+		temp := NewForwardListCopy(other)
+		fl.head, temp.head = temp.head, fl.head
+	}
+	return fl
+}
+
+// Добавляет узел ПОСЛЕ указанного узла ptr
+func FPUSH_FORWARD(ptr *SNode, key interface{}) {
+	if ptr == nil {
+		return
+	}
+	newNode := &SNode{key: key, next: ptr.next}
+	ptr.next = newNode
+}
+
+// Создает список с начальным элементом
+func FCREATE(fList *ForwardList, keyBegin interface{}) {
+	// Очищаем список, если он уже был не пуст
+	for fList.head != nil {
+		fList.head = fList.head.next
+	}
+	fList.head = &SNode{key: keyBegin, next: nil}
+}
+
+// Выводит список в консоль
+func PRINT_FL(fList *ForwardList) {
+	if fList.head == nil {
+		fmt.Println("Список пуст")
+		return
+	}
+	current := fList.head
+	for current != nil {
+		fmt.Printf("%v -> ", current.key)
+		current = current.next
+	}
+	fmt.Println("nil")
+}
+
+// Добавление элемента в НАЧАЛО списка
+func FPUSH_HEAD(fList *ForwardList, key interface{}) {
+	newNode := &SNode{key: key, next: fList.head}
+	fList.head = newNode
+}
+
+// Добавление элемента в КОНЕЦ списка
+func FPUSH_BACK(fList *ForwardList, key interface{}) {
+	newNode := &SNode{key: key, next: nil}
+
+	if fList.head == nil {
+		fList.head = newNode
+		return
+	}
+
+	current := fList.head
+	for current.next != nil {
+		current = current.next
+	}
+	current.next = newNode
+}
+
+// Добавление элемента ДО узла с заданным значением
+func FPUSH_BEFORE(fList *ForwardList, targetKey interface{}, newKey interface{}) {
+	if fList.head == nil {
+		return
+	}
+
+	if fList.head.key == targetKey {
+		FPUSH_HEAD(fList, newKey)
+		return
+	}
+
+	current := fList.head
+	for current.next != nil && current.next.key != targetKey {
+		current = current.next
+	}
+
+	if current.next != nil {
+		FPUSH_FORWARD(current, newKey)
+	}
+}
+
+// Удаление первого элемента (головы) списка
+func FDEL_HEAD(fList *ForwardList) {
+	if fList.head == nil {
+		return
+	}
+	fList.head = fList.head.next
+}
+
+// Удаление последнего элемента списка
+func FDEL_BACK(fList *ForwardList) {
+	if fList.head == nil {
+		return
+	}
+
+	if fList.head.next == nil {
+		fList.head = nil
+		return
+	}
+
+	current := fList.head
+	for current.next.next != nil {
+		current = current.next
+	}
+	current.next = nil
+}
+
+// Удаление узла по значению (первое вхождение)
+func FDEL_BY_VALUE(fList *ForwardList, key interface{}) {
+	if fList.head == nil {
+		return
+	}
+
+	if fList.head.key == key {
+		FDEL_HEAD(fList)
+		return
+	}
+
+	current := fList.head
+	for current.next != nil && current.next.key != key {
+		current = current.next
+	}
+
+	if current.next != nil {
+		toDelete := current.next
+		current.next = toDelete.next
+		toDelete = nil
+	}
+}
+
+// Чтение (поиск) элемента по значению
+func FGET_BY_VALUE(fList *ForwardList, key interface{}) *SNode {
+	current := fList.head
+	for current != nil {
+		if current.key == key {
+			return current
+		}
+		current = current.next
+	}
+	return nil
+}
+
+//====================== СТЕК ======================
+
+type Stack[T any] struct {
+	data     []T
+	capacity uint32
+	size     uint32
+}
+
+func NewStack[T any]() *Stack[T] {
+	return &Stack[T]{
+		size:     0,
+		capacity: 1,
+		data:     make([]T, 1),
+	}
+}
+
+func NewStackWithCapacity[T any](capacity uint32) *Stack[T] {
+	return &Stack[T]{
+		capacity: capacity,
+		size:     0,
+		data:     make([]T, capacity),
+	}
+}
+
+func doubleStack[T any](st *Stack[T]) {
+	newCapacity := st.capacity * 2
+	newData := make([]T, newCapacity)
+	copy(newData, st.data)
+	st.data = newData
+	st.capacity = newCapacity
+}
+
+func SPUSH[T any](st *Stack[T], value T) {
+	if st.size >= st.capacity {
+		doubleStack(st)
+	}
+	st.data[st.size] = value
+	st.size++
+}
+
+func SPOP[T any](st *Stack[T]) {
+	if st.size > 0 {
+		st.size--
+	}
+}
+
+func PRINT[T any](st *Stack[T]) {
+	for i := uint32(0); i < st.size; i++ {
+		fmt.Print(st.data[i], " ")
+	}
+	fmt.Println()
+}
+
+func clearInput(scanner *bufio.Scanner) {
+	// Очистка буфера ввода
+	scanner.Scan()
+}
+
+func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Println("СИСТЕМА УПРАВЛЕНИЯ СТРУКТУРАМИ ДАННЫХ")
+		fmt.Println("\nВыберите структуру данных:")
+		fmt.Println("1. Динамический массив (Array)")
+		fmt.Println("2. Стек (Stack)")
+		fmt.Println("3. Очередь (Queue)")
+		fmt.Println("4. Односвязный список (Singly Linked List)")
+		fmt.Println("5. Двусвязный список (Doubly Linked List)")
+		fmt.Println("0. Выход")
+		fmt.Print("\nВаш выбор: ")
+
+		scanner.Scan()
+		choice, err := strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Println("Ошибка ввода! Введите число.")
+			continue
+		}
+
+		switch choice {
+		case 1:
+			arrayMenu(scanner)
+		case 2:
+			stackMenu(scanner)
+		case 3:
+			queueMenu(scanner)
+		case 4:
+			singlyListMenu(scanner)
+		case 5:
+			doublyListMenu(scanner)
+		case 0:
+			fmt.Println("\nЗавершение работы программы...")
+			return
+		default:
+			fmt.Println("Неверный выбор! Попробуйте снова.")
+		}
+	}
+}
+
+// Массив
+func arrayMenu(scanner *bufio.Scanner) {
+	arr := NewArray[int]()
+
+	for {
+		fmt.Println("\n--- МЕНЮ ДИНАМИЧЕСКОГО МАССИВА ---")
+		fmt.Println("1. Добавить элемент в конец")
+		fmt.Println("2. Добавить элемент по индексу")
+		fmt.Println("3. Получить элемент по индексу")
+		fmt.Println("4. Удалить элемент по индексу")
+		fmt.Println("5. Заменить элемент по индексу")
+		fmt.Println("6. Показать массив")
+		fmt.Println("0. Назад")
+		fmt.Print("Выбор: ")
+
+		scanner.Scan()
+		choice, err := strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Println("Ошибка ввода! Введите число.")
+			continue
+		}
+
+		switch choice {
+		case 1:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			MPUSH_BACK(arr, value)
+			fmt.Println("Элемент добавлен!")
+		case 2:
+			fmt.Print("Введите индекс: ")
+			scanner.Scan()
+			index, _ := strconv.ParseUint(scanner.Text(), 10, 32)
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			MPUSH_BY_IND(arr, uint32(index), value)
+		case 3:
+			fmt.Print("Введите индекс: ")
+			scanner.Scan()
+			index, _ := strconv.ParseUint(scanner.Text(), 10, 32)
+			value := MGET_BY_IND(arr, uint32(index))
+			fmt.Printf("Элемент: %d\n", value)
+		case 4:
+			fmt.Print("Введите индекс: ")
+			scanner.Scan()
+			index, _ := strconv.ParseUint(scanner.Text(), 10, 32)
+			MDEL_BY_IND(arr, uint32(index))
+		case 5:
+			fmt.Print("Введите индекс: ")
+			scanner.Scan()
+			index, _ := strconv.ParseUint(scanner.Text(), 10, 32)
+			fmt.Print("Введите новое значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			MSWAP_BY_IND(arr, uint32(index), value)
+		case 6:
+			fmt.Print("Массив: ")
+			PRINT_ARRAY(arr)
+			fmt.Printf("Размер: %d, Ёмкость: %d\n", arr.size, arr.capacity)
+		case 0:
+			return
+		default:
+			fmt.Println("Неверный выбор!")
+		}
+	}
+}
+
+// Стек
+func stackMenu(scanner *bufio.Scanner) {
+	stack := NewStack[int]()
+
+	for {
+		fmt.Println("\n--- МЕНЮ СТЕКА ---")
+		fmt.Println("1. Добавить элемент (PUSH)")
+		fmt.Println("2. Удалить элемент (POP)")
+		fmt.Println("3. Показать стек")
+		fmt.Println("0. Назад")
+		fmt.Print("Выбор: ")
+
+		scanner.Scan()
+		choice, err := strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Println("Ошибка ввода! Введите число.")
+			continue
+		}
+
+		switch choice {
+		case 1:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			SPUSH(stack, value)
+			fmt.Println("Элемент добавлен!")
+		case 2:
+			if stack.size > 0 {
+				SPOP(stack)
+				fmt.Println("Элемент удалён!")
+			} else {
+				fmt.Println("Стек пуст!")
+			}
+		case 3:
+			fmt.Print("Стек: ")
+			PRINT(stack)
+			fmt.Printf("Размер: %d\n", stack.size)
+		case 0:
+			return
+		default:
+			fmt.Println("Неверный выбор!")
+		}
+	}
+}
+
+// Очередь
+func queueMenu(scanner *bufio.Scanner) {
+	queue := QueueNew[int]()
+
+	for {
+		fmt.Println("\n--- МЕНЮ ОЧЕРЕДИ ---")
+		fmt.Println("1. Добавить элемент (PUSH)")
+		fmt.Println("2. Извлечь элемент (POP)")
+		fmt.Println("3. Посмотреть первый элемент")
+		fmt.Println("4. Показать очередь")
+		fmt.Println("0. Назад")
+		fmt.Print("Выбор: ")
+
+		scanner.Scan()
+		choice, err := strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Println("Ошибка ввода! Введите число.")
+			continue
+		}
+
+		switch choice {
+		case 1:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			QPUSH(queue, value)
+			fmt.Println("Элемент добавлен!")
+		case 2:
+			value, err := QPOP(queue)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("Извлечён элемент: %d\n", value)
+			}
+		case 3:
+			value, err := QGET(queue)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("Первый элемент: %d\n", value)
+			}
+		case 4:
+			PRINT_QUEUE(queue)
+			fmt.Printf("Размер: %d\n", getSize(queue))
+		case 0:
+			return
+		default:
+			fmt.Println("Неверный выбор!")
+		}
+	}
+}
+
+// Односвязный список
+func singlyListMenu(scanner *bufio.Scanner) {
+	list := NewForwardList()
+
+	for {
+		fmt.Println("\n--- МЕНЮ ОДНОСВЯЗНОГО СПИСКА ---")
+		fmt.Println("1. Создать список с начальным элементом")
+		fmt.Println("2. Добавить в начало")
+		fmt.Println("3. Добавить в конец")
+		fmt.Println("4. Добавить перед элементом")
+		fmt.Println("5. Добавить после элемента")
+		fmt.Println("6. Удалить первый элемент")
+		fmt.Println("7. Удалить последний элемент")
+		fmt.Println("8. Удалить по значению")
+		fmt.Println("9. Найти элемент")
+		fmt.Println("10. Показать список")
+		fmt.Println("0. Назад")
+		fmt.Print("Выбор: ")
+
+		scanner.Scan()
+		choice, err := strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Println("Ошибка ввода! Введите число.")
+			continue
+		}
+
+		switch choice {
+		case 1:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			FCREATE(list, value)
+			fmt.Println("Список создан!")
+		case 2:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			FPUSH_HEAD(list, value)
+		case 3:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			FPUSH_BACK(list, value)
+		case 4:
+			fmt.Print("Введите значение целевого элемента: ")
+			scanner.Scan()
+			target, _ := strconv.Atoi(scanner.Text())
+			fmt.Print("Введите новое значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			FPUSH_BEFORE(list, target, value)
+		case 5:
+			fmt.Print("Введите значение целевого элемента: ")
+			scanner.Scan()
+			target, _ := strconv.Atoi(scanner.Text())
+			fmt.Print("Введите новое значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			targetNode := FGET_BY_VALUE(list, target)
+			if targetNode != nil {
+				FPUSH_FORWARD(targetNode, value)
+			} else {
+				fmt.Println("Элемент не найден!")
+			}
+		case 6:
+			FDEL_HEAD(list)
+		case 7:
+			FDEL_BACK(list)
+		case 8:
+			fmt.Print("Введите значение для удаления: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			FDEL_BY_VALUE(list, value)
+		case 9:
+			fmt.Print("Введите значение для поиска: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			foundNode := FGET_BY_VALUE(list, value)
+			if foundNode != nil {
+				fmt.Printf("Элемент найден по адресу: %p\n", foundNode)
+			} else {
+				fmt.Println("Элемент не найден!")
+			}
+		case 10:
+			PRINT_FL(list)
+		case 0:
+			return
+		default:
+			fmt.Println("Неверный выбор!")
+		}
+	}
+}
+
+// Двусвязный список
+func doublyListMenu(scanner *bufio.Scanner) {
+	list := NewDoublyList[int]()
+
+	for {
+		fmt.Println("\n--- МЕНЮ ДВУСВЯЗНОГО СПИСКА ---")
+		fmt.Println("1. Создать список с начальным элементом")
+		fmt.Println("2. Добавить в начало")
+		fmt.Println("3. Добавить в конец")
+		fmt.Println("4. Добавить перед элементом")
+		fmt.Println("5. Добавить после элемента")
+		fmt.Println("6. Удалить первый элемент")
+		fmt.Println("7. Удалить последний элемент")
+		fmt.Println("8. Удалить по значению")
+		fmt.Println("9. Найти элемент")
+		fmt.Println("10. Показать список (прямо)")
+		fmt.Println("11. Показать список (обратно)")
+		fmt.Println("0. Назад")
+		fmt.Print("Выбор: ")
+
+		scanner.Scan()
+		choice, err := strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Println("Ошибка ввода! Введите число.")
+			continue
+		}
+
+		switch choice {
+		case 1:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			LCREATE(list, value)
+			fmt.Println("Список создан!")
+		case 2:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			LPUSH_HEAD(list, value)
+		case 3:
+			fmt.Print("Введите значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			LPUSH_BACK(list, value)
+		case 4:
+			fmt.Print("Введите значение целевого элемента: ")
+			scanner.Scan()
+			target, _ := strconv.Atoi(scanner.Text())
+			fmt.Print("Введите новое значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			LPUSH_BEFORE(list, target, value)
+		case 5:
+			fmt.Print("Введите значение целевого элемента: ")
+			scanner.Scan()
+			target, _ := strconv.Atoi(scanner.Text())
+			fmt.Print("Введите новое значение: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			LPUSH_AFTER(list, target, value)
+		case 6:
+			LDEL_HEAD(list)
+		case 7:
+			LDEL_BACK(list)
+		case 8:
+			fmt.Print("Введите значение для удаления: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			LDEL_BY_VALUE(list, value)
+		case 9:
+			fmt.Print("Введите значение для поиска: ")
+			scanner.Scan()
+			value, _ := strconv.Atoi(scanner.Text())
+			foundNode := LGET_BY_VALUE(list, value)
+			if foundNode != nil {
+				fmt.Printf("Элемент найден по адресу: %p\n", foundNode)
+			} else {
+				fmt.Println("Элемент не найден!")
+			}
+		case 10:
+			PRINT_DL(list, 1)
+		case 11:
+			PRINT_DL(list, 2)
+		case 0:
+			return
+		default:
+			fmt.Println("Неверный выбор!")
+		}
+	}
+}
