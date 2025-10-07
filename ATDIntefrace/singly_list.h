@@ -210,7 +210,7 @@ SNode<T>* FGET_BY_VALUE(ForwardList<T>& fList, T key) {
 
 // Сохранение списка в файл
 template <typename T>
-void saveSinglyListToFile(const ForwardList<T>& fList, const string& filename) {
+void FSAVE(const ForwardList<T>& fList, const string& filename) {
     ofstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для записи!" << endl;
@@ -227,7 +227,7 @@ void saveSinglyListToFile(const ForwardList<T>& fList, const string& filename) {
 
 // Загрузка списка из файла
 template <typename T>
-void loadSinglyListFromFile(ForwardList<T>& fList, const string& filename) {
+void FLOAD(ForwardList<T>& fList, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для чтения!" << endl;

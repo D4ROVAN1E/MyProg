@@ -137,18 +137,18 @@ void arrayMenu() {
             break;
         case 6:
             cout << "Массив: ";
-            readArray(arr);
+            PRINT(arr);
             cout << "Размер: " << arr.size << ", Ёмкость: " << arr.capacity << endl;
             break;
         case 7:
             cout << "Введите имя файла: ";
             cin >> filename;
-            saveArrayToFile(arr, filename);
+            MSAVE(arr, filename);
             break;
         case 8:
             cout << "Введите имя файла: ";
             cin >> filename;
-            loadArrayFromFile(arr, filename);
+            MLOAD(arr, filename);
             break;
         case 0:
             return;
@@ -199,18 +199,18 @@ void stackMenu() {
             break;
         case 3:
             cout << "Стек: ";
-            readStack(stack);
+            PRINT(stack);
             cout << "Размер: " << stack.size << endl;
             break;
         case 4:
             cout << "Введите имя файла: ";
             cin >> filename;
-            saveStackToFile(stack, filename);
+            SSAVE(stack, filename);
             break;
         case 5:
             cout << "Введите имя файла: ";
             cin >> filename;
-            loadStackFromFile(stack, filename);
+            SLOAD(stack, filename);
             break;
         case 0:
             return;
@@ -270,18 +270,18 @@ void queueMenu() {
             }
             break;
         case 4:
-            printQueue(queue);
+            PRINT(queue);
             cout << "Размер: " << getSize(queue) << endl;
             break;
         case 5:
             cout << "Введите имя файла: ";
             cin >> filename;
-            saveQueueToFile(queue, filename);
+            QSAVE(queue, filename);
             break;
         case 6:
             cout << "Введите имя файла: ";
             cin >> filename;
-            loadQueueFromFile(queue, filename);
+            QLOAD(queue, filename);
             break;
         case 0:
             return;
@@ -381,12 +381,12 @@ void singlyListMenu() {
         case 11:
             cout << "Введите имя файла: ";
             cin >> filename;
-            saveSinglyListToFile(list, filename);
+            FSAVE(list, filename);
             break;
         case 12:
             cout << "Введите имя файла: ";
             cin >> filename;
-            loadSinglyListFromFile(list, filename);
+            FLOAD(list, filename);
             break;
         case 0:
             return;
@@ -490,12 +490,12 @@ void doublyListMenu() {
         case 12:
             cout << "Введите имя файла: ";
             cin >> filename;
-            saveDoublyListToFile(list, filename);
+            LSAVE(list, filename);
             break;
         case 13:
             cout << "Введите имя файла: ";
             cin >> filename;
-            loadDoublyListFromFile(list, filename);
+            LLOAD(list, filename);
             break;
         case 0:
             return;
@@ -535,13 +535,13 @@ void binaryTreeMenu() {
         case 1:
             cout << "Введите значение: ";
             cin >> value;
-            insert(tree, value);
+            TINSERT(tree, value);
             cout << "Элемент добавлен!" << endl;
             break;
         case 2:
             if (tree.root) {
                 cout << "Дерево является полным: "
-                    << (isFull(tree.root) ? "Да" : "Нет") << endl;
+                    << (TFULL(tree.root) ? "Да" : "Нет") << endl;
             }
             else {
                 cout << "Дерево пусто!" << endl;
@@ -566,12 +566,12 @@ void binaryTreeMenu() {
         case 7:
             cout << "Введите имя файла: ";
             cin >> filename;
-            saveTreeToFile(tree, filename);
+            TSAVE(tree, filename);
             break;
         case 8:
             cout << "Введите имя файла: ";
             cin >> filename;
-            loadTreeFromFile(tree, filename);
+            TLOAD(tree, filename);
             break;
         case 0:
             return;

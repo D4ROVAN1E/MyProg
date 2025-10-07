@@ -142,7 +142,7 @@ uint32_t getSize(Queue<T>& q) {
 
 // Функция для печати содержимого очереди (для демонстрации)
 template <typename T>
-void printQueue(Queue<T>& q) {
+void PRINT(Queue<T>& q) {
     cout << "Содержимое очереди (от головы к хвосту): ";
     if (isEmpty(q)) {
         cout << "пусто";
@@ -157,7 +157,7 @@ void printQueue(Queue<T>& q) {
 
 // Сохранение очереди в файл
 template <typename T>
-void saveQueueToFile(const Queue<T>& q, const string& filename) {
+void QSAVE(const Queue<T>& q, const string& filename) {
     ofstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для записи!" << endl;
@@ -173,7 +173,7 @@ void saveQueueToFile(const Queue<T>& q, const string& filename) {
 
 // Загрузка очереди из файла
 template <typename T>
-void loadQueueFromFile(Queue<T>& q, const string& filename) {
+void QLOAD(Queue<T>& q, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для чтения!" << endl;

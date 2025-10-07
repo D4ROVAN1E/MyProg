@@ -105,7 +105,7 @@ void postorder_recursive(TreeNode<T>* node) {
 
 // Вставка элемента
 template<typename T>
-void insert(FullBinaryTree<T>& tree, T value) {
+void TINSERT(FullBinaryTree<T>& tree, T value) {
     TreeNode<T>* new_node = new TreeNode<T>(value);
     if (tree.root == nullptr) {
         tree.root = new_node;
@@ -139,12 +139,12 @@ void insert(FullBinaryTree<T>& tree, T value) {
 
 //Функция проверки на full
 template<typename T>
-bool isFull(TreeNode<T>* current) {
+bool TFULL(TreeNode<T>* current) {
     if (((current->left == nullptr) ^ (current->right == nullptr)) == 1) {
         return false;
     }
     else if (current->left != nullptr && current->right != nullptr) {
-        return isFull(current->left) && isFull(current->right);
+        return TFULL(current->left) && TFULL(current->right);
     }
     return true;
 }
@@ -219,7 +219,7 @@ void PRINT(FullBinaryTree<T>& tree, int choise) {
 
 // Сохранение дерева в файл (обход в ширину)
 template<typename T>
-void saveTreeToFile(const FullBinaryTree<T>& tree, const string& filename) {
+void TSAVE(const FullBinaryTree<T>& tree, const string& filename) {
     ofstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для записи!" << endl;
@@ -233,7 +233,7 @@ void saveTreeToFile(const FullBinaryTree<T>& tree, const string& filename) {
     }
 
     // Используем очередь для обхода в ширину, чтобы сохранить
-    // узлы в том же порядке, в котором они добавляются функцией insert
+    // узлы в том же порядке, в котором они добавляются функцией TINSERT
     queue<TreeNode<T>*> q;
     q.push(tree.root);
 
@@ -257,7 +257,7 @@ void saveTreeToFile(const FullBinaryTree<T>& tree, const string& filename) {
 
 // Загрузка дерева из файла
 template<typename T>
-void loadTreeFromFile(FullBinaryTree<T>& tree, const string& filename) {
+void TLOAD(FullBinaryTree<T>& tree, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для чтения!" << endl;
@@ -271,8 +271,8 @@ void loadTreeFromFile(FullBinaryTree<T>& tree, const string& filename) {
     //Читаем значения из файла и вставляем их в дерево
     T value;
     while (file >> value) {
-        // Используем существующую функцию insert для построения дерева
-        insert(tree, value);
+        // Используем существующую функцию TINSERT для построения дерева
+        TINSERT(tree, value);
     }
 
     file.close();

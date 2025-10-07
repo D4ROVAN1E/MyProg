@@ -86,7 +86,7 @@ void SPOP(Stack<T>& st) {
 
 
 template <typename T>
-void readStack(Stack<T>& st) {
+void PRINT(Stack<T>& st) {
     for (uint32_t i = 0; i < st.size; i++) {
         cout << st.data[i] << " ";
     }
@@ -95,7 +95,7 @@ void readStack(Stack<T>& st) {
 
 // Сохранение стека в файл
 template <typename T>
-void saveStackToFile(const Stack<T>& st, const string& filename) {
+void SSAVE(const Stack<T>& st, const string& filename) {
     ofstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для записи!" << endl;
@@ -111,7 +111,7 @@ void saveStackToFile(const Stack<T>& st, const string& filename) {
 
 // Загрузка стека из файла
 template <typename T>
-void loadStackFromFile(Stack<T>& st, const string& filename) {
+void SLOAD(Stack<T>& st, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для чтения!" << endl;

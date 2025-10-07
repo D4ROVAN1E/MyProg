@@ -132,7 +132,7 @@ void MSWAP_BY_IND(Array<T>& ar, uint32_t index, T value) {
 
 
 template <typename T>
-void readArray(Array<T>& ar) {
+void PRINT(Array<T>& ar) {
     for (uint32_t i = 0; i < ar.size; i++) {
         cout << ar.data[i] << " ";
     }
@@ -141,7 +141,7 @@ void readArray(Array<T>& ar) {
 
 // Сохранение массива в файл
 template <typename T>
-void saveArrayToFile(const Array<T>& ar, const string& filename) {
+void MSAVE(const Array<T>& ar, const string& filename) {
     ofstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для записи!" << endl;
@@ -157,7 +157,7 @@ void saveArrayToFile(const Array<T>& ar, const string& filename) {
 
 // Загрузка массива из файла
 template <typename T>
-void loadArrayFromFile(Array<T>& ar, const string& filename) {
+void MLOAD(Array<T>& ar, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для чтения!" << endl;

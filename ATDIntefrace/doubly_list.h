@@ -256,7 +256,7 @@ void clean(DoublyList<T>& dList) {
 
 // Сохранение списка в файл
 template <typename T>
-void saveDoublyListToFile(const DoublyList<T>& dList, const string& filename) {
+void LSAVE(const DoublyList<T>& dList, const string& filename) {
     ofstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для записи!" << endl;
@@ -273,7 +273,7 @@ void saveDoublyListToFile(const DoublyList<T>& dList, const string& filename) {
 
 // Загрузка списка из файла
 template <typename T>
-void loadDoublyListFromFile(DoublyList<T>& dList, const string& filename) {
+void LLOAD(DoublyList<T>& dList, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cout << "Ошибка открытия файла для чтения!" << endl;
