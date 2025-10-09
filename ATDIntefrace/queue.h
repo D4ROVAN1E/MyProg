@@ -23,7 +23,7 @@ struct Queue {
         tail = 0;
         data = new T[capacity];
         for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = T();
+            data[i] = string("0");
         }
     }
 
@@ -35,7 +35,7 @@ struct Queue {
         tail = 0;
         data = new T[capacity];
         for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = T();
+            data[i] = string("0");
         }
     }
 
@@ -127,28 +127,15 @@ T QGET(Queue<T>& q) {
     return q.data[q.head];
 }
 
-// Проверка, пуста ли очередь
-template <typename T>
-bool isEmpty(Queue<T>& q) {
-    return q.size == 0;
-}
-
-// Получение текущего размера очереди
-template <typename T>
-uint32_t getSize(Queue<T>& q) {
-    return q.size;
-}
-
-
 // Функция для печати содержимого очереди (для демонстрации)
 template <typename T>
 void PRINT(Queue<T>& q) {
     cout << "Содержимое очереди (от головы к хвосту): ";
-    if (isEmpty(q)) {
+    if (q.size == 0) {
         cout << "пусто";
     }
     else {
-        for (uint32_t i = 0; i < getSize(q); ++i) {
+        for (uint32_t i = 0; i < q.size; ++i) {
             cout << q.data[(q.head + i) % q.capacity] << " ";
         }
     }

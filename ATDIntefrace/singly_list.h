@@ -80,7 +80,6 @@ void FCREATE(ForwardList<T>& fList, T keyBegin) {
     fList.head = new SNode<T>{ keyBegin, nullptr };
 }
 
-
 // Выводит список в консоль
 template <typename T>
 void PRINT(const ForwardList<T>& fList) {

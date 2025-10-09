@@ -17,7 +17,7 @@ struct Stack {
         capacity = 1;
         data = new T[capacity];
         for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = T();
+            data[i] = string("0");
         }
     }
 
@@ -26,7 +26,7 @@ struct Stack {
         size = 0;
         data = new T[capacity];
         for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = T();
+            data[i] = string("0");
         }
     }
 

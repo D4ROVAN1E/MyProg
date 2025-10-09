@@ -246,14 +246,6 @@ void PRINT(const DoublyList<T>& dList, int choice) {
     }
 }
 
-//Очищает всю память, занятую списком
-template <typename T>
-void clean(DoublyList<T>& dList) {
-    while (dList.head) {
-        LDEL_HEAD(dList);
-    }
-}
-
 // Сохранение списка в файл
 template <typename T>
 void LSAVE(const DoublyList<T>& dList, const string& filename) {

@@ -16,7 +16,7 @@ struct Array {
         size = capacity = 1;
         data = new T[capacity];
         for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = T();
+            data[i] = string("0");
         }
     }
 
@@ -24,7 +24,7 @@ struct Array {
         size = capacity = cap - 1;
         data = new T[cap];
         for (uint32_t i = 0; i < cap; i++) {
-            data[i] = T();
+            data[i] = string("0");
         }
     }
 
@@ -103,7 +103,7 @@ T MGET_BY_IND(Array<T>& ar, uint32_t index) { //Получение элемен�
         return ar.data[index];
     else {
         cout << "Error: Index out of bounds" << endl;
-        return NULL;
+        return string("0");
     }
 }
 
@@ -129,7 +129,6 @@ void MSWAP_BY_IND(Array<T>& ar, uint32_t index, T value) {
         cout << "Error: Index out of bounds" << endl;
     }
 }
-
 
 template <typename T>
 void PRINT(Array<T>& ar) {
@@ -159,10 +158,7 @@ void MSAVE(const Array<T>& ar, const string& filename) {
 template <typename T>
 void MLOAD(Array<T>& ar, const string& filename) {
     ifstream file(filename);
-    if (!file.is_open()) {
-        cout << "Ошибка открытия файла для чтения!" << endl;
-        return;
-    }
+    if (!file.is_open()) return;
     uint32_t size;
     file >> size;
     ar.size = 0;

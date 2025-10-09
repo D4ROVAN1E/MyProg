@@ -5,7 +5,7 @@
 #include <map>
 #include <fstream>
 
-// Подключаем ваши заголовочные файлы
+// Подключаем заголовочные файлы
 #include "array.h"
 #include "stack.h"
 #include "queue.h"
@@ -15,9 +15,9 @@
 
 using namespace std;
 
-// Enum для всех возможных команд (ДОПОЛНЕНО)
+// Enum для всех возможных команд 
 enum class CommandType {
-    HELP, EXIT, UNKNOWN,
+    HELP, EXIT, UNKNOWN, PRINT,
     // Array
     MPUSH_BACK, MPUSH_BY_IND, MGET_BY_IND, MDEL_BY_IND, MSWAP_BY_IND, MPRINT,
     // Stack
@@ -33,9 +33,9 @@ enum class CommandType {
 };
 
 // Enum для типов структур данных
-enum class DS_Type { UNKNOWN, ARRAY, STACK, QUEUE, SINGLY_LIST, DOUBLY_LIST, BINARY_TREE };
+enum class DS_Type { UNKNOWN, ARRAY, STACK, QUEUE, SINGLY_LIST, DOUBLY_LIST, BINARY_TREE};
 
-// --- Глобальные переменные и прототипы служебных функций ---
+//Глобальные переменные и прототипы служебных функций
 
 map<string, CommandType> commandMap;
 map<string, DS_Type> structureTypeMap;
@@ -47,7 +47,7 @@ void saveStructureType(const string& name, DS_Type type);
 DS_Type getImpliedType(CommandType cmd);
 void printHelp();
 
-// --- Основная программа ---
+//Основная программа
 
 int main() {
     setlocale(LC_ALL, "ru");
@@ -70,6 +70,59 @@ int main() {
         if (command == CommandType::UNKNOWN) { cout << "Неизвестная команда: '" << commandStr << "'.\n"; continue; }
 
         if (!(ss >> name)) { cout << "Ошибка: не указано имя структуры.\n"; continue; }
+
+        if (command == CommandType::PRINT) {
+            if (structureTypeMap.count(name) == 0) {
+                cout << "Ошибка: структура '" << name << "' не существует.\n";
+                continue;
+            }
+            else {
+                DS_Type type = structureTypeMap[name];
+                switch (type) {
+                case DS_Type::ARRAY: {
+                    Array<string> arr;
+                    MLOAD(arr, name);
+                    cout << name << ": "; PRINT(arr);
+                    break;
+                }
+                case DS_Type::STACK: {
+                    Stack<string> stack;
+                    SLOAD(stack, name);
+                    cout << name << ": "; PRINT(stack);
+                    break;
+                }
+                case DS_Type::QUEUE: {
+                    Queue<string> queue;
+                    QLOAD(queue, name);
+                    cout << name << ": "; PRINT(queue);
+                    break;
+                }
+                case DS_Type::SINGLY_LIST: {
+                    ForwardList<string> list;
+                    FLOAD(list, name);
+                    cout << name << ": "; PRINT(list);
+                    break;
+                }
+                case DS_Type::DOUBLY_LIST: {
+                    DoublyList<string> list;
+                    LLOAD(list, name);
+                    cout << name << ": "; PRINT(list, 1);
+                    break;
+                }
+                case DS_Type::BINARY_TREE: {
+                    FullBinaryTree<string> tree;
+                    TLOAD(tree, name);
+                    cout << name << ": "; PRINT(tree, 5); // По умолчанию печатаем визуально
+                    break;
+                }
+                default:
+                    cout << "Ошибка: неизвестный тип структуры для '" << name << "'.\n";
+                    break;
+				}
+				continue;
+            }
+
+		}
 
         // Определяем тип структуры (существующий или новый)
         DS_Type type = DS_Type::UNKNOWN;
@@ -111,25 +164,33 @@ int main() {
             }
             case CommandType::MPUSH_BY_IND: {
                 string index_str, value;
-                if (ss >> index_str >> value) { try { MPUSH_BY_IND(arr, stoi(index_str), value); modified = true; } catch (...) { cout << "Ошибка: неверный индекс.\n"; } }
+                if (ss >> index_str >> value) { 
+                    MPUSH_BY_IND(arr, stoi(index_str), value); 
+                    modified = true;  
+                }
                 else { cout << "Ошибка: не указан индекс или значение.\n"; }
                 break;
             }
             case CommandType::MGET_BY_IND: {
                 string index_str;
-                if (ss >> index_str) { try { cout << "Элемент: " << MGET_BY_IND(arr, stoi(index_str)) << endl; } catch (...) { cout << "Ошибка: неверный индекс.\n"; } }
+                if (ss >> index_str) {  cout << "Элемент: " << MGET_BY_IND(arr, stoi(index_str)) << endl;  }
                 else { cout << "Ошибка: не указан индекс.\n"; }
                 break;
             }
             case CommandType::MDEL_BY_IND: {
                 string index_str;
-                if (ss >> index_str) { try { MDEL_BY_IND(arr, stoi(index_str)); modified = true; } catch (...) { cout << "Ошибка: неверный индекс.\n"; } }
+                if (ss >> index_str) {  
+                    MDEL_BY_IND(arr, stoi(index_str)); 
+                    modified = true; 
+                }
                 else { cout << "Ошибка: не указан индекс.\n"; }
                 break;
             }
             case CommandType::MSWAP_BY_IND: {
                 string index_str, value;
-                if (ss >> index_str >> value) { try { MSWAP_BY_IND(arr, stoi(index_str), value); modified = true; } catch (...) { cout << "Ошибка: неверный индекс.\n"; } }
+                if (ss >> index_str >> value) {  
+                    MSWAP_BY_IND(arr, stoi(index_str), value); 
+                    modified = true;  }
                 else { cout << "Ошибка: не указан индекс или значение.\n"; }
                 break;
             }
@@ -341,7 +402,7 @@ int main() {
     return 0;
 }
 
-// --- Реализация служебных функций ---
+//Реализация служебных функций
 
 DS_Type getImpliedType(CommandType cmd) { 
     switch (cmd) {
@@ -379,6 +440,7 @@ void initializeCommandMap() {
     // Общие
     commandMap["HELP"] = CommandType::HELP;
     commandMap["EXIT"] = CommandType::EXIT;
+	commandMap["PRINT"] = CommandType::PRINT;
     // Массив
     commandMap["MPUSH_BACK"] = CommandType::MPUSH_BACK; 
     commandMap["MPUSH_BY_IND"] = CommandType::MPUSH_BY_IND;
@@ -465,22 +527,22 @@ void saveStructureType(const string& name, DS_Type type) {
 }
 
 void printHelp() { 
-    cout << "\n--- СИСТЕМА УПРАВЛЕНИЯ СТРУКТУРАМИ ДАННЫХ ---\n";
+    cout << "\n--- СИСТЕМА УПРАВЛЕНИЯ СТРУКТУРАМИ ДАННЫХ\n";
     cout << "Данные сохраняются в файлы после каждой операции изменения.\n";
     cout << "Формат команд: COMMAND <StructureName> [Arguments...]\n\n";
-    cout << "--- ОБЩИЕ КОМАНДЫ ---\n";
+    cout << "--- ОБЩИЕ КОМАНДЫ\n";
     cout << "HELP              - Показать это сообщение\n";
     cout << "EXIT              - Выход из программы\n\n";
-    cout << "--- ДИНАМИЧЕСКИЙ МАССИВ (Array) ---\n";
+    cout << "--- ДИНАМИЧЕСКИЙ МАССИВ (Array)\n";
     cout << "MPUSH_BACK <Name> <Value>, MPRINT <Name> и т.д.\n\n";
-    cout << "--- СТЕК (Stack) ---\n";
+    cout << "--- СТЕК (Stack)\n";
     cout << "SPUSH <Name> <Value>, SPOP <Name>, SPRINT <Name>\n\n";
-    cout << "--- ОЧЕРЕДЬ (Queue) ---\n";
+    cout << "--- ОЧЕРЕДЬ (Queue)\n";
     cout << "QPUSH <Name> <Value>, QPOP <Name>, QGET <Name>, QPRINT <Name>\n\n";
-    cout << "--- ОДНОСВЯЗНЫЙ СПИСОК (Singly Linked List) ---\n";
+    cout << "--- ОДНОСВЯЗНЫЙ СПИСОК (Singly Linked List)\n";
     cout << "FCREATE <Name> <Value>, FPUSH_HEAD <Name> <Value> и т.д.\n\n";
-    cout << "--- ДВУСВЯЗНЫЙ СПИСОК (Doubly Linked List) ---\n";
+    cout << "--- ДВУСВЯЗНЫЙ СПИСОК (Doubly Linked List)\n";
     cout << "LCREATE <Name> <Value>, LPUSH_HEAD <Name> <Value> и т.д.\n\n";
-    cout << "--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree) ---\n";
+    cout << "--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree)\n";
     cout << "TINSERT <Name> <Value>, TPRINT_VISUAL <Name> и т.д.\n\n";
 }
