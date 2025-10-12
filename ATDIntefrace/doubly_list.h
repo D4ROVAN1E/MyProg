@@ -268,7 +268,6 @@ template <typename T>
 void LLOAD(DoublyList<T>& dList, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Ошибка открытия файла для чтения!" << endl;
         return;
     }
     // Очищаем текущий список

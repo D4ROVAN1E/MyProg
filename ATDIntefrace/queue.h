@@ -163,7 +163,6 @@ template <typename T>
 void QLOAD(Queue<T>& q, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Ошибка открытия файла для чтения!" << endl;
         return;
     }
     // Очищаем текущую очередь

@@ -1,0 +1,1242 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"strconv"
+	"strings"
+)
+
+// --- Типы данных и перечисления ---
+
+// DS_Type определяет тип структуры данных
+type DS_Type int
+
+const (
+	DS_UNKNOWN DS_Type = iota
+	DS_ARRAY
+	DS_STACK
+	DS_QUEUE
+	DS_SINGLY_LIST
+	DS_DOUBLY_LIST
+	DS_BINARY_TREE
+)
+
+// CommandType определяет тип команды
+type CommandType int
+
+const (
+	CMD_UNKNOWN CommandType = iota
+	CMD_HELP
+	CMD_EXIT
+	CMD_PRINT
+	// Array
+	CMD_MPUSH_BACK
+	CMD_MPUSH_BY_IND
+	CMD_MGET_BY_IND
+	CMD_MDEL_BY_IND
+	CMD_MSWAP_BY_IND
+	// Stack
+	CMD_SPUSH
+	CMD_SPOP
+	// Queue
+	CMD_QPUSH
+	CMD_QPOP
+	CMD_QGET
+	// Singly List
+	CMD_FCREATE
+	CMD_FPUSH_HEAD
+	CMD_FPUSH_BACK
+	CMD_FPUSH_BEFORE
+	CMD_FPUSH_FORWARD
+	CMD_FDEL_HEAD
+	CMD_FDEL_BACK
+	CMD_FDEL_BY_VALUE
+	CMD_FGET_BY_VALUE
+	// Doubly List
+	CMD_LCREATE
+	CMD_LPUSH_HEAD
+	CMD_LPUSH_BACK
+	CMD_LPUSH_BEFORE
+	CMD_LPUSH_AFTER
+	CMD_LDEL_HEAD
+	CMD_LDEL_BACK
+	CMD_LDEL_BY_VALUE
+	CMD_LGET_BY_VALUE
+	// Binary Tree
+	CMD_TINSERT
+	CMD_TFULL
+)
+
+const META_FILENAME = "_structure_types.meta"
+
+var commandMap = make(map[string]CommandType)
+var structureTypeMap = make(map[string]DS_Type)
+
+// --- Динамический массив ---
+
+type Array struct {
+	data []string
+}
+
+func NewArray() *Array {
+	return &Array{data: make([]string, 0)}
+}
+
+func (ar *Array) PushBack(value string) {
+	ar.data = append(ar.data, value)
+}
+
+func (ar *Array) PushByIndex(index int, value string) error {
+	if index < 0 || index > len(ar.data) {
+		return fmt.Errorf("Error: Index out of bounds")
+	}
+	ar.data = append(ar.data[:index], append([]string{value}, ar.data[index:]...)...)
+	return nil
+}
+
+func (ar *Array) GetByIndex(index int) (string, error) {
+	if index < 0 || index >= len(ar.data) {
+		return "", fmt.Errorf("Error: Index out of bounds")
+	}
+	return ar.data[index], nil
+}
+
+func (ar *Array) DeleteByIndex(index int) error {
+	if index < 0 || index >= len(ar.data) {
+		return fmt.Errorf("Error: Index out of bounds")
+	}
+	ar.data = append(ar.data[:index], ar.data[index+1:]...)
+	return nil
+}
+
+func (ar *Array) SwapByIndex(index int, value string) error {
+	if index < 0 || index >= len(ar.data) {
+		return fmt.Errorf("Error: Index out of bounds")
+	}
+	ar.data[index] = value
+	return nil
+}
+
+func (ar *Array) Print() {
+	fmt.Println(strings.Join(ar.data, " "))
+}
+
+func (ar *Array) Save(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	// В Go не нужно сохранять размер, он определяется длиной среза
+	_, err = fmt.Fprintln(file, strings.Join(ar.data, " "))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Массив сохранён в файл: %s\n", filename)
+	return nil
+}
+
+func (ar *Array) Load(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil // Файла нет, начинаем с пустой структуры
+		}
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	ar.data = make([]string, 0)
+	for scanner.Scan() {
+		ar.data = append(ar.data, scanner.Text())
+	}
+	fmt.Printf("Массив загружен из файла: %s\n", filename)
+	return scanner.Err()
+}
+
+// --- Стек ---
+
+type Stack struct {
+	data []string
+}
+
+func NewStack() *Stack {
+	return &Stack{data: make([]string, 0)}
+}
+
+func (st *Stack) Push(value string) {
+	st.data = append(st.data, value)
+}
+
+func (st *Stack) Pop() error {
+	if len(st.data) == 0 {
+		return fmt.Errorf("Стек пуст")
+	}
+	st.data = st.data[:len(st.data)-1]
+	return nil
+}
+
+func (st *Stack) Print() {
+	fmt.Println(strings.Join(st.data, " "))
+}
+
+func (st *Stack) Save(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = fmt.Fprintln(file, strings.Join(st.data, " "))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Стек сохранён в файл: %s\n", filename)
+	return nil
+}
+
+func (st *Stack) Load(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	st.data = make([]string, 0)
+	for scanner.Scan() {
+		st.data = append(st.data, scanner.Text())
+	}
+	fmt.Printf("Стек загружен из файла: %s\n", filename)
+	return scanner.Err()
+}
+
+
+// --- Очередь (на основе среза для простоты) ---
+// Реализация кольцевого буфера в Go менее идиоматична, чем использование среза.
+// Для сохранения функциональности и простоты используем срез.
+type Queue struct {
+	data []string
+}
+
+func NewQueue() *Queue {
+	return &Queue{data: make([]string, 0)}
+}
+
+func (q *Queue) Push(value string) {
+	q.data = append(q.data, value)
+}
+
+func (q *Queue) Pop() (string, error) {
+	if len(q.data) == 0 {
+		return "", fmt.Errorf("Очередь пуста!")
+	}
+	value := q.data[0]
+	q.data = q.data[1:]
+	return value, nil
+}
+
+func (q *Queue) Get() (string, error) {
+	if len(q.data) == 0 {
+		return "", fmt.Errorf("Очередь пуста!")
+	}
+	return q.data[0], nil
+}
+
+func (q *Queue) Print() {
+	if len(q.data) == 0 {
+		fmt.Println("Содержимое очереди (от головы к хвосту): пусто")
+	} else {
+		fmt.Println("Содержимое очереди (от головы к хвосту):", strings.Join(q.data, " "))
+	}
+}
+
+func (q *Queue) Save(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = fmt.Fprintln(file, strings.Join(q.data, " "))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Очередь сохранена в файл: %s\n", filename)
+	return nil
+}
+
+func (q *Queue) Load(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	q.data = make([]string, 0)
+	for scanner.Scan() {
+		q.data = append(q.data, scanner.Text())
+	}
+	fmt.Printf("Очередь загружена из файла: %s\n", filename)
+	return scanner.Err()
+}
+
+
+// --- Односвязный список ---
+type SNode struct {
+	key  string
+	next *SNode
+}
+
+type ForwardList struct {
+	head *SNode
+}
+
+func NewForwardList() *ForwardList {
+	return &ForwardList{}
+}
+
+func (fl *ForwardList) Create(key string) {
+	fl.head = &SNode{key: key}
+}
+
+func (fl *ForwardList) PushHead(key string) {
+	newNode := &SNode{key: key, next: fl.head}
+	fl.head = newNode
+}
+
+func (fl *ForwardList) PushBack(key string) {
+	newNode := &SNode{key: key}
+	if fl.head == nil {
+		fl.head = newNode
+		return
+	}
+	current := fl.head
+	for current.next != nil {
+		current = current.next
+	}
+	current.next = newNode
+}
+
+func (fl *ForwardList) GetByValue(key string) *SNode {
+	current := fl.head
+	for current != nil {
+		if current.key == key {
+			return current
+		}
+		current = current.next
+	}
+	return nil
+}
+
+func (fl *ForwardList) PushForward(targetNode *SNode, key string) {
+	if targetNode == nil {
+		return
+	}
+	newNode := &SNode{key: key, next: targetNode.next}
+	targetNode.next = newNode
+}
+
+
+func (fl *ForwardList) PushBefore(targetKey, newKey string) {
+	if fl.head == nil {
+		return
+	}
+	if fl.head.key == targetKey {
+		fl.PushHead(newKey)
+		return
+	}
+	current := fl.head
+	for current.next != nil && current.next.key != targetKey {
+		current = current.next
+	}
+	if current.next != nil {
+		fl.PushForward(current, newKey)
+	}
+}
+
+func (fl *ForwardList) DeleteHead() {
+	if fl.head != nil {
+		fl.head = fl.head.next
+	}
+}
+
+func (fl *ForwardList) DeleteBack() {
+	if fl.head == nil {
+		return
+	}
+	if fl.head.next == nil {
+		fl.head = nil
+		return
+	}
+	current := fl.head
+	for current.next.next != nil {
+		current = current.next
+	}
+	current.next = nil
+}
+
+func (fl *ForwardList) DeleteByValue(key string) {
+	if fl.head == nil {
+		return
+	}
+	if fl.head.key == key {
+		fl.DeleteHead()
+		return
+	}
+	current := fl.head
+	for current.next != nil && current.next.key != key {
+		current = current.next
+	}
+	if current.next != nil {
+		current.next = current.next.next
+	}
+}
+
+func (fl *ForwardList) Print() {
+	if fl.head == nil {
+		fmt.Println("Список пуст")
+		return
+	}
+	current := fl.head
+	for current != nil {
+		fmt.Printf("%s -> ", current.key)
+		current = current.next
+	}
+	fmt.Println("nullptr")
+}
+
+func (fl *ForwardList) Save(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	current := fl.head
+	var parts []string
+	for current != nil {
+		parts = append(parts, current.key)
+		current = current.next
+	}
+	_, err = fmt.Fprintln(file, strings.Join(parts, " "))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Односвязный список сохранён в файл: %s\n", filename)
+	return nil
+}
+
+func (fl *ForwardList) Load(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fl.head = nil
+			return nil
+		}
+		return err
+	}
+	defer file.Close()
+	fl.head = nil
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		fl.PushBack(scanner.Text())
+	}
+	fmt.Printf("Односвязный список загружен из файла: %s\n", filename)
+	return scanner.Err()
+}
+
+
+// --- Двусвязный список ---
+type DNode struct {
+	key  string
+	next *DNode
+	prev *DNode
+}
+
+type DoublyList struct {
+	head *DNode
+	tail *DNode
+}
+
+func NewDoublyList() *DoublyList {
+	return &DoublyList{}
+}
+
+func (dl *DoublyList) Create(key string) {
+	newNode := &DNode{key: key}
+	dl.head = newNode
+	dl.tail = newNode
+}
+
+func (dl *DoublyList) PushHead(key string) {
+	newNode := &DNode{key: key, next: dl.head}
+	if dl.head != nil {
+		dl.head.prev = newNode
+	} else {
+		dl.tail = newNode
+	}
+	dl.head = newNode
+}
+
+func (dl *DoublyList) PushBack(key string) {
+	newNode := &DNode{key: key, prev: dl.tail}
+	if dl.tail != nil {
+		dl.tail.next = newNode
+	} else {
+		dl.head = newNode
+	}
+	dl.tail = newNode
+}
+
+func (dl *DoublyList) GetByValue(key string) *DNode {
+	current := dl.head
+	for current != nil {
+		if current.key == key {
+			return current
+		}
+		current = current.next
+	}
+	return nil
+}
+
+func (dl *DoublyList) PushBefore(targetKey, newKey string) {
+	targetNode := dl.GetByValue(targetKey)
+	if targetNode == nil {
+		return
+	}
+	if targetNode == dl.head {
+		dl.PushHead(newKey)
+		return
+	}
+	newNode := &DNode{key: newKey, next: targetNode, prev: targetNode.prev}
+	targetNode.prev.next = newNode
+	targetNode.prev = newNode
+}
+
+func (dl *DoublyList) PushAfter(targetKey, newKey string) {
+	targetNode := dl.GetByValue(targetKey)
+	if targetNode == nil {
+		return
+	}
+	if targetNode == dl.tail {
+		dl.PushBack(newKey)
+		return
+	}
+	newNode := &DNode{key: newKey, next: targetNode.next, prev: targetNode}
+	targetNode.next.prev = newNode
+	targetNode.next = newNode
+}
+
+func (dl *DoublyList) DeleteHead() {
+	if dl.head == nil {
+		return
+	}
+	dl.head = dl.head.next
+	if dl.head != nil {
+		dl.head.prev = nil
+	} else {
+		dl.tail = nil
+	}
+}
+
+func (dl *DoublyList) DeleteBack() {
+	if dl.tail == nil {
+		return
+	}
+	dl.tail = dl.tail.prev
+	if dl.tail != nil {
+		dl.tail.next = nil
+	} else {
+		dl.head = nil
+	}
+}
+
+func (dl *DoublyList) DeleteByValue(key string) {
+	targetNode := dl.GetByValue(key)
+	if targetNode == nil {
+		return
+	}
+	if targetNode == dl.head {
+		dl.DeleteHead()
+	} else if targetNode == dl.tail {
+		dl.DeleteBack()
+	} else {
+		targetNode.prev.next = targetNode.next
+		targetNode.next.prev = targetNode.prev
+	}
+}
+
+func (dl *DoublyList) Print(forward bool) {
+	if dl.head == nil {
+		fmt.Println("Список пуст.")
+		return
+	}
+	if forward {
+		current := dl.head
+		fmt.Print("Голова -> ")
+		for current != nil {
+			fmt.Printf("%s <-> ", current.key)
+			current = current.next
+		}
+		fmt.Println("nullptr")
+	} else {
+		current := dl.tail
+		fmt.Print("Хвост -> ")
+		for current != nil {
+			fmt.Printf("%s <-> ", current.key)
+			current = current.prev
+		}
+		fmt.Println("nullptr")
+	}
+}
+
+
+func (dl *DoublyList) Save(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	current := dl.head
+	var parts []string
+	for current != nil {
+		parts = append(parts, current.key)
+		current = current.next
+	}
+	_, err = fmt.Fprintln(file, strings.Join(parts, " "))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Двусвязный список сохранён в файл: %s\n", filename)
+	return nil
+}
+
+func (dl *DoublyList) Load(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			dl.head, dl.tail = nil, nil
+			return nil
+		}
+		return err
+	}
+	defer file.Close()
+	dl.head, dl.tail = nil, nil
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		dl.PushBack(scanner.Text())
+	}
+	fmt.Printf("Двусвязный список загружен из файла: %s\n", filename)
+	return scanner.Err()
+}
+
+
+// --- Полное бинарное дерево ---
+type TreeNode struct {
+	key   string
+	left  *TreeNode
+	right *TreeNode
+}
+
+type FullBinaryTree struct {
+	root *TreeNode
+}
+
+func NewFullBinaryTree() *FullBinaryTree {
+	return &FullBinaryTree{}
+}
+
+func (t *FullBinaryTree) Insert(value string) {
+	newNode := &TreeNode{key: value}
+	if t.root == nil {
+		t.root = newNode
+		return
+	}
+
+	q := []*TreeNode{t.root}
+	for len(q) > 0 {
+		current := q[0]
+		q = q[1:]
+
+		if current.left == nil {
+			current.left = newNode
+			return
+		}
+		q = append(q, current.left)
+
+		if current.right == nil {
+			current.right = newNode
+			return
+		}
+		q = append(q, current.right)
+	}
+}
+
+func (t *FullBinaryTree) IsFull() bool {
+    if t.root == nil {
+        return true
+    }
+    return isFullRecursive(t.root)
+}
+
+func isFullRecursive(node *TreeNode) bool {
+    if node.left == nil && node.right == nil {
+        return true
+    }
+    if node.left != nil && node.right != nil {
+        return isFullRecursive(node.left) && isFullRecursive(node.right)
+    }
+    return false
+}
+
+
+func printTreeRecursive(node *TreeNode, prefix string, isLeft bool) {
+	if node != nil {
+		fmt.Print(prefix)
+		if isLeft {
+			fmt.Print("|___ ")
+		} else {
+			fmt.Print("|--- ")
+		}
+		fmt.Println(node.key)
+		
+		newPrefix := prefix
+		if isLeft {
+			newPrefix += "|   "
+		} else {
+			newPrefix += "    "
+		}
+		printTreeRecursive(node.right, newPrefix, false)
+		printTreeRecursive(node.left, newPrefix, true)
+	}
+}
+
+func (t *FullBinaryTree) PrintVisual() {
+    if t.root == nil {
+        fmt.Println("Дерево пустое.")
+        return
+    }
+    fmt.Println(t.root.key)
+    printTreeRecursive(t.root.right, "", false)
+    printTreeRecursive(t.root.left, "", true)
+}
+
+func (t *FullBinaryTree) Save(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if t.root == nil {
+		fmt.Printf("Дерево пустое, сохранён пустой файл: %s\n", filename)
+		return nil
+	}
+
+	var parts []string
+	q := []*TreeNode{t.root}
+	for len(q) > 0 {
+		current := q[0]
+		q = q[1:]
+		parts = append(parts, current.key)
+		if current.left != nil {
+			q = append(q, current.left)
+		}
+		if current.right != nil {
+			q = append(q, current.right)
+		}
+	}
+	_, err = fmt.Fprintln(file, strings.Join(parts, " "))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Полное бинарное дерево сохранено в файл: %s\n", filename)
+	return nil
+}
+
+func (t *FullBinaryTree) Load(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			t.root = nil
+			return nil
+		}
+		return err
+	}
+	defer file.Close()
+	t.root = nil
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		t.Insert(scanner.Text())
+	}
+	fmt.Printf("Полное бинарное дерево загружено из файла: %s\n", filename)
+	return scanner.Err()
+}
+
+
+// --- Основная логика и служебные функции ---
+
+func dsTypeToString(dsType DS_Type) string {
+	switch dsType {
+	case DS_ARRAY:
+		return "ARRAY"
+	case DS_STACK:
+		return "STACK"
+	case DS_QUEUE:
+		return "QUEUE"
+	case DS_SINGLY_LIST:
+		return "SINGLY_LIST"
+	case DS_DOUBLY_LIST:
+		return "DOUBLY_LIST"
+	case DS_BINARY_TREE:
+		return "BINARY_TREE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func stringToDsType(s string) DS_Type {
+	switch s {
+	case "ARRAY":
+		return DS_ARRAY
+	case "STACK":
+		return DS_STACK
+	case "QUEUE":
+		return DS_QUEUE
+	case "SINGLY_LIST":
+		return DS_SINGLY_LIST
+	case "DOUBLY_LIST":
+		return DS_DOUBLY_LIST
+	case "BINARY_TREE":
+		return DS_BINARY_TREE
+	default:
+		return DS_UNKNOWN
+	}
+}
+
+func loadStructureTypes() {
+	file, err := os.Open(META_FILENAME)
+	if err != nil {
+		return // Файла нет, это нормально при первом запуске
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		parts := strings.Fields(scanner.Text())
+		if len(parts) == 2 {
+			name := parts[0]
+			dsType := stringToDsType(parts[1])
+			if dsType != DS_UNKNOWN {
+				structureTypeMap[name] = dsType
+			}
+		}
+	}
+}
+
+func saveStructureType(name string, dsType DS_Type) {
+	if _, exists := structureTypeMap[name]; exists {
+		return
+	}
+	structureTypeMap[name] = dsType
+
+	file, err := os.OpenFile(META_FILENAME, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Критическая ошибка: не удалось открыть метафайл для записи.")
+		return
+	}
+	defer file.Close()
+
+	typeStr := dsTypeToString(dsType)
+	if _, err := fmt.Fprintf(file, "%s %s\n", name, typeStr); err != nil {
+		fmt.Println("Критическая ошибка: не удалось записать в метафайл.")
+	}
+}
+
+func getImpliedType(cmd CommandType) DS_Type {
+	switch cmd {
+	case CMD_MPUSH_BACK, CMD_MPUSH_BY_IND, CMD_MGET_BY_IND, CMD_MDEL_BY_IND, CMD_MSWAP_BY_IND:
+		return DS_ARRAY
+	case CMD_SPUSH, CMD_SPOP:
+		return DS_STACK
+	case CMD_QPUSH, CMD_QPOP, CMD_QGET:
+		return DS_QUEUE
+	case CMD_FCREATE, CMD_FPUSH_HEAD, CMD_FPUSH_BACK, CMD_FPUSH_BEFORE, CMD_FPUSH_FORWARD, CMD_FDEL_HEAD, CMD_FDEL_BACK, CMD_FDEL_BY_VALUE, CMD_FGET_BY_VALUE:
+		return DS_SINGLY_LIST
+	case CMD_LCREATE, CMD_LPUSH_HEAD, CMD_LPUSH_BACK, CMD_LPUSH_BEFORE, CMD_LPUSH_AFTER, CMD_LDEL_HEAD, CMD_LDEL_BACK, CMD_LDEL_BY_VALUE, CMD_LGET_BY_VALUE:
+		return DS_DOUBLY_LIST
+	case CMD_TINSERT, CMD_TFULL:
+		return DS_BINARY_TREE
+	default:
+		return DS_UNKNOWN
+	}
+}
+
+func initializeCommandMap() {
+	// Общие
+	commandMap["HELP"] = CMD_HELP
+	commandMap["EXIT"] = CMD_EXIT
+	commandMap["PRINT"] = CMD_PRINT
+	// Массив
+	commandMap["MPUSH_BACK"] = CMD_MPUSH_BACK
+	commandMap["MPUSH_BY_IND"] = CMD_MPUSH_BY_IND
+	commandMap["MGET_BY_IND"] = CMD_MGET_BY_IND
+	commandMap["MDEL_BY_IND"] = CMD_MDEL_BY_IND
+	commandMap["MSWAP_BY_IND"] = CMD_MSWAP_BY_IND
+	// Стек
+	commandMap["SPUSH"] = CMD_SPUSH
+	commandMap["SPOP"] = CMD_SPOP
+	// Очередь
+	commandMap["QPUSH"] = CMD_QPUSH
+	commandMap["QPOP"] = CMD_QPOP
+	commandMap["QGET"] = CMD_QGET
+	// Односвязный список
+	commandMap["FCREATE"] = CMD_FCREATE
+	commandMap["FPUSH_HEAD"] = CMD_FPUSH_HEAD
+	commandMap["FPUSH_BACK"] = CMD_FPUSH_BACK
+	commandMap["FPUSH_BEFORE"] = CMD_FPUSH_BEFORE
+	commandMap["FPUSH_FORWARD"] = CMD_FPUSH_FORWARD
+	commandMap["FDEL_HEAD"] = CMD_FDEL_HEAD
+	commandMap["FDEL_BACK"] = CMD_FDEL_BACK
+	commandMap["FDEL_BY_VALUE"] = CMD_FDEL_BY_VALUE
+	commandMap["FGET_BY_VALUE"] = CMD_FGET_BY_VALUE
+	// Двусвязный список
+	commandMap["LCREATE"] = CMD_LCREATE
+	commandMap["LPUSH_HEAD"] = CMD_LPUSH_HEAD
+	commandMap["LPUSH_BACK"] = CMD_LPUSH_BACK
+	commandMap["LPUSH_BEFORE"] = CMD_LPUSH_BEFORE
+	commandMap["LPUSH_AFTER"] = CMD_LPUSH_AFTER
+	commandMap["LDEL_HEAD"] = CMD_LDEL_HEAD
+	commandMap["LDEL_BACK"] = CMD_LDEL_BACK
+	commandMap["LDEL_BY_VALUE"] = CMD_LDEL_BY_VALUE
+	commandMap["LGET_BY_VALUE"] = CMD_LGET_BY_VALUE
+	// Полное бинарное дерево
+	commandMap["TINSERT"] = CMD_TINSERT
+	commandMap["TFULL"] = CMD_TFULL
+}
+
+
+func printHelp() {
+    fmt.Println("\n--- СИСТЕМА УПРАВЛЕНИЯ СТРУКТУРАМИ ДАННЫХ")
+    fmt.Println("Данные сохраняются в файлы после каждой операции изменения.")
+    fmt.Println("Формат команд: COMMAND <StructureName> [Arguments...]\n")
+    fmt.Println("--- ОБЩИЕ КОМАНДЫ")
+    fmt.Println("HELP              - Показать это сообщение")
+    fmt.Println("EXIT              - Выход из программы")
+    fmt.Println("PRINT <Name>      - Вывести содержимое структуры <Name>.\n")
+    fmt.Println("--- ДИНАМИЧЕСКИЙ МАССИВ (Array) - Префикс 'M'")
+    fmt.Println("MPUSH_BACK <Name> <Value>   - Добавить <Value> в конец массива.")
+    fmt.Println("MPUSH_BY_IND <Name> <Ind> <Value> - Вставить <Value> по индексу <Ind>.")
+    fmt.Println("MGET_BY_IND <Name> <Ind>    - Получить элемент по индексу <Ind>.")
+    fmt.Println("MDEL_BY_IND <Name> <Ind>    - Удалить элемент по индексу <Ind>.")
+    fmt.Println("MSWAP_BY_IND <Name> <Ind> <Value> - Заменить элемент по индексу <Ind> на <Value>.\n")
+    fmt.Println("--- СТЕК (Stack) - Префикс 'S'")
+    fmt.Println("SPUSH <Name> <Value>      - Поместить <Value> в стек.")
+    fmt.Println("SPOP <Name>               - Извлечь (удалить) верхний элемент стека.\n")
+    fmt.Println("--- ОЧЕРЕДЬ (Queue) - Префикс 'Q'")
+    fmt.Println("QPUSH <Name> <Value>      - Добавить <Value> в конец очереди.")
+    fmt.Println("QPOP <Name>               - Извлечь (удалить) элемент из начала очереди и вывести его.")
+    fmt.Println("QGET <Name>               - Получить элемент из начала очереди (без удаления) и вывести его.\n")
+    fmt.Println("--- ОДНОСВЯЗНЫЙ СПИСОК (Singly Linked List) - Префикс 'F'")
+    fmt.Println("FCREATE <Name> <Value>    - Создать список с одним элементом <Value>.")
+    fmt.Println("FPUSH_HEAD <Name> <Value> - Добавить <Value> в начало списка.")
+    fmt.Println("FPUSH_BACK <Name> <Value> - Добавить <Value> в конец списка.")
+    fmt.Println("FPUSH_BEFORE <Name> <Target> <Value> - Вставить <Value> перед элементом <Target>.")
+    fmt.Println("FPUSH_FORWARD <Name> <Target> <Value> - Вставить <Value> после элемента <Target>.")
+    fmt.Println("FDEL_HEAD <Name>          - Удалить элемент из начала списка.")
+    fmt.Println("FDEL_BACK <Name>          - Удалить элемент из конца списка.")
+    fmt.Println("FDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.")
+    fmt.Println("FGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n")
+    fmt.Println("--- ДВУСВЯЗНЫЙ СПИСОК (Doubly Linked List) - Префикс 'L'")
+    fmt.Println("LCREATE <Name> <Value>    - Создать список с одним элементом <Value>.")
+    fmt.Println("LPUSH_HEAD <Name> <Value> - Добавить <Value> в начало списка.")
+    fmt.Println("LPUSH_BACK <Name> <Value> - Добавить <Value> в конец списка.")
+    fmt.Println("LPUSH_BEFORE <Name> <Target> <Value> - Вставить <Value> перед элементом <Target>.")
+    fmt.Println("LPUSH_AFTER <Name> <Target> <Value> - Вставить <Value> после элемента <Target>.")
+    fmt.Println("LDEL_HEAD <Name>          - Удалить элемент из начала списка.")
+    fmt.Println("LDEL_BACK <Name>          - Удалить элемент из конца списка.")
+    fmt.Println("LDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.")
+    fmt.Println("LGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n")
+    fmt.Println("--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree) - Префикс 'T'")
+    fmt.Println("TINSERT <Name> <Value>    - Вставить <Value> в дерево.")
+    fmt.Println("TFULL <Name>              - Проверить, является ли дерево полным.")
+}
+
+
+func main() {
+	initializeCommandMap()
+	loadStructureTypes()
+
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("> ")
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			fmt.Print("> ")
+			continue
+		}
+
+		parts := strings.Fields(line)
+		commandStr := parts[0]
+		
+		command, ok := commandMap[commandStr]
+		if !ok {
+			fmt.Printf("Неизвестная команда: '%s'.\n", commandStr)
+			fmt.Print("> ")
+			continue
+		}
+
+		if command == CMD_HELP {
+			printHelp()
+			fmt.Print("> ")
+			continue
+		}
+		if command == CMD_EXIT {
+			fmt.Println("Завершение работы программы...")
+			break
+		}
+		
+		if len(parts) < 2 {
+			fmt.Println("Ошибка: не указано имя структуры.")
+			fmt.Print("> ")
+			continue
+		}
+		name := parts[1]
+		args := parts[2:]
+
+		var dsType DS_Type
+		var typeExists bool
+		dsType, typeExists = structureTypeMap[name]
+
+		if command == CMD_PRINT {
+			if !typeExists {
+				fmt.Printf("Ошибка: структура '%s' не существует.\n", name)
+				fmt.Print("> ")
+				continue
+			}
+		} else {
+			impliedType := getImpliedType(command)
+			if typeExists {
+				if dsType != impliedType {
+					fmt.Printf("Ошибка: команда '%s' неприменима к структуре '%s'.\n", commandStr, name)
+					fmt.Print("> ")
+					continue
+				}
+			} else {
+				if impliedType == DS_UNKNOWN {
+					fmt.Println("Внутренняя ошибка: команда не сопоставлена с типом структуры.")
+					fmt.Print("> ")
+					continue
+				}
+				dsType = impliedType
+				saveStructureType(name, dsType)
+			}
+		}
+
+		modified := false
+		
+		// Основной switch по типу структуры
+		switch dsType {
+		case DS_ARRAY:
+			arr := NewArray()
+			arr.Load(name)
+			switch command {
+			case CMD_MPUSH_BACK:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				arr.PushBack(args[0])
+				modified = true
+			case CMD_MPUSH_BY_IND:
+				if len(args) < 2 { fmt.Println("Ошибка: не указан индекс или значение."); break }
+				idx, err := strconv.Atoi(args[0])
+				if err != nil { fmt.Println("Ошибка: неверный формат индекса."); break }
+				if err = arr.PushByIndex(idx, args[1]); err != nil { fmt.Println(err); break }
+				modified = true
+			case CMD_MGET_BY_IND:
+				if len(args) < 1 { fmt.Println("Ошибка: не указан индекс."); break }
+				idx, err := strconv.Atoi(args[0])
+				if err != nil { fmt.Println("Ошибка: неверный формат индекса."); break }
+				val, err := arr.GetByIndex(idx)
+				if err != nil { fmt.Println(err); break }
+				fmt.Println("Элемент:", val)
+			case CMD_MDEL_BY_IND:
+				if len(args) < 1 { fmt.Println("Ошибка: не указан индекс."); break }
+				idx, err := strconv.Atoi(args[0])
+				if err != nil { fmt.Println("Ошибка: неверный формат индекса."); break }
+				if err = arr.DeleteByIndex(idx); err != nil { fmt.Println(err); break }
+				modified = true
+			case CMD_MSWAP_BY_IND:
+				if len(args) < 2 { fmt.Println("Ошибка: не указан индекс или значение."); break }
+				idx, err := strconv.Atoi(args[0])
+				if err != nil { fmt.Println("Ошибка: неверный формат индекса."); break }
+				if err = arr.SwapByIndex(idx, args[1]); err != nil { fmt.Println(err); break }
+				modified = true
+			case CMD_PRINT:
+				arr.Print()
+			}
+			if modified {
+				arr.Save(name)
+				fmt.Println("OK")
+			}
+		case DS_STACK:
+			stack := NewStack()
+			stack.Load(name)
+			switch command {
+			case CMD_SPUSH:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				stack.Push(args[0])
+				modified = true
+			case CMD_SPOP:
+				if err := stack.Pop(); err != nil { fmt.Println(err); break }
+				modified = true
+			case CMD_PRINT:
+				stack.Print()
+			}
+			if modified {
+				stack.Save(name)
+				fmt.Println("OK")
+			}
+        case DS_QUEUE:
+            queue := NewQueue()
+            queue.Load(name)
+            switch command {
+            case CMD_QPUSH:
+                if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+                queue.Push(args[0])
+                modified = true
+            case CMD_QPOP:
+                val, err := queue.Pop()
+                if err != nil { fmt.Println(err); break }
+                fmt.Println("Извлечено:", val)
+                modified = true
+            case CMD_QGET:
+                val, err := queue.Get()
+                if err != nil { fmt.Println(err); break }
+                fmt.Println("Первый элемент:", val)
+            case CMD_PRINT:
+                queue.Print()
+            }
+            if modified {
+                queue.Save(name)
+                if command != CMD_QPOP { fmt.Println("OK") }
+            }
+        case DS_SINGLY_LIST:
+			list := NewForwardList()
+			list.Load(name)
+			switch command {
+			case CMD_FCREATE:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.Create(args[0]); modified = true
+			case CMD_FPUSH_HEAD:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.PushHead(args[0]); modified = true
+			case CMD_FPUSH_BACK:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.PushBack(args[0]); modified = true
+			case CMD_FPUSH_BEFORE:
+				if len(args) < 2 { fmt.Println("Ошибка: не указана цель или значение."); break }
+				list.PushBefore(args[0], args[1]); modified = true
+			case CMD_FPUSH_FORWARD:
+				if len(args) < 2 { fmt.Println("Ошибка: не указана цель или значение."); break }
+				targetNode := list.GetByValue(args[0])
+				if targetNode == nil { fmt.Println("Элемент не найден"); break}
+				list.PushForward(targetNode, args[1]); modified = true
+			case CMD_FDEL_HEAD:
+				list.DeleteHead(); modified = true
+			case CMD_FDEL_BACK:
+				list.DeleteBack(); modified = true
+			case CMD_FDEL_BY_VALUE:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.DeleteByValue(args[0]); modified = true
+			case CMD_FGET_BY_VALUE:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				if list.GetByValue(args[0]) != nil { fmt.Println("Элемент найден") } else { fmt.Println("Элемент не найден") }
+			case CMD_PRINT:
+				list.Print()
+			}
+			if modified {
+				list.Save(name)
+				fmt.Println("OK")
+			}
+		case DS_DOUBLY_LIST:
+			list := NewDoublyList()
+			list.Load(name)
+			switch command {
+			case CMD_LCREATE:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.Create(args[0]); modified = true
+			case CMD_LPUSH_HEAD:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.PushHead(args[0]); modified = true
+			case CMD_LPUSH_BACK:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.PushBack(args[0]); modified = true
+			case CMD_LPUSH_BEFORE:
+				if len(args) < 2 { fmt.Println("Ошибка: не указана цель или значение."); break }
+				list.PushBefore(args[0], args[1]); modified = true
+			case CMD_LPUSH_AFTER:
+				if len(args) < 2 { fmt.Println("Ошибка: не указана цель или значение."); break }
+				list.PushAfter(args[0], args[1]); modified = true
+			case CMD_LDEL_HEAD:
+				list.DeleteHead(); modified = true
+			case CMD_LDEL_BACK:
+				list.DeleteBack(); modified = true
+			case CMD_LDEL_BY_VALUE:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				list.DeleteByValue(args[0]); modified = true
+			case CMD_LGET_BY_VALUE:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				if list.GetByValue(args[0]) != nil { fmt.Println("Элемент найден") } else { fmt.Println("Элемент не найден") }
+			case CMD_PRINT:
+				list.Print(true) // Печать вперед по умолчанию
+			}
+			if modified {
+				list.Save(name)
+				fmt.Println("OK")
+			}
+		case DS_BINARY_TREE:
+			tree := NewFullBinaryTree()
+			tree.Load(name)
+			switch command {
+			case CMD_TINSERT:
+				if len(args) < 1 { fmt.Println("Ошибка: не указано значение."); break }
+				tree.Insert(args[0]); modified = true
+			case CMD_TFULL:
+				isFull := tree.IsFull()
+				result := "Да"
+				if !isFull { result = "Нет"}
+				if tree.root == nil { result = "Да (пустое)"}
+				fmt.Printf("Дерево %s является полным: %s\n", name, result)
+			case CMD_PRINT:
+				tree.PrintVisual()
+			}
+			if modified {
+				tree.Save(name)
+				fmt.Println("OK")
+			}
+		default:
+			fmt.Printf("Структура '%s' имеет неизвестный тип.\n", name)
+		}
+
+		fmt.Print("> ")
+	}
+
+	if err := scanner.Err(); err != nil && err != io.EOF {
+		fmt.Fprintln(os.Stderr, "Ошибка чтения ввода:", err)
+	}
+}

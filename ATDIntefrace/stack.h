@@ -114,7 +114,6 @@ template <typename T>
 void SLOAD(Stack<T>& st, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Ошибка открытия файла для чтения!" << endl;
         return;
     }
     uint32_t size;

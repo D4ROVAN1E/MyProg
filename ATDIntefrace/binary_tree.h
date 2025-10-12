@@ -298,7 +298,6 @@ template<typename T>
 void TLOAD(FullBinaryTree<T>& tree, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Ошибка открытия файла для чтения!" << endl;
         return;
     }
 

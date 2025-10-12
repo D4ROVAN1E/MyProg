@@ -19,17 +19,17 @@ using namespace std;
 enum class CommandType {
     HELP, EXIT, UNKNOWN, PRINT,
     // Array
-    MPUSH_BACK, MPUSH_BY_IND, MGET_BY_IND, MDEL_BY_IND, MSWAP_BY_IND, MPRINT,
+    MPUSH_BACK, MPUSH_BY_IND, MGET_BY_IND, MDEL_BY_IND, MSWAP_BY_IND, 
     // Stack
-    SPUSH, SPOP, SPRINT,
+    SPUSH, SPOP, 
     // Queue
-    QPUSH, QPOP, QGET, QPRINT,
+    QPUSH, QPOP, QGET, 
     // Singly List
-    FCREATE, FPUSH_HEAD, FPUSH_BACK, FPUSH_BEFORE, FPUSH_FORWARD, FDEL_HEAD, FDEL_BACK, FDEL_BY_VALUE, FGET_BY_VALUE, FPRINT,
+    FCREATE, FPUSH_HEAD, FPUSH_BACK, FPUSH_BEFORE, FPUSH_FORWARD, FDEL_HEAD, FDEL_BACK, FDEL_BY_VALUE, FGET_BY_VALUE, 
     // Doubly List
-    LCREATE, LPUSH_HEAD, LPUSH_BACK, LPUSH_BEFORE, LPUSH_AFTER, LDEL_HEAD, LDEL_BACK, LDEL_BY_VALUE, LGET_BY_VALUE, LPRINT_FORWARD, LPRINT_REVERSE,
+    LCREATE, LPUSH_HEAD, LPUSH_BACK, LPUSH_BEFORE, LPUSH_AFTER, LDEL_HEAD, LDEL_BACK, LDEL_BY_VALUE, LGET_BY_VALUE, 
     // Binary Tree
-    TINSERT, TFULL, TPRINT_BFS, TPRINT_PREORDER, TPRINT_INORDER, TPRINT_POSTORDER, TPRINT_VISUAL
+    TINSERT, TFULL
 };
 
 // Enum для типов структур данных
@@ -71,62 +71,21 @@ int main() {
 
         if (!(ss >> name)) { cout << "Ошибка: не указано имя структуры.\n"; continue; }
 
+        // Определяем тип структуры (существующий или новый)
+        DS_Type type = DS_Type::UNKNOWN;
+        DS_Type impliedType = getImpliedType(command);
+
         if (command == CommandType::PRINT) {
             if (structureTypeMap.count(name) == 0) {
                 cout << "Ошибка: структура '" << name << "' не существует.\n";
                 continue;
             }
             else {
-                DS_Type type = structureTypeMap[name];
-                switch (type) {
-                case DS_Type::ARRAY: {
-                    Array<string> arr;
-                    MLOAD(arr, name);
-                    cout << name << ": "; PRINT(arr);
-                    break;
-                }
-                case DS_Type::STACK: {
-                    Stack<string> stack;
-                    SLOAD(stack, name);
-                    cout << name << ": "; PRINT(stack);
-                    break;
-                }
-                case DS_Type::QUEUE: {
-                    Queue<string> queue;
-                    QLOAD(queue, name);
-                    cout << name << ": "; PRINT(queue);
-                    break;
-                }
-                case DS_Type::SINGLY_LIST: {
-                    ForwardList<string> list;
-                    FLOAD(list, name);
-                    cout << name << ": "; PRINT(list);
-                    break;
-                }
-                case DS_Type::DOUBLY_LIST: {
-                    DoublyList<string> list;
-                    LLOAD(list, name);
-                    cout << name << ": "; PRINT(list, 1);
-                    break;
-                }
-                case DS_Type::BINARY_TREE: {
-                    FullBinaryTree<string> tree;
-                    TLOAD(tree, name);
-                    cout << name << ": "; PRINT(tree, 5); // По умолчанию печатаем визуально
-                    break;
-                }
-                default:
-                    cout << "Ошибка: неизвестный тип структуры для '" << name << "'.\n";
-                    break;
-				}
-				continue;
+                type = structureTypeMap[name];
+                goto start;
             }
 
 		}
-
-        // Определяем тип структуры (существующий или новый)
-        DS_Type type = DS_Type::UNKNOWN;
-        DS_Type impliedType = getImpliedType(command);
 
         if (structureTypeMap.count(name)) {
             type = structureTypeMap[name];
@@ -145,6 +104,8 @@ int main() {
                 continue;
             }
         }
+
+        start:
 
         bool modified = false; // Флаг, показывающий, нужно ли сохранять данные
 
@@ -194,9 +155,9 @@ int main() {
                 else { cout << "Ошибка: не указан индекс или значение.\n"; }
                 break;
             }
-            case CommandType::MPRINT: {
-                cout << name << ": "; PRINT(arr);
-                break;
+            case CommandType::PRINT: {
+                PRINT(arr);
+				break;
             }
             default: break;
             }
@@ -221,8 +182,8 @@ int main() {
                 else { cout << "Стек пуст.\n"; }
                 break;
             }
-            case CommandType::SPRINT: {
-                cout << name << ": "; PRINT(stack);
+            case CommandType::PRINT: {
+                PRINT(stack);
                 break;
             }
             default: break;
@@ -253,8 +214,8 @@ int main() {
                 catch (const exception& e) { cout << e.what() << endl; }
                 break;
             }
-            case CommandType::QPRINT: {
-                cout << name << ": "; PRINT(queue);
+            case CommandType::PRINT: {
+                PRINT(queue);
                 break;
             }
             default: break;
@@ -307,7 +268,10 @@ int main() {
                 else { cout << "Ошибка: не указано значение.\n"; }
                 break;
             }
-            case CommandType::FPRINT: { cout << name << ": "; PRINT(list); break; }
+            case CommandType::PRINT: {
+                PRINT(list);
+                break;
+			}
             default: break;
             }
 
@@ -358,8 +322,10 @@ int main() {
                 else { cout << "Ошибка: не указано значение.\n"; }
                 break;
             }
-            case CommandType::LPRINT_FORWARD: { cout << name << " (forward): "; PRINT(list, 1); break; }
-            case CommandType::LPRINT_REVERSE: { cout << name << " (reverse): "; PRINT(list, 2); break; }
+            case CommandType::PRINT: {
+                PRINT(list, 1);
+                break;
+            }
             default: break;
             }
 
@@ -382,11 +348,10 @@ int main() {
                 cout << "Дерево " << name << " является полным: " << (tree.root ? (TFULL(tree.root) ? "Да" : "Нет") : "Да (пустое)") << endl;
                 break;
             }
-            case CommandType::TPRINT_BFS: { cout << name << " (BFS): "; PRINT(tree, 1); break; }
-            case CommandType::TPRINT_PREORDER: { cout << name << " (Pre-order): "; PRINT(tree, 2); break; }
-            case CommandType::TPRINT_INORDER: { cout << name << " (In-order): "; PRINT(tree, 3); break; }
-            case CommandType::TPRINT_POSTORDER: { cout << name << " (Post-order): "; PRINT(tree, 4); break; }
-            case CommandType::TPRINT_VISUAL: { cout << name << " (Visual):\n"; PRINT(tree, 5); break; }
+            case CommandType::PRINT: {
+                PRINT(tree, 5);
+                break;
+            }
             default: break;
             }
 
@@ -408,27 +373,26 @@ DS_Type getImpliedType(CommandType cmd) {
     switch (cmd) {
         // Array
     case CommandType::MPUSH_BACK: case CommandType::MPUSH_BY_IND: case CommandType::MGET_BY_IND:
-    case CommandType::MDEL_BY_IND: case CommandType::MSWAP_BY_IND: case CommandType::MPRINT:
+    case CommandType::MDEL_BY_IND: case CommandType::MSWAP_BY_IND: 
         return DS_Type::ARRAY;
         // Stack
-    case CommandType::SPUSH: case CommandType::SPOP: case CommandType::SPRINT:
+    case CommandType::SPUSH: case CommandType::SPOP: 
         return DS_Type::STACK;
         // Queue
-    case CommandType::QPUSH: case CommandType::QPOP: case CommandType::QGET: case CommandType::QPRINT:
+    case CommandType::QPUSH: case CommandType::QPOP: case CommandType::QGET: 
         return DS_Type::QUEUE;
         // Singly List
     case CommandType::FCREATE: case CommandType::FPUSH_HEAD: case CommandType::FPUSH_BACK: case CommandType::FPUSH_BEFORE:
     case CommandType::FPUSH_FORWARD: case CommandType::FDEL_HEAD: case CommandType::FDEL_BACK: case CommandType::FDEL_BY_VALUE:
-    case CommandType::FGET_BY_VALUE: case CommandType::FPRINT:
+    case CommandType::FGET_BY_VALUE: 
         return DS_Type::SINGLY_LIST;
         // Doubly List
     case CommandType::LCREATE: case CommandType::LPUSH_HEAD: case CommandType::LPUSH_BACK: case CommandType::LPUSH_BEFORE:
     case CommandType::LPUSH_AFTER: case CommandType::LDEL_HEAD: case CommandType::LDEL_BACK: case CommandType::LDEL_BY_VALUE:
-    case CommandType::LGET_BY_VALUE: case CommandType::LPRINT_FORWARD: case CommandType::LPRINT_REVERSE:
+    case CommandType::LGET_BY_VALUE: 
         return DS_Type::DOUBLY_LIST;
         // Binary Tree
-    case CommandType::TINSERT: case CommandType::TFULL: case CommandType::TPRINT_BFS: case CommandType::TPRINT_PREORDER:
-    case CommandType::TPRINT_INORDER: case CommandType::TPRINT_POSTORDER: case CommandType::TPRINT_VISUAL:
+    case CommandType::TINSERT: case CommandType::TFULL: 
         return DS_Type::BINARY_TREE;
         // Unknown
     default:
@@ -447,16 +411,13 @@ void initializeCommandMap() {
     commandMap["MGET_BY_IND"] = CommandType::MGET_BY_IND; 
     commandMap["MDEL_BY_IND"] = CommandType::MDEL_BY_IND;
     commandMap["MSWAP_BY_IND"] = CommandType::MSWAP_BY_IND; 
-    commandMap["MPRINT"] = CommandType::MPRINT;
     // Стек
     commandMap["SPUSH"] = CommandType::SPUSH; 
     commandMap["SPOP"] = CommandType::SPOP; 
-    commandMap["SPRINT"] = CommandType::SPRINT;
     // Очередь
     commandMap["QPUSH"] = CommandType::QPUSH; 
     commandMap["QPOP"] = CommandType::QPOP;
     commandMap["QGET"] = CommandType::QGET; 
-    commandMap["QPRINT"] = CommandType::QPRINT;
     // Односвязный список
     commandMap["FCREATE"] = CommandType::FCREATE; 
     commandMap["FPUSH_HEAD"] = CommandType::FPUSH_HEAD;
@@ -467,7 +428,6 @@ void initializeCommandMap() {
     commandMap["FDEL_BACK"] = CommandType::FDEL_BACK; 
     commandMap["FDEL_BY_VALUE"] = CommandType::FDEL_BY_VALUE;
     commandMap["FGET_BY_VALUE"] = CommandType::FGET_BY_VALUE; 
-    commandMap["FPRINT"] = CommandType::FPRINT;
     // Двусвязный список
     commandMap["LCREATE"] = CommandType::LCREATE; 
     commandMap["LPUSH_HEAD"] = CommandType::LPUSH_HEAD;
@@ -478,16 +438,9 @@ void initializeCommandMap() {
     commandMap["LDEL_BACK"] = CommandType::LDEL_BACK; 
     commandMap["LDEL_BY_VALUE"] = CommandType::LDEL_BY_VALUE;
     commandMap["LGET_BY_VALUE"] = CommandType::LGET_BY_VALUE; 
-    commandMap["LPRINT_FORWARD"] = CommandType::LPRINT_FORWARD;
-    commandMap["LPRINT_REVERSE"] = CommandType::LPRINT_REVERSE;
     // Полное бинарное дерево
     commandMap["TINSERT"] = CommandType::TINSERT; 
     commandMap["TFULL"] = CommandType::TFULL;
-    commandMap["TPRINT_BFS"] = CommandType::TPRINT_BFS; 
-    commandMap["TPRINT_PREORDER"] = CommandType::TPRINT_PREORDER;
-    commandMap["TPRINT_INORDER"] = CommandType::TPRINT_INORDER; 
-    commandMap["TPRINT_POSTORDER"] = CommandType::TPRINT_POSTORDER;
-    commandMap["TPRINT_VISUAL"] = CommandType::TPRINT_VISUAL;
 }
 
 void loadStructureTypes() {
@@ -526,23 +479,55 @@ void saveStructureType(const string& name, DS_Type type) {
     meta_file.close();
 }
 
-void printHelp() { 
+void printHelp() {
     cout << "\n--- СИСТЕМА УПРАВЛЕНИЯ СТРУКТУРАМИ ДАННЫХ\n";
     cout << "Данные сохраняются в файлы после каждой операции изменения.\n";
     cout << "Формат команд: COMMAND <StructureName> [Arguments...]\n\n";
+
     cout << "--- ОБЩИЕ КОМАНДЫ\n";
     cout << "HELP              - Показать это сообщение\n";
-    cout << "EXIT              - Выход из программы\n\n";
-    cout << "--- ДИНАМИЧЕСКИЙ МАССИВ (Array)\n";
-    cout << "MPUSH_BACK <Name> <Value>, MPRINT <Name> и т.д.\n\n";
-    cout << "--- СТЕК (Stack)\n";
-    cout << "SPUSH <Name> <Value>, SPOP <Name>, SPRINT <Name>\n\n";
-    cout << "--- ОЧЕРЕДЬ (Queue)\n";
-    cout << "QPUSH <Name> <Value>, QPOP <Name>, QGET <Name>, QPRINT <Name>\n\n";
-    cout << "--- ОДНОСВЯЗНЫЙ СПИСОК (Singly Linked List)\n";
-    cout << "FCREATE <Name> <Value>, FPUSH_HEAD <Name> <Value> и т.д.\n\n";
-    cout << "--- ДВУСВЯЗНЫЙ СПИСОК (Doubly Linked List)\n";
-    cout << "LCREATE <Name> <Value>, LPUSH_HEAD <Name> <Value> и т.д.\n\n";
-    cout << "--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree)\n";
-    cout << "TINSERT <Name> <Value>, TPRINT_VISUAL <Name> и т.д.\n\n";
+    cout << "EXIT              - Выход из программы\n";
+    cout << "PRINT <Name>      - Вывести содержимое структуры <Name>.\n\n";
+
+    cout << "--- ДИНАМИЧЕСКИЙ МАССИВ (Array) - Префикс 'M'\n";
+    cout << "MPUSH_BACK <Name> <Value>   - Добавить <Value> в конец массива.\n";
+    cout << "MPUSH_BY_IND <Name> <Ind> <Value> - Вставить <Value> по индексу <Ind>.\n";
+    cout << "MGET_BY_IND <Name> <Ind>    - Получить элемент по индексу <Ind>.\n";
+    cout << "MDEL_BY_IND <Name> <Ind>    - Удалить элемент по индексу <Ind>.\n";
+    cout << "MSWAP_BY_IND <Name> <Ind> <Value> - Заменить элемент по индексу <Ind> на <Value>.\n\n";
+
+    cout << "--- СТЕК (Stack) - Префикс 'S'\n";
+    cout << "SPUSH <Name> <Value>      - Поместить <Value> в стек.\n";
+    cout << "SPOP <Name>               - Извлечь (удалить) верхний элемент стека.\n\n";
+
+    cout << "--- ОЧЕРЕДЬ (Queue) - Префикс 'Q'\n";
+    cout << "QPUSH <Name> <Value>      - Добавить <Value> в конец очереди.\n";
+    cout << "QPOP <Name>               - Извлечь (удалить) элемент из начала очереди и вывести его.\n";
+    cout << "QGET <Name>               - Получить элемент из начала очереди (без удаления) и вывести его.\n\n";
+
+    cout << "--- ОДНОСВЯЗНЫЙ СПИСОК (Singly Linked List) - Префикс 'F'\n";
+    cout << "FCREATE <Name> <Value>    - Создать список с одним элементом <Value>.\n";
+    cout << "FPUSH_HEAD <Name> <Value> - Добавить <Value> в начало списка.\n";
+    cout << "FPUSH_BACK <Name> <Value> - Добавить <Value> в конец списка.\n";
+    cout << "FPUSH_BEFORE <Name> <Target> <Value> - Вставить <Value> перед элементом <Target>.\n";
+    cout << "FPUSH_FORWARD <Name> <Target> <Value> - Вставить <Value> после элемента <Target>.\n";
+    cout << "FDEL_HEAD <Name>          - Удалить элемент из начала списка.\n";
+    cout << "FDEL_BACK <Name>          - Удалить элемент из конца списка.\n";
+    cout << "FDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.\n";
+    cout << "FGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n\n";
+
+    cout << "--- ДВУСВЯЗНЫЙ СПИСОК (Doubly Linked List) - Префикс 'L'\n";
+    cout << "LCREATE <Name> <Value>    - Создать список с одним элементом <Value>.\n";
+    cout << "LPUSH_HEAD <Name> <Value> - Добавить <Value> в начало списка.\n";
+    cout << "LPUSH_BACK <Name> <Value> - Добавить <Value> в конец списка.\n";
+    cout << "LPUSH_BEFORE <Name> <Target> <Value> - Вставить <Value> перед элементом <Target>.\n";
+    cout << "LPUSH_AFTER <Name> <Target> <Value> - Вставить <Value> после элемента <Target>.\n";
+    cout << "LDEL_HEAD <Name>          - Удалить элемент из начала списка.\n";
+    cout << "LDEL_BACK <Name>          - Удалить элемент из конца списка.\n";
+    cout << "LDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.\n";
+    cout << "LGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n\n";
+
+    cout << "--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree) - Префикс 'T'\n";
+    cout << "TINSERT <Name> <Value>    - Вставить <Value> в дерево.\n";
+    cout << "TFULL <Name>              - Проверить, является ли дерево полным.\n";
 }

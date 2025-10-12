@@ -229,7 +229,6 @@ template <typename T>
 void FLOAD(ForwardList<T>& fList, const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Ошибка открытия файла для чтения!" << endl;
         return;
     }
     // Очищаем текущий список

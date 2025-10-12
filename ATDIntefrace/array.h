@@ -13,11 +13,9 @@ struct Array {
     uint32_t size;
 
     Array() { //Конструктор для пустого массива
-        size = capacity = 1;
+        size = 0; 
+        capacity = 1;
         data = new T[capacity];
-        for (uint32_t i = 0; i < capacity; i++) {
-            data[i] = string("0");
-        }
     }
 
     Array(const uint32_t cap) { //Конструктор
