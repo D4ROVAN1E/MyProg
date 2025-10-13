@@ -178,6 +178,54 @@ void LPUSH_AFTER(DoublyList<T>& dList, T targetKey, T newKey) {
     targetDNode->next = newDNode;
 }
 
+// Удаление элемента ПОСЛЕ узла с заданным значением
+template <typename T>
+void LDEL_AFTER(DoublyList<T>& dList, T targetKey) {
+    DNode<T>* targetNode = LGET_BY_VALUE(dList, targetKey);
+
+    // Если целевой узел не найден или он является хвостом,
+    // то удалять нечего.
+    if (!targetNode || !targetNode->next) {
+        return;
+    }
+
+    DNode<T>* nodeToDelete = targetNode->next;
+
+    // Если удаляемый узел - хвост, используем готовую функцию
+    if (nodeToDelete == dList.tail) {
+        LDEL_BACK(dList);
+    } else {
+        // Если это узел в середине списка
+        targetNode->next = nodeToDelete->next;
+        nodeToDelete->next->prev = targetNode;
+        delete nodeToDelete;
+    }
+}
+
+// Удаление элемента ДО узла с заданным значением
+template <typename T>
+void LDEL_BEFORE(DoublyList<T>& dList, T targetKey) {
+    DNode<T>* targetNode = LGET_BY_VALUE(dList, targetKey);
+
+    // Если целевой узел не найден или он является головой,
+    // то удалять нечего.
+    if (!targetNode || !targetNode->prev) {
+        return;
+    }
+
+    DNode<T>* nodeToDelete = targetNode->prev;
+
+    // Если удаляемый узел - голова, используем готовую функцию
+    if (nodeToDelete == dList.head) {
+        LDEL_HEAD(dList);
+    } else {
+        // Если это узел в середине списка
+        targetNode->prev = nodeToDelete->prev;
+        nodeToDelete->prev->next = targetNode;
+        delete nodeToDelete;
+    }
+}
+
 //Удаление узла по значению (первое вхождение)
 template <typename T>
 void LDEL_BY_VALUE(DoublyList<T>& dList, T key) {

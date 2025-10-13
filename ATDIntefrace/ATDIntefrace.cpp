@@ -15,19 +15,21 @@
 
 using namespace std;
 
-// Enum для всех возможных команд 
+// Enum для всех возможных команд
 enum class CommandType {
     HELP, EXIT, UNKNOWN, PRINT,
     // Array
-    MPUSH_BACK, MPUSH_BY_IND, MGET_BY_IND, MDEL_BY_IND, MSWAP_BY_IND, 
+    MPUSH_BACK, MPUSH_BY_IND, MGET_BY_IND, MDEL_BY_IND, MSWAP_BY_IND,
     // Stack
-    SPUSH, SPOP, 
+    SPUSH, SPOP,
     // Queue
-    QPUSH, QPOP, QGET, 
+    QPUSH, QPOP, QGET,
     // Singly List
-    FCREATE, FPUSH_HEAD, FPUSH_BACK, FPUSH_BEFORE, FPUSH_FORWARD, FDEL_HEAD, FDEL_BACK, FDEL_BY_VALUE, FGET_BY_VALUE, 
+    FCREATE, FPUSH_HEAD, FPUSH_BACK, FPUSH_BEFORE, FPUSH_FORWARD,
+    FDEL_HEAD, FDEL_BACK, FDEL_BY_VALUE, FGET_BY_VALUE, FDEL_AFTER, FDEL_BEFORE,
     // Doubly List
-    LCREATE, LPUSH_HEAD, LPUSH_BACK, LPUSH_BEFORE, LPUSH_AFTER, LDEL_HEAD, LDEL_BACK, LDEL_BY_VALUE, LGET_BY_VALUE, 
+    LCREATE, LPUSH_HEAD, LPUSH_BACK, LPUSH_BEFORE, LPUSH_AFTER,
+    LDEL_HEAD, LDEL_BACK, LDEL_BY_VALUE, LGET_BY_VALUE, LDEL_AFTER, LDEL_BEFORE,
     // Binary Tree
     TINSERT, TFULL
 };
@@ -125,9 +127,9 @@ int main() {
             }
             case CommandType::MPUSH_BY_IND: {
                 string index_str, value;
-                if (ss >> index_str >> value) { 
-                    MPUSH_BY_IND(arr, stoi(index_str), value); 
-                    modified = true;  
+                if (ss >> index_str >> value) {
+                    MPUSH_BY_IND(arr, stoi(index_str), value);
+                    modified = true;
                 }
                 else { cout << "Ошибка: не указан индекс или значение.\n"; }
                 break;
@@ -140,17 +142,17 @@ int main() {
             }
             case CommandType::MDEL_BY_IND: {
                 string index_str;
-                if (ss >> index_str) {  
-                    MDEL_BY_IND(arr, stoi(index_str)); 
-                    modified = true; 
+                if (ss >> index_str) {
+                    MDEL_BY_IND(arr, stoi(index_str));
+                    modified = true;
                 }
                 else { cout << "Ошибка: не указан индекс.\n"; }
                 break;
             }
             case CommandType::MSWAP_BY_IND: {
                 string index_str, value;
-                if (ss >> index_str >> value) {  
-                    MSWAP_BY_IND(arr, stoi(index_str), value); 
+                if (ss >> index_str >> value) {
+                    MSWAP_BY_IND(arr, stoi(index_str), value);
                     modified = true;  }
                 else { cout << "Ошибка: не указан индекс или значение.\n"; }
                 break;
@@ -178,7 +180,7 @@ int main() {
                 break;
             }
             case CommandType::SPOP: {
-                if (stack.size > 0) { SPOP(stack); modified = true; }
+                if (stack.size > 0) { cout << "Извлечено " << string(SPOP(stack)) << endl; modified = true; }
                 else { cout << "Стек пуст.\n"; }
                 break;
             }
@@ -262,6 +264,31 @@ int main() {
                 else { cout << "Ошибка: не указано значение.\n"; }
                 break;
             }
+            case CommandType::FDEL_AFTER: {
+                string target;
+                if (ss >> target) {
+                    SNode<string>* targetNode = FGET_BY_VALUE(list, target);
+                    if (targetNode) {
+                        FDEL_AFTER(targetNode);
+                        modified = true;
+                    } else {
+                        cout << "Ошибка: узел '" << target << "' не найден.\n";
+                    }
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
+                break;
+            }
+            case CommandType::FDEL_BEFORE: {
+                string target;
+                if (ss >> target) {
+                    FDEL_BEFORE(list, target);
+                    modified = true;
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
+                break;
+            }
             case CommandType::FGET_BY_VALUE: {
                 string value;
                 if (ss >> value) { cout << (FGET_BY_VALUE(list, value) ? "Элемент найден" : "Элемент не найден") << endl; }
@@ -314,6 +341,26 @@ int main() {
                 string value;
                 if (ss >> value) { LDEL_BY_VALUE(list, value); modified = true; }
                 else { cout << "Ошибка: не указано значение.\n"; }
+                break;
+            }
+            case CommandType::LDEL_AFTER: {
+                string target;
+                if (ss >> target) {
+                    LDEL_AFTER(list, target);
+                    modified = true;
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
+                break;
+            }
+            case CommandType::LDEL_BEFORE: {
+                string target;
+                if (ss >> target) {
+                    LDEL_BEFORE(list, target);
+                    modified = true;
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
                 break;
             }
             case CommandType::LGET_BY_VALUE: {
@@ -369,30 +416,30 @@ int main() {
 
 //Реализация служебных функций
 
-DS_Type getImpliedType(CommandType cmd) { 
+DS_Type getImpliedType(CommandType cmd) {
     switch (cmd) {
         // Array
     case CommandType::MPUSH_BACK: case CommandType::MPUSH_BY_IND: case CommandType::MGET_BY_IND:
-    case CommandType::MDEL_BY_IND: case CommandType::MSWAP_BY_IND: 
+    case CommandType::MDEL_BY_IND: case CommandType::MSWAP_BY_IND:
         return DS_Type::ARRAY;
         // Stack
-    case CommandType::SPUSH: case CommandType::SPOP: 
+    case CommandType::SPUSH: case CommandType::SPOP:
         return DS_Type::STACK;
         // Queue
-    case CommandType::QPUSH: case CommandType::QPOP: case CommandType::QGET: 
+    case CommandType::QPUSH: case CommandType::QPOP: case CommandType::QGET:
         return DS_Type::QUEUE;
         // Singly List
     case CommandType::FCREATE: case CommandType::FPUSH_HEAD: case CommandType::FPUSH_BACK: case CommandType::FPUSH_BEFORE:
     case CommandType::FPUSH_FORWARD: case CommandType::FDEL_HEAD: case CommandType::FDEL_BACK: case CommandType::FDEL_BY_VALUE:
-    case CommandType::FGET_BY_VALUE: 
+    case CommandType::FGET_BY_VALUE: case CommandType::FDEL_AFTER: case CommandType::FDEL_BEFORE:
         return DS_Type::SINGLY_LIST;
         // Doubly List
     case CommandType::LCREATE: case CommandType::LPUSH_HEAD: case CommandType::LPUSH_BACK: case CommandType::LPUSH_BEFORE:
     case CommandType::LPUSH_AFTER: case CommandType::LDEL_HEAD: case CommandType::LDEL_BACK: case CommandType::LDEL_BY_VALUE:
-    case CommandType::LGET_BY_VALUE: 
+    case CommandType::LGET_BY_VALUE: case CommandType::LDEL_AFTER: case CommandType::LDEL_BEFORE:
         return DS_Type::DOUBLY_LIST;
         // Binary Tree
-    case CommandType::TINSERT: case CommandType::TFULL: 
+    case CommandType::TINSERT: case CommandType::TFULL:
         return DS_Type::BINARY_TREE;
         // Unknown
     default:
@@ -406,40 +453,44 @@ void initializeCommandMap() {
     commandMap["EXIT"] = CommandType::EXIT;
 	commandMap["PRINT"] = CommandType::PRINT;
     // Массив
-    commandMap["MPUSH_BACK"] = CommandType::MPUSH_BACK; 
+    commandMap["MPUSH_BACK"] = CommandType::MPUSH_BACK;
     commandMap["MPUSH_BY_IND"] = CommandType::MPUSH_BY_IND;
-    commandMap["MGET_BY_IND"] = CommandType::MGET_BY_IND; 
+    commandMap["MGET_BY_IND"] = CommandType::MGET_BY_IND;
     commandMap["MDEL_BY_IND"] = CommandType::MDEL_BY_IND;
-    commandMap["MSWAP_BY_IND"] = CommandType::MSWAP_BY_IND; 
+    commandMap["MSWAP_BY_IND"] = CommandType::MSWAP_BY_IND;
     // Стек
-    commandMap["SPUSH"] = CommandType::SPUSH; 
-    commandMap["SPOP"] = CommandType::SPOP; 
+    commandMap["SPUSH"] = CommandType::SPUSH;
+    commandMap["SPOP"] = CommandType::SPOP;
     // Очередь
-    commandMap["QPUSH"] = CommandType::QPUSH; 
+    commandMap["QPUSH"] = CommandType::QPUSH;
     commandMap["QPOP"] = CommandType::QPOP;
-    commandMap["QGET"] = CommandType::QGET; 
+    commandMap["QGET"] = CommandType::QGET;
     // Односвязный список
-    commandMap["FCREATE"] = CommandType::FCREATE; 
+    commandMap["FCREATE"] = CommandType::FCREATE;
     commandMap["FPUSH_HEAD"] = CommandType::FPUSH_HEAD;
-    commandMap["FPUSH_BACK"] = CommandType::FPUSH_BACK; 
+    commandMap["FPUSH_BACK"] = CommandType::FPUSH_BACK;
     commandMap["FPUSH_BEFORE"] = CommandType::FPUSH_BEFORE;
-    commandMap["FPUSH_FORWARD"] = CommandType::FPUSH_FORWARD; 
+    commandMap["FPUSH_FORWARD"] = CommandType::FPUSH_FORWARD;
     commandMap["FDEL_HEAD"] = CommandType::FDEL_HEAD;
-    commandMap["FDEL_BACK"] = CommandType::FDEL_BACK; 
+    commandMap["FDEL_BACK"] = CommandType::FDEL_BACK;
     commandMap["FDEL_BY_VALUE"] = CommandType::FDEL_BY_VALUE;
-    commandMap["FGET_BY_VALUE"] = CommandType::FGET_BY_VALUE; 
+    commandMap["FGET_BY_VALUE"] = CommandType::FGET_BY_VALUE;
+    commandMap["FDEL_AFTER"] = CommandType::FDEL_AFTER;
+    commandMap["FDEL_BEFORE"] = CommandType::FDEL_BEFORE;
     // Двусвязный список
-    commandMap["LCREATE"] = CommandType::LCREATE; 
+    commandMap["LCREATE"] = CommandType::LCREATE;
     commandMap["LPUSH_HEAD"] = CommandType::LPUSH_HEAD;
-    commandMap["LPUSH_BACK"] = CommandType::LPUSH_BACK; 
+    commandMap["LPUSH_BACK"] = CommandType::LPUSH_BACK;
     commandMap["LPUSH_BEFORE"] = CommandType::LPUSH_BEFORE;
-    commandMap["LPUSH_AFTER"] = CommandType::LPUSH_AFTER; 
+    commandMap["LPUSH_AFTER"] = CommandType::LPUSH_AFTER;
     commandMap["LDEL_HEAD"] = CommandType::LDEL_HEAD;
-    commandMap["LDEL_BACK"] = CommandType::LDEL_BACK; 
+    commandMap["LDEL_BACK"] = CommandType::LDEL_BACK;
     commandMap["LDEL_BY_VALUE"] = CommandType::LDEL_BY_VALUE;
-    commandMap["LGET_BY_VALUE"] = CommandType::LGET_BY_VALUE; 
+    commandMap["LGET_BY_VALUE"] = CommandType::LGET_BY_VALUE;
+    commandMap["LDEL_AFTER"] = CommandType::LDEL_AFTER;
+    commandMap["LDEL_BEFORE"] = CommandType::LDEL_BEFORE;
     // Полное бинарное дерево
-    commandMap["TINSERT"] = CommandType::TINSERT; 
+    commandMap["TINSERT"] = CommandType::TINSERT;
     commandMap["TFULL"] = CommandType::TFULL;
 }
 
@@ -514,6 +565,8 @@ void printHelp() {
     cout << "FDEL_HEAD <Name>          - Удалить элемент из начала списка.\n";
     cout << "FDEL_BACK <Name>          - Удалить элемент из конца списка.\n";
     cout << "FDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.\n";
+    cout << "FDEL_AFTER <Name> <Target> - Удалить элемент после элемента <Target>.\n";
+    cout << "FDEL_BEFORE <Name> <Target>- Удалить элемент перед элементом <Target>.\n";
     cout << "FGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n\n";
 
     cout << "--- ДВУСВЯЗНЫЙ СПИСОК (Doubly Linked List) - Префикс 'L'\n";
@@ -525,6 +578,8 @@ void printHelp() {
     cout << "LDEL_HEAD <Name>          - Удалить элемент из начала списка.\n";
     cout << "LDEL_BACK <Name>          - Удалить элемент из конца списка.\n";
     cout << "LDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.\n";
+    cout << "LDEL_AFTER <Name> <Target> - Удалить элемент после элемента <Target>.\n";
+    cout << "LDEL_BEFORE <Name> <Target>- Удалить элемент перед элементом <Target>.\n";
     cout << "LGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n\n";
 
     cout << "--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree) - Префикс 'T'\n";

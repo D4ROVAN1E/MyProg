@@ -80,8 +80,10 @@ void SPUSH(Stack<T>& st, T value) { //Добавление элемента в �
 }
 
 template <typename T>
-void SPOP(Stack<T>& st) {
+T SPOP(Stack<T>& st) {
+	T rt = st.data[st.size - 1];
     st.size--;
+	return rt;
 }
 
 

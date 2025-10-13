@@ -138,37 +138,42 @@ void postorder_recursive(TreeNode<T>* node) {
     }
 }
 
-// Вставка элемента
+// Вставка элемента по принципу бинарного дерева поиска
 template<typename T>
 void TINSERT(FullBinaryTree<T>& tree, T value) {
+    // Создаем новый узел с переданным значением
     TreeNode<T>* new_node = new TreeNode<T>(value);
+
+    // Если дерево пустое, новый узел становится корнем
     if (tree.root == nullptr) {
         tree.root = new_node;
         return;
     }
 
-    queue<TreeNode<T>*> q;
-    q.push(tree.root);
+    // Начинаем поиск места для вставки с корня
+    TreeNode<T>* current = tree.root;
+    TreeNode<T>* parent = nullptr;
 
-    while (!q.empty()) {
-        TreeNode<T>* current = q.front();
-        q.pop();
-
-        if (current->left == nullptr) {
-            current->left = new_node;
-            return;
+    // Ищем подходящее место для вставки, спускаясь по дереву
+    while (current != nullptr) {
+        parent = current; // Запоминаем родителя
+        if (value < current->key) {
+            // Если значение меньше ключа текущего узла, идем влево
+            current = current->left;
         }
         else {
-            q.push(current->left);
+            // Если значение больше или равно, идем вправо
+            current = current->right;
         }
+    }
 
-        if (current->right == nullptr) {
-            current->right = new_node;
-            return;
-        }
-        else {
-            q.push(current->right);
-        }
+    // Когда найдено пустое место (current == nullptr), 
+    // вставляем новый узел как левого или правого потомка родителя (parent)
+    if (value < parent->key) {
+        parent->left = new_node;
+    }
+    else {
+        parent->right = new_node;
     }
 }
 

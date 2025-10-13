@@ -39,7 +39,7 @@ struct ForwardList
         }
     }
 
-    // Копирующий оператор присваивания 
+    // Копирующий оператор присваивания
     ForwardList& operator=(const ForwardList& other) {
         if (this != &other) {
             ForwardList temp(other);
@@ -171,6 +171,47 @@ void FDEL_BACK(ForwardList<T>& fList) {
     current->next = nullptr;
 }
 
+// Удаление элемента ПОСЛЕ указанного узла
+template <typename T>
+void FDEL_AFTER(SNode<T>* ptr) {
+    // Если указанный узел не существует или он последний, ничего не делаем
+    if (!ptr || !ptr->next) {
+        return;
+    }
+
+    SNode<T>* nodeToDelete = ptr->next; // Узел, который нужно удалить
+    ptr->next = nodeToDelete->next;   // "Перепрыгиваем" через удаляемый узел
+    delete nodeToDelete;              // Освобождаем память
+}
+
+// Удаление элемента ДО узла с заданным значением
+template <typename T>
+void FDEL_BEFORE(ForwardList<T>& fList, T targetKey) {
+    // Если список пуст, содержит один элемент, или искомый элемент - голова,
+    // то удалять нечего.
+    if (!fList.head || !fList.head->next || fList.head->key == targetKey) {
+        return;
+    }
+
+    // Нужно удалить голову списка (элемент перед вторым элементом)
+    if (fList.head->next->key == targetKey) {
+        FDEL_HEAD(fList);
+        return;
+    }
+
+    // Ищем узел, который находится за два шага до целевого
+    SNode<T>* current = fList.head;
+    while (current->next && current->next->next) {
+        if (current->next->next->key == targetKey) {
+            // Мы нашли узел (current), после которого идет узел для удаления.
+            // Используем уже существующую функцию FDEL_AFTER.
+            FDEL_AFTER(current);
+            return;
+        }
+        current = current->next;
+    }
+}
+
 //Удаление узла по значению (первое вхождение)
 template <typename T>
 void FDEL_BY_VALUE(ForwardList<T>& fList, T key) {
@@ -221,7 +262,7 @@ void FSAVE(const ForwardList<T>& fList, const string& filename) {
         current = current->next;
     }
     file.close();
-    cout << "Односвязный список сохранён в файл: " << filename << endl;
+    //cout << "Односвязный список сохранён в файл: " << filename << endl;
 }
 
 // Загрузка списка из файла
@@ -248,5 +289,5 @@ void FLOAD(ForwardList<T>& fList, const string& filename) {
         }
     }
     file.close();
-    cout << "Односвязный список загружен из файла: " << filename << endl;
-}
+    //cout << "Односвязный список загружен из файла: " << filename << endl;
+};

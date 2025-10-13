@@ -11,6 +11,938 @@
 
 using namespace std;
 
+// Константы для форматирования вывода
+const string branch_right = "|--- "; // Ветка к правому потомку
+const string branch_left = "|___ ";  // Ветка к левому потомку
+
+// Структура узла 
+template<typename T>
+struct TreeNode {
+    T key;
+    TreeNode<T>* left;
+    TreeNode<T>* right;
+
+    // Конструктор для создания узла
+    TreeNode(T val) {
+        key = val;
+        left = nullptr;
+        right = nullptr;
+    }
+};
+
+// Рекурсивная функция для глубокого копирования дерева
+template<typename T>
+TreeNode<T>* copy_tree(const TreeNode<T>* other_node) {
+    if (other_node == nullptr) {
+        return nullptr;
+    }
+    TreeNode<T>* new_node = new TreeNode<T>(other_node->key);
+    new_node->left = copy_tree(other_node->left);
+    new_node->right = copy_tree(other_node->right);
+    return new_node;
+}
+
+// Рекурсивная функция для удаления всех узлов
+template<typename T>
+void destroy_tree(TreeNode<T>* node) {
+    if (node != nullptr) {
+        destroy_tree(node->left);
+        destroy_tree(node->right);
+        delete node;
+    }
+}
+
+template<typename T>
+struct FullBinaryTree {
+    TreeNode<T>* root;
+
+    //Конструктор по умолчанию
+    FullBinaryTree() {
+        root = nullptr;
+    }
+
+    //Деструктор
+    ~FullBinaryTree() {
+        destroy_tree(root);
+    }
+
+    //Копирующий конструктор
+    FullBinaryTree(const FullBinaryTree& other) {
+        root = copy_tree(other.root);
+    }
+
+    //Копирующий оператор присваивания
+    FullBinaryTree& operator=(const FullBinaryTree& other) {
+        if (this != &other) { // Защита от самоприсваивания
+            //Очищаем текущие ресурсы
+            destroy_tree(root);
+            //Копируем ресурсы из другого объекта
+            root = copy_tree(other.root);
+        }
+        return *this;
+    }
+};
+
+// Вспомогательная рекурсивная функция для красивой печати
+template<typename T>
+void print_tree_recursive(TreeNode<T>* node, const string& prefix, bool isLeft) {
+    if (node != nullptr) {
+        cout << prefix;
+        // Используем разные символы для левой и правой ветки
+        cout << (isLeft ? branch_left : branch_right);
+        // Выводим значение узла
+        cout << node->key << endl;
+
+        // Рекурсивно вызываем для потомков, увеличивая отступ
+        // Правый потомок идет первым, чтобы дерево "росло" слева направо
+        print_tree_recursive(node->right, prefix + (isLeft ? "|   " : "    "), false);
+        print_tree_recursive(node->left, prefix + (isLeft ? "|   " : "    "), true);
+    }
+}
+
+// Главная функция для красивой печати дерева
+template<typename T>
+void printTreeVisual(TreeNode<T>* root) {
+    if (root == nullptr) {
+        cout << "Дерево пустое." << endl;
+        return;
+    }
+    // Начинаем печать с корневого узла
+    cout << root->key << endl;
+    // Вызываем рекурсивную функцию для потомков
+    print_tree_recursive(root->right, "", false);
+    print_tree_recursive(root->left, "", true);
+}
+
+// Рекурсивные функцияы для обходов
+template<typename T>
+void preorder_recursive(TreeNode<T>* node) {
+    if (node != nullptr) {
+        cout << node->key << " ";
+        preorder_recursive(node->left);
+        preorder_recursive(node->right);
+    }
+}
+
+template<typename T>
+void inorder_recursive(TreeNode<T>* node) {
+    if (node != nullptr) {
+        inorder_recursive(node->left);
+        cout << node->key << " ";
+        inorder_recursive(node->right);
+    }
+}
+
+template<typename T>
+void postorder_recursive(TreeNode<T>* node) {
+    if (node != nullptr) {
+        postorder_recursive(node->left);
+        postorder_recursive(node->right);
+        cout << node->key << " ";
+    }
+}
+
+// Вставка элемента по принципу бинарного дерева поиска
+template<typename T>
+void TINSERT(FullBinaryTree<T>& tree, T value) {
+    // Создаем новый узел с переданным значением
+    TreeNode<T>* new_node = new TreeNode<T>(value);
+
+    // Если дерево пустое, новый узел становится корнем
+    if (tree.root == nullptr) {
+        tree.root = new_node;
+        return;
+    }
+
+    // Начинаем поиск места для вставки с корня
+    TreeNode<T>* current = tree.root;
+    TreeNode<T>* parent = nullptr;
+
+    // Ищем подходящее место для вставки, спускаясь по дереву
+    while (current != nullptr) {
+        parent = current; // Запоминаем родителя
+        if (value < current->key) {
+            // Если значение меньше ключа текущего узла, идем влево
+            current = current->left;
+        }
+        else {
+            // Если значение больше или равно, идем вправо
+            current = current->right;
+        }
+    }
+
+    // Когда найдено пустое место (current == nullptr), 
+    // вставляем новый узел как левого или правого потомка родителя (parent)
+    if (value < parent->key) {
+        parent->left = new_node;
+    }
+    else {
+        parent->right = new_node;
+    }
+}
+
+//Функция проверки на full
+template<typename T>
+bool TFULL(TreeNode<T>* current) {
+    if (((current->left == nullptr) ^ (current->right == nullptr)) == 1) {
+        return false;
+    }
+    else if (current->left != nullptr && current->right != nullptr) {
+        return TFULL(current->left) && TFULL(current->right);
+    }
+    return true;
+}
+
+// Прямой обход (Pre-order): Корень -> Лево -> Право
+template<typename T>
+void printPreorder(FullBinaryTree<T>& tree) {
+    preorder_recursive(tree.root);
+    cout << endl;
+}
+
+// Центрированный обход (In-order): Лево -> Корень -> Право
+template<typename T>
+void printInorder(FullBinaryTree<T>& tree) {
+    inorder_recursive(tree.root);
+    cout << endl;
+}
+
+// Обратный обход (Post-order): Лево -> Право -> Корень
+template<typename T>
+void printPostorder(FullBinaryTree<T>& tree) {
+    postorder_recursive(tree.root);
+    cout << endl;
+}
+
+// Обход в ширину (Level-order / Breadth-first)
+template<typename T>
+void printBreadthFirst(FullBinaryTree<T>& tree) {
+    if (tree.root == nullptr) {
+        return;
+    }
+
+    queue<TreeNode<T>*> q;
+    q.push(tree.root);
+
+    while (!q.empty()) {
+        TreeNode<T>* current = q.front();
+        q.pop();
+
+        cout << current->key << " ";
+
+        if (current->left != nullptr) {
+            q.push(current->left);
+        }
+        if (current->right != nullptr) {
+            q.push(current->right);
+        }
+    }
+    cout << endl;
+}
+
+template<typename T>
+void PRINT(FullBinaryTree<T>& tree, int choise) {
+    switch (choise)
+    {
+    case 1:
+        printBreadthFirst(tree);
+	    break;
+    case 2:
+		printPreorder(tree);
+        break;
+	case 3:
+        printInorder(tree);
+		break;
+    case 4:
+		printPostorder(tree);
+		break;
+    case 5:
+        printTreeVisual(tree.root);
+        break;
+    default:
+        break;
+    }
+}
+
+// Сохранение дерева в файл (обход в ширину)
+template<typename T>
+void TSAVE(const FullBinaryTree<T>& tree, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "Ошибка открытия файла для записи!" << endl;
+        return;
+    }
+
+    if (tree.root == nullptr) {
+        file.close();
+        cout << "Дерево пустое, сохранён пустой файл: " << filename << endl;
+        return;
+    }
+
+    // Используем очередь для обхода в ширину, чтобы сохранить
+    // узлы в том же порядке, в котором они добавляются функцией TINSERT
+    queue<TreeNode<T>*> q;
+    q.push(tree.root);
+
+    while (!q.empty()) {
+        TreeNode<T>* current = q.front();
+        q.pop();
+
+        file << current->key << " "; // Записываем ключ узла в файл
+
+        if (current->left != nullptr) {
+            q.push(current->left);
+        }
+        if (current->right != nullptr) {
+            q.push(current->right);
+        }
+    }
+
+    file.close();
+    cout << "Полное бинарное дерево сохранено в файл: " << filename << endl;
+}
+
+// Загрузка дерева из файла
+template<typename T>
+void TLOAD(FullBinaryTree<T>& tree, const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        return;
+    }
+
+    //Очищаем текущее дерево, чтобы избежать утечек памяти
+    destroy_tree(tree.root);
+    tree.root = nullptr;
+
+    //Читаем значения из файла и вставляем их в дерево
+    T value;
+    while (file >> value) {
+        // Используем существующую функцию TINSERT для построения дерева
+        TINSERT(tree, value);
+    }
+
+    file.close();
+    cout << "Полное бинарное дерево загружено из файла: " << filename << endl;
+}
+
+// Структура узла для двусвязного списка
+template <typename T>
+struct DNode
+{
+    T key;
+    DNode<T>* next; // Указатель на следующий элемент
+    DNode<T>* prev; // Указатель на предыдущий элемент
+};
+
+// Структура двусвязного списка
+template <typename T>
+struct DoublyList
+{
+    DNode<T>* head = nullptr;
+    DNode<T>* tail = nullptr;
+
+    DoublyList() {
+        head = nullptr;
+        tail = nullptr;
+    }
+
+    // Деструктор (очищает всю память)
+    ~DoublyList() {
+        while (head) {
+            DNode<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+
+    // Копирующий конструктор (создает глубокую копию)
+    DoublyList(const DoublyList& other) {
+        head = nullptr;
+        tail = nullptr;
+        if (!other.head) {
+            return;
+        }
+        DNode<T>* current_other = other.head;
+        while (current_other) {
+            this->push_back(current_other->key);
+            current_other = current_other->next;
+        }
+    }
+
+    DoublyList& operator=(const DoublyList& other) {
+        if (this != &other) {
+            //Создание глубокой копии 
+            DoublyList temp(other);
+
+            // Используем swap.
+            swap(head, temp.head);
+            swap(tail, temp.tail);
+        }
+
+        return *this;
+    }
+};
+
+//Создает список с начальным элементом
+template <typename T>
+void LCREATE(DoublyList<T>& dList, T keyBegin) {
+    DNode<T>* newDNode = new DNode<T>{ keyBegin, nullptr, nullptr };
+    dList.head = newDNode;
+    dList.tail = newDNode;
+}
+
+//Добавление элемента в НАЧАЛО списка
+template <typename T>
+void LPUSH_HEAD(DoublyList<T>& dList, T key) {
+    DNode<T>* newDNode = new DNode<T>{ key, dList.head, nullptr };
+
+    if (dList.head) { // Если список не пуст
+        dList.head->prev = newDNode;
+    }
+    else { // Если список был пуст, новый узел также является хвостом
+        dList.tail = newDNode;
+    }
+    dList.head = newDNode;
+}
+
+//Добавление элемента в КОНЕЦ списка
+template <typename T>
+void LPUSH_BACK(DoublyList<T>& dList, T key) {
+    DNode<T>* newDNode = new DNode<T>{ key, nullptr, dList.tail };
+
+    if (dList.tail) { // Если список не пуст
+        dList.tail->next = newDNode;
+    }
+    else { // Если список был пуст, новый узел также является головой
+        dList.head = newDNode;
+    }
+    dList.tail = newDNode;
+}
+
+//Удаление первого элемента (головы) списка
+template <typename T>
+void LDEL_HEAD(DoublyList<T>& dList) {
+    if (!dList.head) return; // Список пуст
+
+    DNode<T>* temp = dList.head;
+    dList.head = dList.head->next;
+
+    if (dList.head) { // Если в списке остались элементы
+        dList.head->prev = nullptr;
+    }
+    else { // Если список стал пустым
+        dList.tail = nullptr;
+    }
+    delete temp;
+}
+
+//Удаление последнего элемента списка
+template <typename T>
+void LDEL_BACK(DoublyList<T>& dList) {
+    if (!dList.tail) return; // Список пуст
+
+    DNode<T>* temp = dList.tail;
+    dList.tail = dList.tail->prev;
+
+    if (dList.tail) { // Если в списке остались элементы
+        dList.tail->next = nullptr;
+    }
+    else { // Если список стал пустым
+        dList.head = nullptr;
+    }
+    delete temp;
+}
+
+//Чтение (поиск) элемента по значению
+template <typename T>
+DNode<T>* LGET_BY_VALUE(const DoublyList<T>& dList, T key) {
+    DNode<T>* current = dList.head;
+    while (current != nullptr) {
+        if (current->key == key) {
+            return current;
+        }
+        current = current->next;
+    }
+    return nullptr; // Элемент не найден
+}
+
+//Добавление элемента ДО узла с заданным значением
+template <typename T>
+void LPUSH_BEFORE(DoublyList<T>& dList, T targetKey, T newKey) {
+    DNode<T>* targetDNode = LGET_BY_VALUE(dList, targetKey);
+    if (!targetDNode) return; // Элемент, перед которым нужно вставить, не найден
+
+    if (targetDNode == dList.head) { // Если вставляем перед головой
+        LPUSH_HEAD(dList, newKey);
+        return;
+    }
+
+    DNode<T>* newDNode = new DNode<T>{ newKey, targetDNode, targetDNode->prev };
+    targetDNode->prev->next = newDNode;
+    targetDNode->prev = newDNode;
+}
+
+//Добавление элемента ПОСЛЕ узла с заданным значением
+template <typename T>
+void LPUSH_AFTER(DoublyList<T>& dList, T targetKey, T newKey) {
+    DNode<T>* targetDNode = LGET_BY_VALUE(dList, targetKey);
+    if (!targetDNode) return; // Элемент, после которого нужно вставить, не найден
+    if (targetDNode == dList.tail) { // Если вставляем после хвоста
+        LPUSH_BACK(dList, newKey);
+        return;
+    }
+    DNode<T>* newDNode = new DNode<T>{ newKey, targetDNode->next, targetDNode };
+    targetDNode->next->prev = newDNode;
+    targetDNode->next = newDNode;
+}
+
+// Удаление элемента ПОСЛЕ узла с заданным значением
+template <typename T>
+void LDEL_AFTER(DoublyList<T>& dList, T targetKey) {
+    DNode<T>* targetNode = LGET_BY_VALUE(dList, targetKey);
+
+    // Если целевой узел не найден или он является хвостом,
+    // то удалять нечего.
+    if (!targetNode || !targetNode->next) {
+        return;
+    }
+
+    DNode<T>* nodeToDelete = targetNode->next;
+
+    // Если удаляемый узел - хвост, используем готовую функцию
+    if (nodeToDelete == dList.tail) {
+        LDEL_BACK(dList);
+    } else {
+        // Если это узел в середине списка
+        targetNode->next = nodeToDelete->next;
+        nodeToDelete->next->prev = targetNode;
+        delete nodeToDelete;
+    }
+}
+
+// Удаление элемента ДО узла с заданным значением
+template <typename T>
+void LDEL_BEFORE(DoublyList<T>& dList, T targetKey) {
+    DNode<T>* targetNode = LGET_BY_VALUE(dList, targetKey);
+
+    // Если целевой узел не найден или он является головой,
+    // то удалять нечего.
+    if (!targetNode || !targetNode->prev) {
+        return;
+    }
+
+    DNode<T>* nodeToDelete = targetNode->prev;
+
+    // Если удаляемый узел - голова, используем готовую функцию
+    if (nodeToDelete == dList.head) {
+        LDEL_HEAD(dList);
+    } else {
+        // Если это узел в середине списка
+        targetNode->prev = nodeToDelete->prev;
+        nodeToDelete->prev->next = targetNode;
+        delete nodeToDelete;
+    }
+}
+
+//Удаление узла по значению (первое вхождение)
+template <typename T>
+void LDEL_BY_VALUE(DoublyList<T>& dList, T key) {
+    DNode<T>* targetDNode = LGET_BY_VALUE(dList, key);
+    if (!targetDNode) return; // Узел для удаления не найден
+
+    if (targetDNode == dList.head) {
+        LDEL_HEAD(dList);
+    }
+    else if (targetDNode == dList.tail) {
+        LDEL_BACK(dList);
+    }
+    else {
+        // Связываем предыдущий и следующий узлы между собой
+        targetDNode->prev->next = targetDNode->next;
+        targetDNode->next->prev = targetDNode->prev;
+        delete targetDNode;
+    }
+}
+
+//Выводит список в консоль от начала до конца
+template <typename T>
+void print_forward(const DoublyList<T>& dList) {
+    if (!dList.head) {
+        cout << "Список пуст." << endl;
+        return;
+    }
+    DNode<T>* current = dList.head;
+    cout << "Голова -> ";
+    while (current != nullptr)
+    {
+        cout << current->key << " <-> ";
+        current = current->next;
+    }
+    cout << "nullptr" << endl;
+}
+
+//Выводит список в консоль от конца до начала (для проверки)
+template <typename T>
+void print_backward(const DoublyList<T>& dList) {
+    if (!dList.tail) {
+        cout << "Список пуст." << endl;
+        return;
+    }
+    DNode<T>* current = dList.tail;
+    cout << "Хвост -> ";
+    while (current != nullptr)
+    {
+        cout << current->key << " <-> ";
+        current = current->prev;
+    }
+    cout << "nullptr" << endl;
+}
+
+template <typename T>
+void PRINT(const DoublyList<T>& dList, int choice) {
+    switch (choice)
+    {
+    case 1:
+        print_forward(dList);
+        break;
+    case 2:
+        print_backward(dList);
+        break;
+    default:
+        break;
+    }
+}
+
+// Сохранение списка в файл
+template <typename T>
+void LSAVE(const DoublyList<T>& dList, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "Ошибка открытия файла для записи!" << endl;
+        return;
+    }
+    DNode<T>* current = dList.head;
+    while (current != nullptr) {
+        file << current->key << " ";
+        current = current->next;
+    }
+    file.close();
+    cout << "Двусвязный список сохранён в файл: " << filename << endl;
+}
+
+// Загрузка списка из файла
+template <typename T>
+void LLOAD(DoublyList<T>& dList, const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        return;
+    }
+    // Очищаем текущий список
+    while (dList.head) {
+        LDEL_HEAD(dList);
+    }
+
+    T value;
+    bool first = true;
+    while (file >> value) {
+        if (first) {
+            LCREATE(dList, value);
+            first = false;
+        }
+        else {
+            LPUSH_BACK(dList, value);
+        }
+    }
+    file.close();
+    cout << "Двусвязный список загружен из файла: " << filename << endl;
+}
+
+template <typename T>
+struct SNode
+{
+    T key;
+    SNode<T>* next; // указатель на следующий элемент
+};
+
+template <typename T>
+struct ForwardList
+{
+    SNode<T>* head;
+
+    // Конструктор по умолчанию
+    ForwardList() {
+        head = nullptr;
+    }
+
+    // Копирующий конструктор (создает глубокую копию)
+    ForwardList(const ForwardList& other) {
+        head = nullptr;
+        if (!other.head) {
+            return;
+        }
+        head = new SNode<T>{ other.head->key, nullptr };
+        SNode<T>* current_this = head;
+        SNode<T>* current_other = other.head->next;
+        while (current_other) {
+            current_this->next = new SNode<T>{ current_other->key, nullptr };
+            current_this = current_this->next;
+            current_other = current_other->next;
+        }
+    }
+
+    // Копирующий оператор присваивания
+    ForwardList& operator=(const ForwardList& other) {
+        if (this != &other) {
+            ForwardList temp(other);
+            swap(head, temp.head);
+        }
+        return *this;
+    }
+
+    // Деструктор (очищает память)
+    ~ForwardList() {
+        while (head != nullptr) {
+            SNode<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+};
+
+
+// Добавляет узел ПОСЛЕ указанного узла ptr
+template <typename T>
+void FPUSH_FORWARD(SNode<T>* ptr, T key) {
+    if (!ptr) return;
+    SNode<T>* newSNode = new SNode<T>{ key, nullptr };
+    newSNode->next = ptr->next;
+    ptr->next = newSNode;
+}
+
+// Создает список с начальным элементом
+template <typename T>
+void FCREATE(ForwardList<T>& fList, T keyBegin) {
+    // Очистим список, если он уже был не пуст
+    while (fList.head) {
+        SNode<T>* temp = fList.head;
+        fList.head = fList.head->next;
+        delete temp;
+    }
+    fList.head = new SNode<T>{ keyBegin, nullptr };
+}
+
+// Выводит список в консоль
+template <typename T>
+void PRINT(const ForwardList<T>& fList) {
+    if (!fList.head) {
+        cout << "Список пуст" << endl;
+        return;
+    }
+    SNode<T>* current = fList.head;
+    while (current != nullptr)
+    {
+        cout << current->key << " -> ";
+        current = current->next;
+    }
+    cout << "nullptr" << endl;
+}
+
+//Добавление элемента в НАЧАЛО списка
+template <typename T>
+void FPUSH_HEAD(ForwardList<T>& fList, T key) {
+    SNode<T>* newSNode = new SNode<T>{ key, nullptr };
+    newSNode->next = fList.head;
+    fList.head = newSNode;
+}
+
+//Добавление элемента в КОНЕЦ списка
+template <typename T>
+void FPUSH_BACK(ForwardList<T>& fList, T key) {
+    SNode<T>* newSNode = new SNode<T>{ key, nullptr };
+
+    if (fList.head == nullptr) { // Если список пуст
+        fList.head = newSNode;
+        return;
+    }
+
+    SNode<T>* current = fList.head;
+    while (current->next != nullptr) { // Идем до последнего элемента
+        current = current->next;
+    }
+    current->next = newSNode; // Последний элемент теперь указывает на новый узел
+}
+
+//Добавление элемента ДО узла с заданным значением
+template <typename T>
+void FPUSH_BEFORE(ForwardList<T>& fList, T targetKey, T newKey) {
+    if (!fList.head) return; // Список пуст
+
+    if (fList.head->key == targetKey) {
+        FPUSH_HEAD(fList, newKey);
+        return;
+    }
+
+    SNode<T>* current = fList.head;
+    while (current->next != nullptr && current->next->key != targetKey) {
+        current = current->next;
+    }
+
+    if (current->next != nullptr) {
+        FPUSH_FORWARD(current, newKey);
+    }
+}
+
+//Удаление первого элемента (головы) списка
+template <typename T>
+void FDEL_HEAD(ForwardList<T>& fList) {
+    if (!fList.head) return; // Список уже пуст
+
+    SNode<T>* temp = fList.head;
+    fList.head = fList.head->next;
+    delete temp;
+}
+
+//Удаление последнего элемента списка
+template <typename T>
+void FDEL_BACK(ForwardList<T>& fList) {
+    if (!fList.head) return;
+
+    if (fList.head->next == nullptr) {
+        delete fList.head;
+        fList.head = nullptr;
+        return;
+    }
+
+    SNode<T>* current = fList.head;
+    while (current->next->next != nullptr) {
+        current = current->next;
+    }
+
+    delete current->next;
+    current->next = nullptr;
+}
+
+// Удаление элемента ПОСЛЕ указанного узла
+template <typename T>
+void FDEL_AFTER(SNode<T>* ptr) {
+    // Если указанный узел не существует или он последний, ничего не делаем
+    if (!ptr || !ptr->next) {
+        return;
+    }
+
+    SNode<T>* nodeToDelete = ptr->next; // Узел, который нужно удалить
+    ptr->next = nodeToDelete->next;   // "Перепрыгиваем" через удаляемый узел
+    delete nodeToDelete;              // Освобождаем память
+}
+
+// Удаление элемента ДО узла с заданным значением
+template <typename T>
+void FDEL_BEFORE(ForwardList<T>& fList, T targetKey) {
+    // Если список пуст, содержит один элемент, или искомый элемент - голова,
+    // то удалять нечего.
+    if (!fList.head || !fList.head->next || fList.head->key == targetKey) {
+        return;
+    }
+
+    // Нужно удалить голову списка (элемент перед вторым элементом)
+    if (fList.head->next->key == targetKey) {
+        FDEL_HEAD(fList);
+        return;
+    }
+
+    // Ищем узел, который находится за два шага до целевого
+    SNode<T>* current = fList.head;
+    while (current->next && current->next->next) {
+        if (current->next->next->key == targetKey) {
+            // Мы нашли узел (current), после которого идет узел для удаления.
+            // Используем уже существующую функцию FDEL_AFTER.
+            FDEL_AFTER(current);
+            return;
+        }
+        current = current->next;
+    }
+}
+
+//Удаление узла по значению (первое вхождение)
+template <typename T>
+void FDEL_BY_VALUE(ForwardList<T>& fList, T key) {
+    if (!fList.head) return;
+
+    if (fList.head->key == key) {
+        FDEL_HEAD(fList);
+        return;
+    }
+
+    SNode<T>* current = fList.head;
+    while (current->next != nullptr && current->next->key != key) {
+        current = current->next;
+    }
+
+    if (current->next != nullptr) {
+        SNode<T>* deleteSNode = current->next;
+        current->next = deleteSNode->next;
+        delete deleteSNode;
+    }
+}
+
+
+//Чтение (поиск) элемента по значению
+template <typename T>
+SNode<T>* FGET_BY_VALUE(ForwardList<T>& fList, T key) {
+    SNode<T>* current = fList.head;
+    while (current != nullptr) {
+        if (current->key == key) {
+            return current;
+        }
+        current = current->next;
+    }
+    return nullptr;
+}
+
+// Сохранение списка в файл
+template <typename T>
+void FSAVE(const ForwardList<T>& fList, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "Ошибка открытия файла для записи!" << endl;
+        return;
+    }
+    SNode<T>* current = fList.head;
+    while (current != nullptr) {
+        file << current->key << " ";
+        current = current->next;
+    }
+    file.close();
+    //cout << "Односвязный список сохранён в файл: " << filename << endl;
+}
+
+// Загрузка списка из файла
+template <typename T>
+void FLOAD(ForwardList<T>& fList, const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        return;
+    }
+    // Очищаем текущий список
+    while (fList.head) {
+        FDEL_HEAD(fList);
+    }
+
+    T value;
+    bool first = true;
+    while (file >> value) {
+        if (first) {
+            FCREATE(fList, value);
+            first = false;
+        }
+        else {
+            FPUSH_BACK(fList, value);
+        }
+    }
+    file.close();
+    //cout << "Односвязный список загружен из файла: " << filename << endl;
+};
+
 template <typename T>
 struct Queue {
     T* data;         // Указатель на динамический массив для хранения данных
@@ -185,844 +1117,6 @@ void QLOAD(Queue<T>& q, const string& filename) {
 }
 
 template <typename T>
-struct SNode
-{
-    T key;
-    SNode<T>* next; // указатель на следующий элемент
-};
-
-template <typename T>
-struct ForwardList
-{
-    SNode<T>* head;
-
-    // Конструктор по умолчанию
-    ForwardList() {
-        head = nullptr;
-    }
-
-    // Копирующий конструктор (создает глубокую копию)
-    ForwardList(const ForwardList& other) {
-        head = nullptr;
-        if (!other.head) {
-            return;
-        }
-        head = new SNode<T>{ other.head->key, nullptr };
-        SNode<T>* current_this = head;
-        SNode<T>* current_other = other.head->next;
-        while (current_other) {
-            current_this->next = new SNode<T>{ current_other->key, nullptr };
-            current_this = current_this->next;
-            current_other = current_other->next;
-        }
-    }
-
-    // Копирующий оператор присваивания 
-    ForwardList& operator=(const ForwardList& other) {
-        if (this != &other) {
-            ForwardList temp(other);
-            swap(head, temp.head);
-        }
-        return *this;
-    }
-
-    // Деструктор (очищает память)
-    ~ForwardList() {
-        while (head != nullptr) {
-            SNode<T>* temp = head;
-            head = head->next;
-            delete temp;
-        }
-    }
-};
-
-
-// Добавляет узел ПОСЛЕ указанного узла ptr
-template <typename T>
-void FPUSH_FORWARD(SNode<T>* ptr, T key) {
-    if (!ptr) return;
-    SNode<T>* newSNode = new SNode<T>{ key, nullptr };
-    newSNode->next = ptr->next;
-    ptr->next = newSNode;
-}
-
-// Создает список с начальным элементом
-template <typename T>
-void FCREATE(ForwardList<T>& fList, T keyBegin) {
-    // Очистим список, если он уже был не пуст
-    while (fList.head) {
-        SNode<T>* temp = fList.head;
-        fList.head = fList.head->next;
-        delete temp;
-    }
-    fList.head = new SNode<T>{ keyBegin, nullptr };
-}
-
-// Выводит список в консоль
-template <typename T>
-void PRINT(const ForwardList<T>& fList) {
-    if (!fList.head) {
-        cout << "Список пуст" << endl;
-        return;
-    }
-    SNode<T>* current = fList.head;
-    while (current != nullptr)
-    {
-        cout << current->key << " -> ";
-        current = current->next;
-    }
-    cout << "nullptr" << endl;
-}
-
-//Добавление элемента в НАЧАЛО списка
-template <typename T>
-void FPUSH_HEAD(ForwardList<T>& fList, T key) {
-    SNode<T>* newSNode = new SNode<T>{ key, nullptr };
-    newSNode->next = fList.head;
-    fList.head = newSNode;
-}
-
-//Добавление элемента в КОНЕЦ списка
-template <typename T>
-void FPUSH_BACK(ForwardList<T>& fList, T key) {
-    SNode<T>* newSNode = new SNode<T>{ key, nullptr };
-
-    if (fList.head == nullptr) { // Если список пуст
-        fList.head = newSNode;
-        return;
-    }
-
-    SNode<T>* current = fList.head;
-    while (current->next != nullptr) { // Идем до последнего элемента
-        current = current->next;
-    }
-    current->next = newSNode; // Последний элемент теперь указывает на новый узел
-}
-
-//Добавление элемента ДО узла с заданным значением
-template <typename T>
-void FPUSH_BEFORE(ForwardList<T>& fList, T targetKey, T newKey) {
-    if (!fList.head) return; // Список пуст
-
-    if (fList.head->key == targetKey) {
-        FPUSH_HEAD(fList, newKey);
-        return;
-    }
-
-    SNode<T>* current = fList.head;
-    while (current->next != nullptr && current->next->key != targetKey) {
-        current = current->next;
-    }
-
-    if (current->next != nullptr) {
-        FPUSH_FORWARD(current, newKey);
-    }
-}
-
-//Удаление первого элемента (головы) списка
-template <typename T>
-void FDEL_HEAD(ForwardList<T>& fList) {
-    if (!fList.head) return; // Список уже пуст
-
-    SNode<T>* temp = fList.head;
-    fList.head = fList.head->next;
-    delete temp;
-}
-
-//Удаление последнего элемента списка
-template <typename T>
-void FDEL_BACK(ForwardList<T>& fList) {
-    if (!fList.head) return;
-
-    if (fList.head->next == nullptr) {
-        delete fList.head;
-        fList.head = nullptr;
-        return;
-    }
-
-    SNode<T>* current = fList.head;
-    while (current->next->next != nullptr) {
-        current = current->next;
-    }
-
-    delete current->next;
-    current->next = nullptr;
-}
-
-//Удаление узла по значению (первое вхождение)
-template <typename T>
-void FDEL_BY_VALUE(ForwardList<T>& fList, T key) {
-    if (!fList.head) return;
-
-    if (fList.head->key == key) {
-        FDEL_HEAD(fList);
-        return;
-    }
-
-    SNode<T>* current = fList.head;
-    while (current->next != nullptr && current->next->key != key) {
-        current = current->next;
-    }
-
-    if (current->next != nullptr) {
-        SNode<T>* deleteSNode = current->next;
-        current->next = deleteSNode->next;
-        delete deleteSNode;
-    }
-}
-
-
-//Чтение (поиск) элемента по значению
-template <typename T>
-SNode<T>* FGET_BY_VALUE(ForwardList<T>& fList, T key) {
-    SNode<T>* current = fList.head;
-    while (current != nullptr) {
-        if (current->key == key) {
-            return current;
-        }
-        current = current->next;
-    }
-    return nullptr;
-}
-
-// Сохранение списка в файл
-template <typename T>
-void FSAVE(const ForwardList<T>& fList, const string& filename) {
-    ofstream file(filename);
-    if (!file.is_open()) {
-        cout << "Ошибка открытия файла для записи!" << endl;
-        return;
-    }
-    SNode<T>* current = fList.head;
-    while (current != nullptr) {
-        file << current->key << " ";
-        current = current->next;
-    }
-    file.close();
-    cout << "Односвязный список сохранён в файл: " << filename << endl;
-}
-
-// Загрузка списка из файла
-template <typename T>
-void FLOAD(ForwardList<T>& fList, const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        return;
-    }
-    // Очищаем текущий список
-    while (fList.head) {
-        FDEL_HEAD(fList);
-    }
-
-    T value;
-    bool first = true;
-    while (file >> value) {
-        if (first) {
-            FCREATE(fList, value);
-            first = false;
-        }
-        else {
-            FPUSH_BACK(fList, value);
-        }
-    }
-    file.close();
-    cout << "Односвязный список загружен из файла: " << filename << endl;
-}
-
-// Структура узла для двусвязного списка
-template <typename T>
-struct DNode
-{
-    T key;
-    DNode<T>* next; // Указатель на следующий элемент
-    DNode<T>* prev; // Указатель на предыдущий элемент
-};
-
-// Структура двусвязного списка
-template <typename T>
-struct DoublyList
-{
-    DNode<T>* head = nullptr;
-    DNode<T>* tail = nullptr;
-
-    DoublyList() {
-        head = nullptr;
-        tail = nullptr;
-    }
-
-    // Деструктор (очищает всю память)
-    ~DoublyList() {
-        while (head) {
-            DNode<T>* temp = head;
-            head = head->next;
-            delete temp;
-        }
-    }
-
-    // Копирующий конструктор (создает глубокую копию)
-    DoublyList(const DoublyList& other) {
-        head = nullptr;
-        tail = nullptr;
-        if (!other.head) {
-            return;
-        }
-        DNode<T>* current_other = other.head;
-        while (current_other) {
-            this->push_back(current_other->key);
-            current_other = current_other->next;
-        }
-    }
-
-    DoublyList& operator=(const DoublyList& other) {
-        if (this != &other) {
-            //Создание глубокой копии 
-            DoublyList temp(other);
-
-            // Используем swap.
-            swap(head, temp.head);
-            swap(tail, temp.tail);
-        }
-
-        return *this;
-    }
-};
-
-//Создает список с начальным элементом
-template <typename T>
-void LCREATE(DoublyList<T>& dList, T keyBegin) {
-    DNode<T>* newDNode = new DNode<T>{ keyBegin, nullptr, nullptr };
-    dList.head = newDNode;
-    dList.tail = newDNode;
-}
-
-//Добавление элемента в НАЧАЛО списка
-template <typename T>
-void LPUSH_HEAD(DoublyList<T>& dList, T key) {
-    DNode<T>* newDNode = new DNode<T>{ key, dList.head, nullptr };
-
-    if (dList.head) { // Если список не пуст
-        dList.head->prev = newDNode;
-    }
-    else { // Если список был пуст, новый узел также является хвостом
-        dList.tail = newDNode;
-    }
-    dList.head = newDNode;
-}
-
-//Добавление элемента в КОНЕЦ списка
-template <typename T>
-void LPUSH_BACK(DoublyList<T>& dList, T key) {
-    DNode<T>* newDNode = new DNode<T>{ key, nullptr, dList.tail };
-
-    if (dList.tail) { // Если список не пуст
-        dList.tail->next = newDNode;
-    }
-    else { // Если список был пуст, новый узел также является головой
-        dList.head = newDNode;
-    }
-    dList.tail = newDNode;
-}
-
-//Удаление первого элемента (головы) списка
-template <typename T>
-void LDEL_HEAD(DoublyList<T>& dList) {
-    if (!dList.head) return; // Список пуст
-
-    DNode<T>* temp = dList.head;
-    dList.head = dList.head->next;
-
-    if (dList.head) { // Если в списке остались элементы
-        dList.head->prev = nullptr;
-    }
-    else { // Если список стал пустым
-        dList.tail = nullptr;
-    }
-    delete temp;
-}
-
-//Удаление последнего элемента списка
-template <typename T>
-void LDEL_BACK(DoublyList<T>& dList) {
-    if (!dList.tail) return; // Список пуст
-
-    DNode<T>* temp = dList.tail;
-    dList.tail = dList.tail->prev;
-
-    if (dList.tail) { // Если в списке остались элементы
-        dList.tail->next = nullptr;
-    }
-    else { // Если список стал пустым
-        dList.head = nullptr;
-    }
-    delete temp;
-}
-
-//Чтение (поиск) элемента по значению
-template <typename T>
-DNode<T>* LGET_BY_VALUE(const DoublyList<T>& dList, T key) {
-    DNode<T>* current = dList.head;
-    while (current != nullptr) {
-        if (current->key == key) {
-            return current;
-        }
-        current = current->next;
-    }
-    return nullptr; // Элемент не найден
-}
-
-//Добавление элемента ДО узла с заданным значением
-template <typename T>
-void LPUSH_BEFORE(DoublyList<T>& dList, T targetKey, T newKey) {
-    DNode<T>* targetDNode = LGET_BY_VALUE(dList, targetKey);
-    if (!targetDNode) return; // Элемент, перед которым нужно вставить, не найден
-
-    if (targetDNode == dList.head) { // Если вставляем перед головой
-        LPUSH_HEAD(dList, newKey);
-        return;
-    }
-
-    DNode<T>* newDNode = new DNode<T>{ newKey, targetDNode, targetDNode->prev };
-    targetDNode->prev->next = newDNode;
-    targetDNode->prev = newDNode;
-}
-
-//Добавление элемента ПОСЛЕ узла с заданным значением
-template <typename T>
-void LPUSH_AFTER(DoublyList<T>& dList, T targetKey, T newKey) {
-    DNode<T>* targetDNode = LGET_BY_VALUE(dList, targetKey);
-    if (!targetDNode) return; // Элемент, после которого нужно вставить, не найден
-    if (targetDNode == dList.tail) { // Если вставляем после хвоста
-        LPUSH_BACK(dList, newKey);
-        return;
-    }
-    DNode<T>* newDNode = new DNode<T>{ newKey, targetDNode->next, targetDNode };
-    targetDNode->next->prev = newDNode;
-    targetDNode->next = newDNode;
-}
-
-//Удаление узла по значению (первое вхождение)
-template <typename T>
-void LDEL_BY_VALUE(DoublyList<T>& dList, T key) {
-    DNode<T>* targetDNode = LGET_BY_VALUE(dList, key);
-    if (!targetDNode) return; // Узел для удаления не найден
-
-    if (targetDNode == dList.head) {
-        LDEL_HEAD(dList);
-    }
-    else if (targetDNode == dList.tail) {
-        LDEL_BACK(dList);
-    }
-    else {
-        // Связываем предыдущий и следующий узлы между собой
-        targetDNode->prev->next = targetDNode->next;
-        targetDNode->next->prev = targetDNode->prev;
-        delete targetDNode;
-    }
-}
-
-//Выводит список в консоль от начала до конца
-template <typename T>
-void print_forward(const DoublyList<T>& dList) {
-    if (!dList.head) {
-        cout << "Список пуст." << endl;
-        return;
-    }
-    DNode<T>* current = dList.head;
-    cout << "Голова -> ";
-    while (current != nullptr)
-    {
-        cout << current->key << " <-> ";
-        current = current->next;
-    }
-    cout << "nullptr" << endl;
-}
-
-//Выводит список в консоль от конца до начала (для проверки)
-template <typename T>
-void print_backward(const DoublyList<T>& dList) {
-    if (!dList.tail) {
-        cout << "Список пуст." << endl;
-        return;
-    }
-    DNode<T>* current = dList.tail;
-    cout << "Хвост -> ";
-    while (current != nullptr)
-    {
-        cout << current->key << " <-> ";
-        current = current->prev;
-    }
-    cout << "nullptr" << endl;
-}
-
-template <typename T>
-void PRINT(const DoublyList<T>& dList, int choice) {
-    switch (choice)
-    {
-    case 1:
-        print_forward(dList);
-        break;
-    case 2:
-        print_backward(dList);
-        break;
-    default:
-        break;
-    }
-}
-
-// Сохранение списка в файл
-template <typename T>
-void LSAVE(const DoublyList<T>& dList, const string& filename) {
-    ofstream file(filename);
-    if (!file.is_open()) {
-        cout << "Ошибка открытия файла для записи!" << endl;
-        return;
-    }
-    DNode<T>* current = dList.head;
-    while (current != nullptr) {
-        file << current->key << " ";
-        current = current->next;
-    }
-    file.close();
-    cout << "Двусвязный список сохранён в файл: " << filename << endl;
-}
-
-// Загрузка списка из файла
-template <typename T>
-void LLOAD(DoublyList<T>& dList, const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        return;
-    }
-    // Очищаем текущий список
-    while (dList.head) {
-        LDEL_HEAD(dList);
-    }
-
-    T value;
-    bool first = true;
-    while (file >> value) {
-        if (first) {
-            LCREATE(dList, value);
-            first = false;
-        }
-        else {
-            LPUSH_BACK(dList, value);
-        }
-    }
-    file.close();
-    cout << "Двусвязный список загружен из файла: " << filename << endl;
-}
-
-// Константы для форматирования вывода
-const string branch_right = "|--- "; // Ветка к правому потомку
-const string branch_left = "|___ ";  // Ветка к левому потомку
-
-// Структура узла 
-template<typename T>
-struct TreeNode {
-    T key;
-    TreeNode<T>* left;
-    TreeNode<T>* right;
-
-    // Конструктор для создания узла
-    TreeNode(T val) {
-        key = val;
-        left = nullptr;
-        right = nullptr;
-    }
-};
-
-// Рекурсивная функция для глубокого копирования дерева
-template<typename T>
-TreeNode<T>* copy_tree(const TreeNode<T>* other_node) {
-    if (other_node == nullptr) {
-        return nullptr;
-    }
-    TreeNode<T>* new_node = new TreeNode<T>(other_node->key);
-    new_node->left = copy_tree(other_node->left);
-    new_node->right = copy_tree(other_node->right);
-    return new_node;
-}
-
-// Рекурсивная функция для удаления всех узлов
-template<typename T>
-void destroy_tree(TreeNode<T>* node) {
-    if (node != nullptr) {
-        destroy_tree(node->left);
-        destroy_tree(node->right);
-        delete node;
-    }
-}
-
-template<typename T>
-struct FullBinaryTree {
-    TreeNode<T>* root;
-
-    //Конструктор по умолчанию
-    FullBinaryTree() {
-        root = nullptr;
-    }
-
-    //Деструктор
-    ~FullBinaryTree() {
-        destroy_tree(root);
-    }
-
-    //Копирующий конструктор
-    FullBinaryTree(const FullBinaryTree& other) {
-        root = copy_tree(other.root);
-    }
-
-    //Копирующий оператор присваивания
-    FullBinaryTree& operator=(const FullBinaryTree& other) {
-        if (this != &other) { // Защита от самоприсваивания
-            //Очищаем текущие ресурсы
-            destroy_tree(root);
-            //Копируем ресурсы из другого объекта
-            root = copy_tree(other.root);
-        }
-        return *this;
-    }
-};
-
-// Вспомогательная рекурсивная функция для красивой печати
-template<typename T>
-void print_tree_recursive(TreeNode<T>* node, const string& prefix, bool isLeft) {
-    if (node != nullptr) {
-        cout << prefix;
-        // Используем разные символы для левой и правой ветки
-        cout << (isLeft ? branch_left : branch_right);
-        // Выводим значение узла
-        cout << node->key << endl;
-
-        // Рекурсивно вызываем для потомков, увеличивая отступ
-        // Правый потомок идет первым, чтобы дерево "росло" слева направо
-        print_tree_recursive(node->right, prefix + (isLeft ? "|   " : "    "), false);
-        print_tree_recursive(node->left, prefix + (isLeft ? "|   " : "    "), true);
-    }
-}
-
-// Главная функция для красивой печати дерева
-template<typename T>
-void printTreeVisual(TreeNode<T>* root) {
-    if (root == nullptr) {
-        cout << "Дерево пустое." << endl;
-        return;
-    }
-    // Начинаем печать с корневого узла
-    cout << root->key << endl;
-    // Вызываем рекурсивную функцию для потомков
-    print_tree_recursive(root->right, "", false);
-    print_tree_recursive(root->left, "", true);
-}
-
-// Рекурсивные функцияы для обходов
-template<typename T>
-void preorder_recursive(TreeNode<T>* node) {
-    if (node != nullptr) {
-        cout << node->key << " ";
-        preorder_recursive(node->left);
-        preorder_recursive(node->right);
-    }
-}
-
-template<typename T>
-void inorder_recursive(TreeNode<T>* node) {
-    if (node != nullptr) {
-        inorder_recursive(node->left);
-        cout << node->key << " ";
-        inorder_recursive(node->right);
-    }
-}
-
-template<typename T>
-void postorder_recursive(TreeNode<T>* node) {
-    if (node != nullptr) {
-        postorder_recursive(node->left);
-        postorder_recursive(node->right);
-        cout << node->key << " ";
-    }
-}
-
-// Вставка элемента
-template<typename T>
-void TINSERT(FullBinaryTree<T>& tree, T value) {
-    TreeNode<T>* new_node = new TreeNode<T>(value);
-    if (tree.root == nullptr) {
-        tree.root = new_node;
-        return;
-    }
-
-    queue<TreeNode<T>*> q;
-    q.push(tree.root);
-
-    while (!q.empty()) {
-        TreeNode<T>* current = q.front();
-        q.pop();
-
-        if (current->left == nullptr) {
-            current->left = new_node;
-            return;
-        }
-        else {
-            q.push(current->left);
-        }
-
-        if (current->right == nullptr) {
-            current->right = new_node;
-            return;
-        }
-        else {
-            q.push(current->right);
-        }
-    }
-}
-
-//Функция проверки на full
-template<typename T>
-bool TFULL(TreeNode<T>* current) {
-    if (((current->left == nullptr) ^ (current->right == nullptr)) == 1) {
-        return false;
-    }
-    else if (current->left != nullptr && current->right != nullptr) {
-        return TFULL(current->left) && TFULL(current->right);
-    }
-    return true;
-}
-
-// Прямой обход (Pre-order): Корень -> Лево -> Право
-template<typename T>
-void printPreorder(FullBinaryTree<T>& tree) {
-    preorder_recursive(tree.root);
-    cout << endl;
-}
-
-// Центрированный обход (In-order): Лево -> Корень -> Право
-template<typename T>
-void printInorder(FullBinaryTree<T>& tree) {
-    inorder_recursive(tree.root);
-    cout << endl;
-}
-
-// Обратный обход (Post-order): Лево -> Право -> Корень
-template<typename T>
-void printPostorder(FullBinaryTree<T>& tree) {
-    postorder_recursive(tree.root);
-    cout << endl;
-}
-
-// Обход в ширину (Level-order / Breadth-first)
-template<typename T>
-void printBreadthFirst(FullBinaryTree<T>& tree) {
-    if (tree.root == nullptr) {
-        return;
-    }
-
-    queue<TreeNode<T>*> q;
-    q.push(tree.root);
-
-    while (!q.empty()) {
-        TreeNode<T>* current = q.front();
-        q.pop();
-
-        cout << current->key << " ";
-
-        if (current->left != nullptr) {
-            q.push(current->left);
-        }
-        if (current->right != nullptr) {
-            q.push(current->right);
-        }
-    }
-    cout << endl;
-}
-
-template<typename T>
-void PRINT(FullBinaryTree<T>& tree, int choise) {
-    switch (choise)
-    {
-    case 1:
-        printBreadthFirst(tree);
-	    break;
-    case 2:
-		printPreorder(tree);
-        break;
-	case 3:
-        printInorder(tree);
-		break;
-    case 4:
-		printPostorder(tree);
-		break;
-    case 5:
-        printTreeVisual(tree.root);
-        break;
-    default:
-        break;
-    }
-}
-
-// Сохранение дерева в файл (обход в ширину)
-template<typename T>
-void TSAVE(const FullBinaryTree<T>& tree, const string& filename) {
-    ofstream file(filename);
-    if (!file.is_open()) {
-        cout << "Ошибка открытия файла для записи!" << endl;
-        return;
-    }
-
-    if (tree.root == nullptr) {
-        file.close();
-        cout << "Дерево пустое, сохранён пустой файл: " << filename << endl;
-        return;
-    }
-
-    // Используем очередь для обхода в ширину, чтобы сохранить
-    // узлы в том же порядке, в котором они добавляются функцией TINSERT
-    queue<TreeNode<T>*> q;
-    q.push(tree.root);
-
-    while (!q.empty()) {
-        TreeNode<T>* current = q.front();
-        q.pop();
-
-        file << current->key << " "; // Записываем ключ узла в файл
-
-        if (current->left != nullptr) {
-            q.push(current->left);
-        }
-        if (current->right != nullptr) {
-            q.push(current->right);
-        }
-    }
-
-    file.close();
-    cout << "Полное бинарное дерево сохранено в файл: " << filename << endl;
-}
-
-// Загрузка дерева из файла
-template<typename T>
-void TLOAD(FullBinaryTree<T>& tree, const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        return;
-    }
-
-    //Очищаем текущее дерево, чтобы избежать утечек памяти
-    destroy_tree(tree.root);
-    tree.root = nullptr;
-
-    //Читаем значения из файла и вставляем их в дерево
-    T value;
-    while (file >> value) {
-        // Используем существующую функцию TINSERT для построения дерева
-        TINSERT(tree, value);
-    }
-
-    file.close();
-    cout << "Полное бинарное дерево загружено из файла: " << filename << endl;
-}
-
-template <typename T>
 struct Stack {
     T* data;
     uint32_t capacity;
@@ -1096,8 +1190,10 @@ void SPUSH(Stack<T>& st, T value) { //Добавление элемента в �
 }
 
 template <typename T>
-void SPOP(Stack<T>& st) {
+T SPOP(Stack<T>& st) {
+	T rt = st.data[st.size - 1];
     st.size--;
+	return rt;
 }
 
 
@@ -1142,7 +1238,6 @@ void SLOAD(Stack<T>& st, const string& filename) {
     file.close();
     cout << "Стек загружен из файла: " << filename << endl;
 }
-
 
 template <typename T>
 struct Array {
@@ -1246,7 +1341,7 @@ T MGET_BY_IND(Array<T>& ar, uint32_t index) { //Получение элемен�
 template <typename T>
 void MDEL_BY_IND(Array<T>& ar, uint32_t index) {
     if (index >= 0 && index < ar.size) {
-        for (uint32_t i = index; i < ar.size; i++) {
+        for (uint32_t i = index; i < ar.size - 1; i++) {
             ar.data[i] = ar.data[i + 1];
         }
         ar.size--;
@@ -1306,19 +1401,21 @@ void MLOAD(Array<T>& ar, const string& filename) {
     cout << "Массив загружен из файла: " << filename << endl;
 }
 
-// Enum для всех возможных команд 
+// Enum для всех возможных команд
 enum class CommandType {
     HELP, EXIT, UNKNOWN, PRINT,
     // Array
-    MPUSH_BACK, MPUSH_BY_IND, MGET_BY_IND, MDEL_BY_IND, MSWAP_BY_IND, 
+    MPUSH_BACK, MPUSH_BY_IND, MGET_BY_IND, MDEL_BY_IND, MSWAP_BY_IND,
     // Stack
-    SPUSH, SPOP, 
+    SPUSH, SPOP,
     // Queue
-    QPUSH, QPOP, QGET, 
+    QPUSH, QPOP, QGET,
     // Singly List
-    FCREATE, FPUSH_HEAD, FPUSH_BACK, FPUSH_BEFORE, FPUSH_FORWARD, FDEL_HEAD, FDEL_BACK, FDEL_BY_VALUE, FGET_BY_VALUE, 
+    FCREATE, FPUSH_HEAD, FPUSH_BACK, FPUSH_BEFORE, FPUSH_FORWARD,
+    FDEL_HEAD, FDEL_BACK, FDEL_BY_VALUE, FGET_BY_VALUE, FDEL_AFTER, FDEL_BEFORE,
     // Doubly List
-    LCREATE, LPUSH_HEAD, LPUSH_BACK, LPUSH_BEFORE, LPUSH_AFTER, LDEL_HEAD, LDEL_BACK, LDEL_BY_VALUE, LGET_BY_VALUE, 
+    LCREATE, LPUSH_HEAD, LPUSH_BACK, LPUSH_BEFORE, LPUSH_AFTER,
+    LDEL_HEAD, LDEL_BACK, LDEL_BY_VALUE, LGET_BY_VALUE, LDEL_AFTER, LDEL_BEFORE,
     // Binary Tree
     TINSERT, TFULL
 };
@@ -1416,9 +1513,9 @@ int main() {
             }
             case CommandType::MPUSH_BY_IND: {
                 string index_str, value;
-                if (ss >> index_str >> value) { 
-                    MPUSH_BY_IND(arr, stoi(index_str), value); 
-                    modified = true;  
+                if (ss >> index_str >> value) {
+                    MPUSH_BY_IND(arr, stoi(index_str), value);
+                    modified = true;
                 }
                 else { cout << "Ошибка: не указан индекс или значение.\n"; }
                 break;
@@ -1431,17 +1528,17 @@ int main() {
             }
             case CommandType::MDEL_BY_IND: {
                 string index_str;
-                if (ss >> index_str) {  
-                    MDEL_BY_IND(arr, stoi(index_str)); 
-                    modified = true; 
+                if (ss >> index_str) {
+                    MDEL_BY_IND(arr, stoi(index_str));
+                    modified = true;
                 }
                 else { cout << "Ошибка: не указан индекс.\n"; }
                 break;
             }
             case CommandType::MSWAP_BY_IND: {
                 string index_str, value;
-                if (ss >> index_str >> value) {  
-                    MSWAP_BY_IND(arr, stoi(index_str), value); 
+                if (ss >> index_str >> value) {
+                    MSWAP_BY_IND(arr, stoi(index_str), value);
                     modified = true;  }
                 else { cout << "Ошибка: не указан индекс или значение.\n"; }
                 break;
@@ -1469,7 +1566,7 @@ int main() {
                 break;
             }
             case CommandType::SPOP: {
-                if (stack.size > 0) { SPOP(stack); modified = true; }
+                if (stack.size > 0) { cout << "Извлечено " << string(SPOP(stack)) << endl; modified = true; }
                 else { cout << "Стек пуст.\n"; }
                 break;
             }
@@ -1553,6 +1650,31 @@ int main() {
                 else { cout << "Ошибка: не указано значение.\n"; }
                 break;
             }
+            case CommandType::FDEL_AFTER: {
+                string target;
+                if (ss >> target) {
+                    SNode<string>* targetNode = FGET_BY_VALUE(list, target);
+                    if (targetNode) {
+                        FDEL_AFTER(targetNode);
+                        modified = true;
+                    } else {
+                        cout << "Ошибка: узел '" << target << "' не найден.\n";
+                    }
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
+                break;
+            }
+            case CommandType::FDEL_BEFORE: {
+                string target;
+                if (ss >> target) {
+                    FDEL_BEFORE(list, target);
+                    modified = true;
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
+                break;
+            }
             case CommandType::FGET_BY_VALUE: {
                 string value;
                 if (ss >> value) { cout << (FGET_BY_VALUE(list, value) ? "Элемент найден" : "Элемент не найден") << endl; }
@@ -1605,6 +1727,26 @@ int main() {
                 string value;
                 if (ss >> value) { LDEL_BY_VALUE(list, value); modified = true; }
                 else { cout << "Ошибка: не указано значение.\n"; }
+                break;
+            }
+            case CommandType::LDEL_AFTER: {
+                string target;
+                if (ss >> target) {
+                    LDEL_AFTER(list, target);
+                    modified = true;
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
+                break;
+            }
+            case CommandType::LDEL_BEFORE: {
+                string target;
+                if (ss >> target) {
+                    LDEL_BEFORE(list, target);
+                    modified = true;
+                } else {
+                    cout << "Ошибка: не указано целевое значение.\n";
+                }
                 break;
             }
             case CommandType::LGET_BY_VALUE: {
@@ -1660,30 +1802,30 @@ int main() {
 
 //Реализация служебных функций
 
-DS_Type getImpliedType(CommandType cmd) { 
+DS_Type getImpliedType(CommandType cmd) {
     switch (cmd) {
         // Array
     case CommandType::MPUSH_BACK: case CommandType::MPUSH_BY_IND: case CommandType::MGET_BY_IND:
-    case CommandType::MDEL_BY_IND: case CommandType::MSWAP_BY_IND: 
+    case CommandType::MDEL_BY_IND: case CommandType::MSWAP_BY_IND:
         return DS_Type::ARRAY;
         // Stack
-    case CommandType::SPUSH: case CommandType::SPOP: 
+    case CommandType::SPUSH: case CommandType::SPOP:
         return DS_Type::STACK;
         // Queue
-    case CommandType::QPUSH: case CommandType::QPOP: case CommandType::QGET: 
+    case CommandType::QPUSH: case CommandType::QPOP: case CommandType::QGET:
         return DS_Type::QUEUE;
         // Singly List
     case CommandType::FCREATE: case CommandType::FPUSH_HEAD: case CommandType::FPUSH_BACK: case CommandType::FPUSH_BEFORE:
     case CommandType::FPUSH_FORWARD: case CommandType::FDEL_HEAD: case CommandType::FDEL_BACK: case CommandType::FDEL_BY_VALUE:
-    case CommandType::FGET_BY_VALUE: 
+    case CommandType::FGET_BY_VALUE: case CommandType::FDEL_AFTER: case CommandType::FDEL_BEFORE:
         return DS_Type::SINGLY_LIST;
         // Doubly List
     case CommandType::LCREATE: case CommandType::LPUSH_HEAD: case CommandType::LPUSH_BACK: case CommandType::LPUSH_BEFORE:
     case CommandType::LPUSH_AFTER: case CommandType::LDEL_HEAD: case CommandType::LDEL_BACK: case CommandType::LDEL_BY_VALUE:
-    case CommandType::LGET_BY_VALUE: 
+    case CommandType::LGET_BY_VALUE: case CommandType::LDEL_AFTER: case CommandType::LDEL_BEFORE:
         return DS_Type::DOUBLY_LIST;
         // Binary Tree
-    case CommandType::TINSERT: case CommandType::TFULL: 
+    case CommandType::TINSERT: case CommandType::TFULL:
         return DS_Type::BINARY_TREE;
         // Unknown
     default:
@@ -1697,40 +1839,44 @@ void initializeCommandMap() {
     commandMap["EXIT"] = CommandType::EXIT;
 	commandMap["PRINT"] = CommandType::PRINT;
     // Массив
-    commandMap["MPUSH_BACK"] = CommandType::MPUSH_BACK; 
+    commandMap["MPUSH_BACK"] = CommandType::MPUSH_BACK;
     commandMap["MPUSH_BY_IND"] = CommandType::MPUSH_BY_IND;
-    commandMap["MGET_BY_IND"] = CommandType::MGET_BY_IND; 
+    commandMap["MGET_BY_IND"] = CommandType::MGET_BY_IND;
     commandMap["MDEL_BY_IND"] = CommandType::MDEL_BY_IND;
-    commandMap["MSWAP_BY_IND"] = CommandType::MSWAP_BY_IND; 
+    commandMap["MSWAP_BY_IND"] = CommandType::MSWAP_BY_IND;
     // Стек
-    commandMap["SPUSH"] = CommandType::SPUSH; 
-    commandMap["SPOP"] = CommandType::SPOP; 
+    commandMap["SPUSH"] = CommandType::SPUSH;
+    commandMap["SPOP"] = CommandType::SPOP;
     // Очередь
-    commandMap["QPUSH"] = CommandType::QPUSH; 
+    commandMap["QPUSH"] = CommandType::QPUSH;
     commandMap["QPOP"] = CommandType::QPOP;
-    commandMap["QGET"] = CommandType::QGET; 
+    commandMap["QGET"] = CommandType::QGET;
     // Односвязный список
-    commandMap["FCREATE"] = CommandType::FCREATE; 
+    commandMap["FCREATE"] = CommandType::FCREATE;
     commandMap["FPUSH_HEAD"] = CommandType::FPUSH_HEAD;
-    commandMap["FPUSH_BACK"] = CommandType::FPUSH_BACK; 
+    commandMap["FPUSH_BACK"] = CommandType::FPUSH_BACK;
     commandMap["FPUSH_BEFORE"] = CommandType::FPUSH_BEFORE;
-    commandMap["FPUSH_FORWARD"] = CommandType::FPUSH_FORWARD; 
+    commandMap["FPUSH_FORWARD"] = CommandType::FPUSH_FORWARD;
     commandMap["FDEL_HEAD"] = CommandType::FDEL_HEAD;
-    commandMap["FDEL_BACK"] = CommandType::FDEL_BACK; 
+    commandMap["FDEL_BACK"] = CommandType::FDEL_BACK;
     commandMap["FDEL_BY_VALUE"] = CommandType::FDEL_BY_VALUE;
-    commandMap["FGET_BY_VALUE"] = CommandType::FGET_BY_VALUE; 
+    commandMap["FGET_BY_VALUE"] = CommandType::FGET_BY_VALUE;
+    commandMap["FDEL_AFTER"] = CommandType::FDEL_AFTER;
+    commandMap["FDEL_BEFORE"] = CommandType::FDEL_BEFORE;
     // Двусвязный список
-    commandMap["LCREATE"] = CommandType::LCREATE; 
+    commandMap["LCREATE"] = CommandType::LCREATE;
     commandMap["LPUSH_HEAD"] = CommandType::LPUSH_HEAD;
-    commandMap["LPUSH_BACK"] = CommandType::LPUSH_BACK; 
+    commandMap["LPUSH_BACK"] = CommandType::LPUSH_BACK;
     commandMap["LPUSH_BEFORE"] = CommandType::LPUSH_BEFORE;
-    commandMap["LPUSH_AFTER"] = CommandType::LPUSH_AFTER; 
+    commandMap["LPUSH_AFTER"] = CommandType::LPUSH_AFTER;
     commandMap["LDEL_HEAD"] = CommandType::LDEL_HEAD;
-    commandMap["LDEL_BACK"] = CommandType::LDEL_BACK; 
+    commandMap["LDEL_BACK"] = CommandType::LDEL_BACK;
     commandMap["LDEL_BY_VALUE"] = CommandType::LDEL_BY_VALUE;
-    commandMap["LGET_BY_VALUE"] = CommandType::LGET_BY_VALUE; 
+    commandMap["LGET_BY_VALUE"] = CommandType::LGET_BY_VALUE;
+    commandMap["LDEL_AFTER"] = CommandType::LDEL_AFTER;
+    commandMap["LDEL_BEFORE"] = CommandType::LDEL_BEFORE;
     // Полное бинарное дерево
-    commandMap["TINSERT"] = CommandType::TINSERT; 
+    commandMap["TINSERT"] = CommandType::TINSERT;
     commandMap["TFULL"] = CommandType::TFULL;
 }
 
@@ -1805,6 +1951,8 @@ void printHelp() {
     cout << "FDEL_HEAD <Name>          - Удалить элемент из начала списка.\n";
     cout << "FDEL_BACK <Name>          - Удалить элемент из конца списка.\n";
     cout << "FDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.\n";
+    cout << "FDEL_AFTER <Name> <Target> - Удалить элемент после элемента <Target>.\n";
+    cout << "FDEL_BEFORE <Name> <Target>- Удалить элемент перед элементом <Target>.\n";
     cout << "FGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n\n";
 
     cout << "--- ДВУСВЯЗНЫЙ СПИСОК (Doubly Linked List) - Префикс 'L'\n";
@@ -1816,6 +1964,8 @@ void printHelp() {
     cout << "LDEL_HEAD <Name>          - Удалить элемент из начала списка.\n";
     cout << "LDEL_BACK <Name>          - Удалить элемент из конца списка.\n";
     cout << "LDEL_BY_VALUE <Name> <Value> - Удалить первый найденный элемент со значением <Value>.\n";
+    cout << "LDEL_AFTER <Name> <Target> - Удалить элемент после элемента <Target>.\n";
+    cout << "LDEL_BEFORE <Name> <Target>- Удалить элемент перед элементом <Target>.\n";
     cout << "LGET_BY_VALUE <Name> <Value> - Проверить наличие элемента со значением <Value>.\n\n";
 
     cout << "--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree) - Префикс 'T'\n";
