@@ -108,7 +108,7 @@ T MGET_BY_IND(Array<T>& ar, uint32_t index) { //Получение элемен�
 template <typename T>
 void MDEL_BY_IND(Array<T>& ar, uint32_t index) {
     if (index >= 0 && index < ar.size) {
-        for (uint32_t i = index; i < ar.size; i++) {
+        for (uint32_t i = index; i < ar.size - 1; i++) {
             ar.data[i] = ar.data[i + 1];
         }
         ar.size--;
