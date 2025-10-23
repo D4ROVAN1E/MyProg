@@ -190,9 +190,6 @@ public:
         uint32_t tableSize, elemCount;
         file >> tableSize >> elemCount;
 
-        // Создаём новое множество с нужным размером
-        HashSet<T> set(tableSize);
-
         // Читаем и добавляем элементы
         T value;
         while (file >> value) {

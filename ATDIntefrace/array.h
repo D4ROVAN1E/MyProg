@@ -22,7 +22,7 @@ struct Array {
         size = capacity = cap - 1;
         data = new T[cap];
         for (uint32_t i = 0; i < cap; i++) {
-            data[i] = string("0");
+            data[i] = T();
         }
     }
 

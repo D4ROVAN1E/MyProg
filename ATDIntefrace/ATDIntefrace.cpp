@@ -12,6 +12,7 @@
 #include "singly_list.h"
 #include "doubly_list.h"
 #include "binary_tree.h"
+#include "set.hpp"
 
 using namespace std;
 
@@ -31,11 +32,13 @@ enum class CommandType {
     LCREATE, LPUSH_HEAD, LPUSH_BACK, LPUSH_BEFORE, LPUSH_AFTER,
     LDEL_HEAD, LDEL_BACK, LDEL_BY_VALUE, LGET_BY_VALUE, LDEL_AFTER, LDEL_BEFORE,
     // Binary Tree
-    TINSERT, TFULL
+    TINSERT, TFULL,
+    // Set
+    SETADD, SETDEL, SET_AT
 };
 
 // Enum для типов структур данных
-enum class DS_Type { UNKNOWN, ARRAY, STACK, QUEUE, SINGLY_LIST, DOUBLY_LIST, BINARY_TREE};
+enum class DS_Type { UNKNOWN, ARRAY, STACK, QUEUE, SINGLY_LIST, DOUBLY_LIST, BINARY_TREE, SET};
 
 //Глобальные переменные и прототипы служебных функций
 
@@ -406,6 +409,40 @@ int main() {
             break;
         } // case DS_Type::BINARY_TREE
 
+        case DS_Type::SET: {
+            HashSet<string> set;
+            set.SETLOAD(name);
+
+            switch (command) {
+            case CommandType::SETADD: {
+                string value;
+                if (ss >> value) { set.SETADD(value); modified = true; }
+                else { cout << "Ошибка: не указано значение.\n"; }
+                break;
+            }
+            case CommandType::SETDEL: {
+                string value;
+                if (ss >> value) { set.SETDEL(value); modified = true; }
+                else { cout << "Ошибка: не указано значение.\n"; }
+                break;
+            }
+            case CommandType::SET_AT: {
+                string value;
+                if (ss >> value) { set.SET_AT(value); modified = true; }
+                else { cout << "Ошибка: не указано значение.\n"; }
+                break;
+            }
+            case CommandType::PRINT: {
+                set.PRINT();
+                break;
+            }
+            default: break;
+            }
+
+            if (modified) { set.SETSAVE(name); cout << "OK\n"; }
+            break;
+        } // case DS_Type::SET
+
         default:
             cout << "Структура '" << name << "' имеет неизвестный тип.\n";
             break;
@@ -441,6 +478,9 @@ DS_Type getImpliedType(CommandType cmd) {
         // Binary Tree
     case CommandType::TINSERT: case CommandType::TFULL:
         return DS_Type::BINARY_TREE;
+        // Set
+    case CommandType::SETADD: case CommandType::SETDEL: case CommandType::SET_AT:
+        return DS_Type::SET;
         // Unknown
     default:
         return DS_Type::UNKNOWN;
@@ -492,6 +532,10 @@ void initializeCommandMap() {
     // Полное бинарное дерево
     commandMap["TINSERT"] = CommandType::TINSERT;
     commandMap["TFULL"] = CommandType::TFULL;
+    // Множество
+    commandMap["SETADD"] = CommandType::SETADD;
+    commandMap["SETDEL"] = CommandType::SETDEL;
+    commandMap["SET_AT"] = CommandType::SET_AT;
 }
 
 void loadStructureTypes() {
@@ -506,6 +550,7 @@ void loadStructureTypes() {
         else if (type_str == "SINGLY_LIST") type = DS_Type::SINGLY_LIST;
         else if (type_str == "DOUBLY_LIST") type = DS_Type::DOUBLY_LIST;
         else if (type_str == "BINARY_TREE") type = DS_Type::BINARY_TREE;
+        else if (type_str == "SET") type = DS_Type::SET;
         if (type != DS_Type::UNKNOWN) structureTypeMap[name] = type;
     }
     meta_file.close();
@@ -524,6 +569,7 @@ void saveStructureType(const string& name, DS_Type type) {
     case DS_Type::SINGLY_LIST: type_str = "SINGLY_LIST"; break;
     case DS_Type::DOUBLY_LIST: type_str = "DOUBLY_LIST"; break;
     case DS_Type::BINARY_TREE: type_str = "BINARY_TREE"; break;
+    case DS_Type::SET: type_str = "SET"; break;
     default: break;
     }
     meta_file << name << " " << type_str << endl;
@@ -585,4 +631,9 @@ void printHelp() {
     cout << "--- ПОЛНОЕ БИНАРНОЕ ДЕРЕВО (Full Binary Tree) - Префикс 'T'\n";
     cout << "TINSERT <Name> <Value>    - Вставить <Value> в дерево.\n";
     cout << "TFULL <Name>              - Проверить, является ли дерево полным.\n";
+
+    cout << "--- МНОЖЕСТВО (SET) - Префикс 'SET'\n";
+    cout << "SETADD <Name> <Value>    - Вставить <Value> в множество.\n";
+    cout << "SETDEL <Name> <Value>    - Удалить <Value> из множества.\n";
+    cout << "SET_AT <Name> <Value>      - Проверить, наличие элемента в множестве.\n";
 }
