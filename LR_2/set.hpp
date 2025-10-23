@@ -189,6 +189,7 @@ public:
 
         uint32_t tableSize, elemCount;
         file >> tableSize >> elemCount;
+        file >> tableSize >> elemCount;
 
         // Читаем и добавляем элементы
         T value;
