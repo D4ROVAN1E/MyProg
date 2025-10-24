@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "array.h"
-#include "singly_list.h"
+#include "array.hpp"
+#include "singly_list.hpp"
 #include <cmath>
 #include <string>
 #include <fstream>
@@ -194,7 +194,7 @@ public:
         // Читаем и добавляем элементы
         T value;
         while (file >> value) {
-            set.SETADD(value);
+            SETADD(value);
         }
 
         file.close();

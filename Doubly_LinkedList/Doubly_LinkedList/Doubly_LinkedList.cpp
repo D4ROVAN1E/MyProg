@@ -161,6 +161,20 @@ void LPUSH_BEFORE (DoublyList<T>& dList, T targetKey, T newKey) {
     targetNode->prev = newNode;
 }
 
+//Добавление элемента ПОСЛЕ узла с заданным значением
+template <typename T>
+void LPUSH_AFTER(DoublyList<T>& dList, T targetKey, T newKey) {
+    Node<T>* targetNode = LGET_BY_VALUE(dList, targetKey);
+    if (!targetNode) return; // Элемент, после которого нужно вставить, не найден
+    if (targetNode == dList.tail) { // Если вставляем после хвоста
+        LPUSH_BACK(dList, newKey);
+        return;
+    }
+    Node<T>* newNode = new Node<T>{ newKey, targetNode->next, targetNode };
+    targetNode->next->prev = newNode;
+    targetNode->next = newNode;
+}
+
 //Удаление узла по значению (первое вхождение)
 template <typename T>
 void LDEL_BY_VALUE(DoublyList<T>& dList, T key) {
@@ -235,7 +249,7 @@ int main() {
     LPUSH_BACK(list, 20);      // в конец
     LPUSH_BACK(list, 30);      // в конец
     LPUSH_HEAD(list, 5);      // в начало
-    LPUSH_BEFORE(list, 20, 15); // до 20
+    LPUSH_AFTER(list, 20, 15); // до 20
     LPUSH_BEFORE(list, 5, 2);   // до головы
     print_forward(list);
     cout << "Проверка вывода в обратном порядке:" << endl;

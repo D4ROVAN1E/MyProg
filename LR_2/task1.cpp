@@ -1,5 +1,5 @@
-﻿#include "binary_tree.h"
-#include "stack.h"
+﻿#include "binary_tree.hpp"
+#include "stack.hpp"
 #include <iostream>
 
 using namespace std;
