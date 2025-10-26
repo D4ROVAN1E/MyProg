@@ -33,10 +33,9 @@ private:
 
         // Применяем метод умножения: hash(k) = floor(M * ((k * A) mod 1))
         double temp = k * A;
-        double fractional = temp - floor(temp); // (k * A) mod 1
-        uint32_t hash = static_cast<uint32_t>(floor(table.size * fractional));
+        temp = temp - floor(temp); // (k * A) mod 1
 
-        return hash % table.size;
+        return static_cast<uint32_t>(floor(table.size * temp));
     }
 
     // Проверка необходимости расширения таблицы
@@ -188,7 +187,6 @@ public:
         }
 
         uint32_t tableSize, elemCount;
-        file >> tableSize >> elemCount;
         file >> tableSize >> elemCount;
 
         // Читаем и добавляем элементы
