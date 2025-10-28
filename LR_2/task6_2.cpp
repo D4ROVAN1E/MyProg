@@ -1,15 +1,14 @@
-﻿#include "dh.hpp"
+﻿#include "ch.hpp"
+#include <sstream>
 
- //Вспомогательная рекурсивная функция для подсчёта подчинённых с использованием мемоизации (subordinateCounts) и детекции циклов (visiting)
+//Вспомогательная рекурсивная функция для подсчёта подчинённых с использованием мемоизации (subordinateCounts) и детекции циклов (visiting)
 uint32_t countSubordinates(
     const string& person,
-    DoubleHash<Array<string>>& subordinatesMap,
-    DoubleHash<uint32_t>& subordinateCounts,
-    DoubleHash<bool>& visiting)
+    CuckooHash<Array<string>>& subordinatesMap,
+    CuckooHash<uint32_t>& subordinateCounts,
+    CuckooHash<bool>& visiting)
 {
-    //Проверка мемоизации (если уже считали)
-    //Если результат для 'person' уже есть в 'subordinateCounts',
-    //возвращаем его, не делая лишних вычислений.
+    //Если результат для 'person' уже есть в 'subordinateCounts', возвращаем его, не делая лишних вычислений.
     uint32_t* cachedCount = subordinateCounts.find(person);
     if (cachedCount != nullptr) {
         return *cachedCount;
@@ -40,13 +39,13 @@ uint32_t countSubordinates(
     for (uint32_t i = 0; i < directSubs->size; i++) {
         string sub = MGET_BY_IND(*directSubs, i);
 
-        //Игнорируем прямую петлю (напр., "E" -> "E" из примера)
+        //Игнорируем прямую петлю (напр., "E" -> "E")
         if (sub == person) {
             continue;
         }
 
         //Считаем 1 (за самого прямого подчинённого) 
-        //+ всех его/её подчинённых (рекурсивный вызов)
+        //+ всех его подчинённых 
         totalCount += 1 + countSubordinates(sub, subordinatesMap, subordinateCounts, visiting);
     }
 
@@ -56,28 +55,47 @@ uint32_t countSubordinates(
     return totalCount;
 }
 
-int kek() {
+int main() {
     setlocale(LC_ALL, "ru");
     //Исходные данные (сотрудник, менеджер)
     Array<string> employees;
     Array<string> managers;
 
-    MPUSH_BACK(employees, string("A")); MPUSH_BACK(managers, string("B"));
+    /*MPUSH_BACK(employees, string("A")); MPUSH_BACK(managers, string("B"));
     MPUSH_BACK(employees, string("C")); MPUSH_BACK(managers, string("B"));
     MPUSH_BACK(employees, string("D")); MPUSH_BACK(managers, string("E"));
     MPUSH_BACK(employees, string("B")); MPUSH_BACK(managers, string("E"));
-    MPUSH_BACK(employees, string("E")); MPUSH_BACK(managers, string("E"));
+    MPUSH_BACK(employees, string("E")); MPUSH_BACK(managers, string("E"));*/
+
+    string line;
+    getline(cin, line);
+    istringstream  pers(line);
+    bool change = false;
+    while (pers >> line) {
+        if (!change) {
+            MPUSH_BACK(employees, line);
+            change = true;
+        }
+        else {
+            MPUSH_BACK(managers, line);
+            change = false;
+        }
+    }
+    if (employees.size != managers.size) {
+        cout << "Ошибка: количество сотрудников и менеджеров не совпадает!" << endl;
+        return 1;
+    }
 
     //Карта для хранения списков прямых подчинённых: Менеджер -> Array<Сотрудник>
-    DoubleHash<Array<string>> subordinatesMap;
+    CuckooHash<Array<string>> subordinatesMap;
 
     //Хэш-таблица для хранения уникальных имён (используется как "set")
-    DoubleHash<bool> seenPeople;
+    CuckooHash<bool> seenPeople;
 
     //Массив всех уникальных людей для итогового вывода
     Array<string> allPeople;
 
-    //Заполняем subordinatesMap (граф) и allPeople (список всех)
+    //Заполняем subordinatesMap и allPeople
     for (uint32_t i = 0; i < employees.size; i++) {
         string emp = MGET_BY_IND(employees, i);
         string mgr = MGET_BY_IND(managers, i);
@@ -111,10 +129,10 @@ int kek() {
     //Создаём структуры для подсчёта
 
     //Карта для мемоизации (хранения) результатов: Человек -> Кол-во подчинённых
-    DoubleHash<uint32_t> subordinateCounts;
+    CuckooHash<uint32_t> subordinateCounts;
 
     //Хэш-таблица для детекции циклов во время рекурсии
-    DoubleHash<bool> visiting;
+    CuckooHash<bool> visiting;
 
     //Запускаем подсчёт для каждого человека
     //Мы должны вызвать функцию для каждого, чтобы гарантировать,
@@ -136,10 +154,6 @@ int kek() {
 
         if (count != nullptr) {
             cout << person << "-" << *count;
-        }
-        else {
-            //Эта ситуация не должна произойти, если логика верна
-            cout << person << "- (ошибка подсчёта)";
         }
 
         if (i < allPeople.size - 1) {
