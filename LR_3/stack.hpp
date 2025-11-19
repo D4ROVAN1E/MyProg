@@ -126,6 +126,53 @@ class Stack {
         cout << "Стек загружен из файла: " << filename << endl;
     }
 
+    // Сохранение в бинарный файл
+    void SSAVE_BINARY(const string& filename) {
+        // Открываем файл с флагом ios::binary
+        ofstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для бинарной записи!" << endl;
+            return;
+        }
+
+        // Записываем размер стека (сколько элементов считывать)
+        file.write(reinterpret_cast<const char*>(&size), sizeof(size));
+
+        // Записываем массив данных целиком
+        // reinterpret_cast преобразует указатель T* в char*, чтобы write мог записать байты
+        file.write(reinterpret_cast<const char*>(data), size * sizeof(T));
+
+        file.close();
+        cout << "Стек сохранён (bin): " << filename << endl;
+    }
+
+    // Загрузка из бинарного файла
+    void SLOAD_BINARY(const string& filename) {
+        ifstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для бинарного чтения!" << endl;
+            return;
+        }
+
+        uint32_t newSize = 0;
+        // Читаем размер записанного стека
+        file.read(reinterpret_cast<char*>(&newSize), sizeof(newSize));
+
+        // Если текущей ёмкости (capacity) не хватает, перевыделяем память
+        if (newSize > capacity) {
+            delete[] data;
+            capacity = newSize; 
+            data = new T[capacity];
+        }
+
+        // Обновляем размер и читаем данные прямо в память
+        size = newSize;
+        file.read(reinterpret_cast<char*>(data), size * sizeof(T));
+
+        file.close();
+        cout << "Стек загружен (bin): " << filename << endl;
+    }
+
     auto GetSize() -> uint32_t {
         return size;
     }

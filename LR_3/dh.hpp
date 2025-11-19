@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cmath>
 #include <string>
+#include <fstream> 
 #include "array.hpp"
 
 using namespace std;
@@ -240,6 +241,166 @@ class DoubleHash {
             }
         }
         cout << "===================" << endl;
+    }
+    
+    // Сериализация в текстовом формате
+    void serialize_text(const string& filename) const {
+        ofstream outFile(filename);
+        if (!outFile.is_open()) {
+            cerr << "Ошибка: Не удалось открыть файл для записи: " << filename << endl;
+            return;
+        }
+
+        // Записываем заголовок
+        outFile << tableSize << " " << elementsCount << endl;
+
+        // Записываем только занятые ячейки
+        for (uint32_t i = 0; i < tableSize; i++) {
+            if (table[i].isOccupied) {
+                // Сохраняем индекс, чтобы при загрузке восстановить позицию без перехэширования
+                outFile << i << " " << table[i].key << " " << table[i].value << endl;
+            }
+        }
+
+        outFile.close();
+        cout << "Таблица (текст) успешно сохранена в " << filename << endl;
+    }
+
+    // Десериализация из текстового формата
+    void deserialize_text(const string& filename) {
+        ifstream inFile(filename);
+        if (!inFile.is_open()) {
+            cerr << "Ошибка: Не удалось открыть файл для чтения: " << filename << endl;
+            return;
+        }
+
+        uint32_t newTableSize = 0;
+        uint32_t newElementsCount = 0;
+
+        // Читаем заголовок
+        if (!(inFile >> newTableSize >> newElementsCount)) {
+            cerr << "Ошибка: Некорректный формат файла или пустой файл." << endl;
+            return;
+        }
+
+        // Пересоздаем таблицу
+        table = Array<HashNode<T>>(newTableSize + 1);
+        for (uint32_t i = 0; i < newTableSize; i++) {
+            table[i] = HashNode<T>();
+        }
+        table.SetSize(newTableSize);
+
+        tableSize = newTableSize;
+        elementsCount = newElementsCount;
+
+        // Читаем данные
+        uint32_t idx;
+        string key;
+        T value;
+
+        while (inFile >> idx >> key >> value) {
+            if (idx < tableSize) {
+                // Вставляем напрямую по индексу, чтобы сохранить структуру
+                table[idx] = HashNode<T>(key, value);
+            } else {
+                cerr << "Предупреждение: Индекс в файле (" << idx
+                     << ") выходит за границы таблицы (" << tableSize << ")" << endl;
+            }
+        }
+
+        inFile.close();
+        cout << "Таблица (текст) успешно загружена из " << filename << endl;
+    }
+
+    // Сериализация в бинарном формате
+    void serialize_bin(const string& filename) const {
+        ofstream outFile(filename, ios::binary);
+        if (!outFile.is_open()) {
+            cerr << "Ошибка: Не удалось открыть файл для записи: " << filename << endl;
+            return;
+        }
+
+        // Записываем размер таблицы и количество элементов
+        outFile.write(reinterpret_cast<const char*>(&tableSize), sizeof(tableSize));
+        outFile.write(reinterpret_cast<const char*>(&elementsCount), sizeof(elementsCount));
+
+        // Проходим по всей таблице
+        for (uint32_t i = 0; i < tableSize; i++) {
+            bool occupied = table[i].isOccupied;
+            outFile.write(reinterpret_cast<const char*>(&occupied), sizeof(bool));
+
+            if (occupied) {
+                // Записываем длину ключа
+                uint32_t keyLen = static_cast<uint32_t>(table[i].key.size());
+                outFile.write(reinterpret_cast<const char*>(&keyLen), sizeof(keyLen));
+
+                // Записываем сам ключ
+                outFile.write(table[i].key.c_str(), keyLen);
+
+                // Записываем значение (работает корректно для POD-типов)
+                outFile.write(reinterpret_cast<const char*>(&table[i].value), sizeof(T));
+            }
+        }
+
+        outFile.close();
+        cout << "Таблица (бинарн.) успешно сохранена в " << filename << endl;
+    }
+
+    // Десериализация из бинарного формата
+    void deserialize_bin(const string& filename) {
+        ifstream inFile(filename, ios::binary);
+        if (!inFile.is_open()) {
+            cerr << "Ошибка: Не удалось открыть файл для чтения: " << filename << endl;
+            return;
+        }
+
+        // Читаем размеры
+        uint32_t newTableSize = 0;
+        uint32_t newElementsCount = 0;
+
+        inFile.read(reinterpret_cast<char*>(&newTableSize), sizeof(newTableSize));
+        inFile.read(reinterpret_cast<char*>(&newElementsCount), sizeof(newElementsCount));
+
+        // Пересоздаем таблицу под новый размер
+        table = Array<HashNode<T>>(newTableSize + 1);
+        for (uint32_t i = 0; i < newTableSize; i++) {
+            table[i] = HashNode<T>();
+        }
+        table.SetSize(newTableSize);
+
+        tableSize = newTableSize;
+        elementsCount = newElementsCount;
+
+        // Читаем данные ячеек
+        for (uint32_t i = 0; i < tableSize; i++) {
+            bool occupied = false;
+            inFile.read(reinterpret_cast<char*>(&occupied), sizeof(bool));
+
+            if (occupied) {
+                // Читаем длину ключа
+                uint32_t keyLen = 0;
+                inFile.read(reinterpret_cast<char*>(&keyLen), sizeof(keyLen));
+
+                // Читаем ключ
+                char* keyBuf = new char[keyLen + 1];
+                inFile.read(keyBuf, keyLen);
+                keyBuf[keyLen] = '\0';
+                string loadedKey(keyBuf);
+                delete[] keyBuf;
+
+                // Читаем значение
+                T loadedValue;
+                inFile.read(reinterpret_cast<char*>(&loadedValue), sizeof(T));
+
+                // Записываем в узел напрямую
+                table[i] = HashNode<T>(loadedKey, loadedValue);
+            } else {
+                table[i].isOccupied = false;
+            }
+        }
+
+        inFile.close();
+        cout << "Таблица (бинарн.) успешно загружена из " << filename << endl;
     }
 
     // Получение количества элементов

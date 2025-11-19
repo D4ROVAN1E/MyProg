@@ -121,6 +121,44 @@ class FullBinaryTree {
         return true;
     }
 
+    // Вспомогательная функция для сохранения в бинарном формате (Pre-order)
+    void serialize_recursive(TreeNode<T>* node, ofstream& out) const {
+        // Маркер существования узла: true - есть узел, false - nullptr
+        bool exists = (node != nullptr);
+        out.write(reinterpret_cast<const char*>(&exists), sizeof(bool));
+
+        if (exists) {
+            // Сохраняем данные узла
+            out.write(reinterpret_cast<const char*>(&node->key), sizeof(T));
+            // Рекурсивно сохраняем левое поддерево
+            serialize_recursive(node->left, out);
+            // Рекурсивно сохраняем правое поддерево
+            serialize_recursive(node->right, out);
+        }
+    }
+
+    // Вспомогательная функция для загрузки из бинарного формата
+    void deserialize_recursive(TreeNode<T>*& node, ifstream& in) {
+        bool exists;
+        // Читаем маркер
+        if (!in.read(reinterpret_cast<char*>(&exists), sizeof(bool))) {
+            return;
+        }
+
+        if (!exists) {
+            node = nullptr;
+        } else {
+            T value;
+            // Читаем данные
+            in.read(reinterpret_cast<char*>(&value), sizeof(T));
+            
+            // Создаем узел и рекурсивно восстанавливаем потомков
+            node = new TreeNode<T>(value);
+            deserialize_recursive(node->left, in);
+            deserialize_recursive(node->right, in);
+        }
+    }
+
  public:
     // Конструктор по умолчанию
     FullBinaryTree() : root(nullptr) {}
@@ -293,6 +331,39 @@ class FullBinaryTree {
         file.close();
         cout << "Полное бинарное дерево загружено из файла: "
              << filename << endl;
+    }
+
+    // Сохранение в бинарный файл
+    void TSAVE_BINARY(const string& filename) const {
+        // Открываем с флагом ios::binary
+        ofstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для записи!" << endl;
+            return;
+        }
+
+        serialize_recursive(root, file);
+        
+        file.close();
+        cout << "Дерево сохранено в бинарный файл: " << filename << endl;
+    }
+
+    // Загрузка из бинарного файла
+    void TLOAD_BINARY(const string& filename) {
+        ifstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для чтения!" << endl;
+            return;
+        }
+
+        // Очищаем текущее дерево перед загрузкой
+        destroy_tree(root);
+        root = nullptr;
+
+        deserialize_recursive(root, file);
+
+        file.close();
+        cout << "Дерево загружено из бинарного файла: " << filename << endl;
     }
 
     auto GetRoot() const -> TreeNode<T>* {

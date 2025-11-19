@@ -166,6 +166,62 @@ class Array {
         cout << "Массив загружен из файла: " << filename << endl;
     }
 
+    // Сохранение массива в бинарный файл
+    void MSAVE_BINARY(const string& filename) const {
+        ofstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cerr << "Error: Unable to open file for binary writing: " << filename << endl;
+            return;
+        }
+
+        // Записываем размер массива (uint32_t)
+        file.write(reinterpret_cast<const char*>(&size), sizeof(size));
+
+        // Записываем сырые данные массива
+        // Работает корректно только для POD-типов (int, float и т.д.)
+        if (size > 0) {
+            file.write(reinterpret_cast<const char*>(data), size * sizeof(T));
+        }
+
+        file.close();
+        cout << "Массив (бинарный) сохранён в файл: " << filename << endl;
+    }
+
+    // Загрузка массива из бинарного файла
+    void MLOAD_BINARY(const string& filename) {
+        ifstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cerr << "Error: Unable to open file for binary reading: " << filename << endl;
+            return;
+        }
+
+        uint32_t newSize = 0;
+        // Читаем размер массива
+        file.read(reinterpret_cast<char*>(&newSize), sizeof(newSize));
+
+        // Если чтение не удалось или размер некорректен
+        if (!file) { 
+            cerr << "Error: Failed to read size from binary file." << endl;
+            return;
+        }
+
+        // Подготовка памяти
+        if (newSize > capacity) {
+            delete[] data;
+            capacity = newSize; 
+            data = new T[capacity];
+        }
+        size = newSize;
+
+        // Читаем данные прямо в массив
+        if (size > 0) {
+            file.read(reinterpret_cast<char*>(data), size * sizeof(T));
+        }
+
+        file.close();
+        cout << "Массив (бинарный) загружен из файла: " << filename << endl;
+    }
+
     [[nodiscard]] auto GetSize() const -> uint32_t {
         return size;
     }

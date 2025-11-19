@@ -313,6 +313,46 @@ class DoublyList {
         cout << "Двусвязный список загружен из файла: " << filename << endl;
     }
 
+    // Сохранение списка в бинарный файл
+    void LSAVE_BIN(const string& filename) const {
+        ofstream file(filename, ios::binary); // Открываем в бинарном режиме
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для записи!" << endl;
+            return;
+        }
+
+        DNode<T>* current = head;
+        while (current != nullptr) {
+            // Записываем сырые байты переменной key
+            file.write(reinterpret_cast<const char*>(&current->key), sizeof(T));
+            current = current->next;
+        }
+        file.close();
+        cout << "Двусвязный список сохранён в бинарный файл: " << filename << endl;
+    }
+
+    // Загрузка списка из бинарного файла
+    void LLOAD_BIN(const string& filename) {
+        ifstream file(filename, ios::binary); // Открываем в бинарном режиме
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для чтения!" << endl;
+            return;
+        }
+
+        // Очищаем текущий список перед загрузкой
+        while (head) {
+            LDEL_HEAD();
+        }
+
+        T value;
+        // Читаем байты размером sizeof(T) пока файл не закончится
+        while (file.read(reinterpret_cast<char*>(&value), sizeof(T))) {
+            LPUSH_BACK(value);
+        }
+        file.close();
+        cout << "Двусвязный список загружен из бинарного файла: " << filename << endl;
+    }
+
     auto GetHead() const -> DNode<T>* {
         return head;
     }

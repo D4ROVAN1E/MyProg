@@ -276,7 +276,59 @@ class ForwardList {
             }
         }
         file.close();
-    };
+    }
+
+    // Сериализация (сохранение в бинарный файл)
+    void FSERIALIZE(const string& filename) const {
+        // Открываем файл с флагом ios::binary
+        ofstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для записи!" << endl;
+            return;
+        }
+
+        SNode<T>* current = head;
+        while (current != nullptr) {
+            // Записываем побитовое представление ключа (key)
+            // reinterpret_cast преобразует указатель на данные в указатель на char*,
+            // который требуется функции write.
+            file.write(reinterpret_cast<const char*>(&current->key), sizeof(T));
+            current = current->next;
+        }
+        file.close();
+    }
+
+    // Десериализация (загрузка из бинарного файла)
+    void FDESERIALIZE(const string& filename) {
+        ifstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для чтения!" << endl;
+            return;
+        }
+
+        // Очищаем текущий список перед загрузкой
+        while (head) {
+            FDEL_HEAD();
+        }
+
+        T tempValue;
+        SNode<T>* tail = nullptr; // Локальный указатель на конец, чтобы вставка была быстрой O(1)
+
+        // Читаем из файла блоками размером sizeof(T)
+        while (file.read(reinterpret_cast<char*>(&tempValue), sizeof(T))) {
+            // Создаем новый узел
+            SNode<T>* newNode = new SNode<T>{ tempValue, nullptr };
+
+            if (head == nullptr) {
+                head = newNode;
+                tail = newNode;
+            } else {
+                tail->next = newNode;
+                tail = newNode; // Сдвигаем хвост
+            }
+        }
+        file.close();
+    }
 
     auto GetHead() const -> SNode<T>* {
         return head;

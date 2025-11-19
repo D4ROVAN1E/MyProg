@@ -172,6 +172,65 @@ class Queue {
         cout << "Очередь загружена из файла: " << filename << endl;
     }
 
+    // Сохранение очереди в бинарный файл
+    void QSAVE_BINARY(const string& filename) const {
+        ofstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия файла для бинарной записи!" << endl;
+            return;
+        }
+
+        // Записываем количество элементов (size)
+        file.write(reinterpret_cast<const char*>(&size), sizeof(size));
+
+        // Записываем сами элементы
+        // идем логически от head до tail, чтобы сохранить порядок
+        for (uint32_t i = 0; i < size; i++) {
+            const T& item = data[(head + i) % capacity];
+            file.write(reinterpret_cast<const char*>(&item), sizeof(T));
+        }
+
+        file.close();
+        cout << "Очередь сохранена (bin): " << filename << endl;
+    }
+
+    // Загрузка очереди из бинарного файла
+    void QLOAD_BINARY(const string& filename) {
+        ifstream file(filename, ios::binary);
+        if (!file.is_open()) {
+            cout << "Ошибка открытия бинарного файла для чтения!" << endl;
+            return;
+        }
+
+        // Сбрасываем текущее состояние очереди
+        size = 0;
+        head = 0;
+        tail = 0;
+        // capacity не сбрасываем, будем расширять при необходимости через QPUSH
+
+        uint32_t newSize = 0;
+        // Считываем количество элементов
+        file.read(reinterpret_cast<char*>(&newSize), sizeof(newSize));
+
+        // Считываем элементы один за другим и добавляем в очередь
+        for (uint32_t i = 0; i < newSize; ++i) {
+            T value;
+            // Считываем сырые байты в переменную value
+            file.read(reinterpret_cast<char*>(&value), sizeof(T));
+            
+            // Если файл оборван или данные повреждены, прекращаем чтение
+            if (!file) {
+                cout << "Ошибка чтения данных (файл поврежден или короче ожидаемого)." << endl;
+                break;
+            }
+            
+            QPUSH(value);
+        }
+
+        file.close();
+        cout << "Очередь загружена (bin): " << filename << endl;
+    }
+
     [[nodiscard]] auto empty() const -> bool {
         return size == 0;
     }
