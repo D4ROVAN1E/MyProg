@@ -72,11 +72,20 @@ class Array {
     // Неконстантная перегрузка оператора скобок
     auto operator[](uint32_t index) -> T& {
         if (index >= size) {
-            throw out_of_range("Error: Index " + to_string(index) + 
-                               " is out of bounds (size " + to_string(size) + ").");
+            throw out_of_range("Error: Index " + to_string(index) 
+            + " is out of bounds (size " + to_string(size) + ").");
         }
         return data[index];
     }
+
+    // Константная перегрузка оператора скобок (для чтения)
+    auto operator[](uint32_t index) const -> const T& {
+    if (index >= size) {
+        throw out_of_range("Error: Index " + to_string(index) 
+        + " is out of bounds (size " + to_string(size) + ").");
+    }
+    return data[index];
+}
 
     void MPUSH_BACK(T value) {  // Добавление элемента в конец массива
         if (size + 1 > capacity) {

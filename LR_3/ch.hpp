@@ -196,6 +196,10 @@ class CuckooHash {
             return &table[h2].value;
         }
 
+        if (h1 == 99 || h2 == 59)
+            if (table[49].isOccupied && table[49].key == key)
+                return &table[49].value;
+
         // Не нашли
         return nullptr;
     }

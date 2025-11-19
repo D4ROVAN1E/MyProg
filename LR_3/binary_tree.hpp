@@ -147,14 +147,21 @@ class FullBinaryTree {
 
     // Вспомогательная функция для загрузки из бинарного формата
     void deserialize_recursive(TreeNode<T>*& node, ifstream& in) {
-        bool exists;
-        // Читаем маркер
-        if (!in.read(reinterpret_cast<char*>(&exists), sizeof(bool))) {
-            // Если файл закончился неожиданно во время рекурсии, это может быть ошибкой,
-            // но здесь мы полагаемся на структуру. Если это самый конец файла при корректном завершении - ок.
-            if (in.fail()) throw runtime_error("Error reading the tree structure (broken file).");
-            return;
+        // Используем однобайтовый тип для чтения
+        uint8_t marker = 0; 
+        
+        // Читаем маркер (1 байт)
+        if (!in.read(reinterpret_cast<char*>(&marker), sizeof(uint8_t))) {
+            if (in.fail() && !in.eof()) throw runtime_error("Error reading file structure.");
+            return; 
         }
+
+        // Если байт не 0 и не 1, значит файл поврежден или это не тот формат
+        if (marker != 0 && marker != 1) {
+            throw runtime_error("Error: Invalid file format. Expected binary marker (0 or 1), got: " + to_string((int)marker));
+        }
+
+        bool exists = (marker == 1);
 
         if (!exists) {
             node = nullptr;

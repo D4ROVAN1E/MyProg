@@ -246,8 +246,7 @@ class DoubleHash {
         << ", Элементов: " << elementsCount << endl;
         for (uint32_t i = 0; i < tableSize; i++) {
             if (table[i].isOccupied) {
-                cout << "[" << i << "] " << table[i].key
-                    << " => " << table[i].value << endl;
+                cout << "[" << i << "] " << table[i].key << " => " << table[i].value << endl;
             }
         }
         cout << "===================" << endl;
