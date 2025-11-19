@@ -1,8 +1,9 @@
 ﻿#ifndef QUEUE_HPP
 #define QUEUE_HPP
+
 #include <iostream>
 #include <cstdint>
-#include <stdexcept>  // Для генерации исключений
+#include <stdexcept> 
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -11,21 +12,20 @@ using namespace std;
 
 template <typename T>
 class Queue {
- private:        // Указатель на динамический массив для хранения данных
+ private:
     uint32_t capacity;  // Общая вместимость массива
-    uint32_t size;
-    T* data;     // Текущее количество элементов в очереди
+    uint32_t size;      // Текущее количество элементов
+    T* data;            // Указатель на динамический массив
 
-    uint32_t head;  // Индекс "головы" очереди (первого элемента для извлечения)
-    uint32_t tail;  // Индекс для вставки следующего элемента ("хвост")
+    uint32_t head;  // Индекс "головы"
+    uint32_t tail;  // Индекс "хвоста"
 
     // Вспомогательная функция для расширения массива
     void resize() {
         uint32_t newCapacity = capacity * 2;
         T* newData = new T[newCapacity];
 
-        // Копируем элементы из старого массива в новый,
-        // "распрямляя" кольцевой буфер
+        // Копируем элементы из старого массива в новый, "распрямляя" кольцевой буфер
         for (uint32_t i = 0; i < size; ++i) {
             newData[i] = data[(head + i) % capacity];
         }
@@ -107,7 +107,7 @@ class Queue {
     // Извлечение элемента из начала очереди
     auto QPOP() -> T {
         if (size == 0) {
-            throw out_of_range("Очередь пуста!");
+            throw out_of_range("Queue is empty!");
         }
         T value = data[head];
         head = (head + 1) % capacity;  // Сдвигаем голову по кругу
@@ -118,7 +118,7 @@ class Queue {
     // Получение первого элемента без его извлечения
     auto QGET() const -> T {
         if (size == 0) {
-            throw out_of_range("Очередь пуста!");
+            throw out_of_range("Queue is empty!");
         }
         return data[head];
     }
@@ -140,8 +140,7 @@ class Queue {
     void QSAVE(const string& filename) const {
         ofstream file(filename);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Error opening file for writing: " + filename);
         }
         file << size << endl;
         for (uint32_t i = 0; i < size; i++) {
@@ -155,19 +154,29 @@ class Queue {
     void QLOAD(const string& filename) {
         ifstream file(filename);
         if (!file.is_open()) {
-            return;
+            throw runtime_error("Error opening file for reading: " + filename);
         }
-        // Очищаем текущую очередь
+        
+        // Очищаем текущую очередь перед загрузкой
         size = 0;
         head = 0;
         tail = 0;
 
-        uint32_t NewSize;
-        file >> NewSize;
+        uint32_t NewSize = 0;
+        if (!(file >> NewSize)) {
+             throw runtime_error("Error reading queue size from file: " + filename);
+        }
+
         T value;
-        while (file >> value && size < NewSize) {
+        while (size < NewSize && file >> value) {
             QPUSH(value);
         }
+
+        // Проверка: если файл закончился раньше, чем мы считали NewSize элементов
+        if (size != NewSize) {
+            throw runtime_error("Error: file corrupted or contains less data than specified in the header.");
+        }
+
         file.close();
         cout << "Очередь загружена из файла: " << filename << endl;
     }
@@ -176,18 +185,20 @@ class Queue {
     void QSAVE_BINARY(const string& filename) const {
         ofstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для бинарной записи!" << endl;
-            return;
+            throw runtime_error("Error opening file for binary writing: " + filename);
         }
 
         // Записываем количество элементов (size)
         file.write(reinterpret_cast<const char*>(&size), sizeof(size));
 
         // Записываем сами элементы
-        // идем логически от head до tail, чтобы сохранить порядок
         for (uint32_t i = 0; i < size; i++) {
             const T& item = data[(head + i) % capacity];
             file.write(reinterpret_cast<const char*>(&item), sizeof(T));
+        }
+        
+        if (!file) {
+             throw runtime_error("Error writing data to file.");
         }
 
         file.close();
@@ -198,8 +209,7 @@ class Queue {
     void QLOAD_BINARY(const string& filename) {
         ifstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия бинарного файла для чтения!" << endl;
-            return;
+            throw runtime_error("Error opening binary file for reading: " + filename);
         }
 
         // Сбрасываем текущее состояние очереди
@@ -211,17 +221,20 @@ class Queue {
         uint32_t newSize = 0;
         // Считываем количество элементов
         file.read(reinterpret_cast<char*>(&newSize), sizeof(newSize));
+        
+        if (!file) {
+            throw runtime_error("Error reading size (header) from binary file.");
+        }
 
-        // Считываем элементы один за другим и добавляем в очередь
+        // Считываем элементы один за другим
         for (uint32_t i = 0; i < newSize; ++i) {
             T value;
             // Считываем сырые байты в переменную value
             file.read(reinterpret_cast<char*>(&value), sizeof(T));
             
-            // Если файл оборван или данные повреждены, прекращаем чтение
+            // Если файл оборван или данные повреждены
             if (!file) {
-                cout << "Ошибка чтения данных (файл поврежден или короче ожидаемого)." << endl;
-                break;
+                throw runtime_error("Error reading data (file corrupted or shorter than expected).");
             }
             
             QPUSH(value);

@@ -1,5 +1,6 @@
 ﻿#ifndef CH_HPP
 #define CH_HPP
+
 #include <iostream>
 #include <cstdint>
 #include <cmath>
@@ -7,6 +8,7 @@
 #include <algorithm>
 #include <utility>
 #include <fstream>
+#include <stdexcept> 
 #include "array.hpp"
 
 using namespace std;
@@ -243,8 +245,7 @@ class CuckooHash {
     void serialize_text(const string& filename) const {
         ofstream outFile(filename);
         if (!outFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для записи: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open file for writing: " + filename);
         }
 
         // Записываем заголовок
@@ -267,8 +268,7 @@ class CuckooHash {
     void deserialize_text(const string& filename) {
         ifstream inFile(filename);
         if (!inFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для чтения: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open file for reading: " + filename);
         }
 
         uint32_t newTableSize = 0;
@@ -276,8 +276,7 @@ class CuckooHash {
 
         // Читаем заголовок
         if (!(inFile >> newTableSize >> newElementsCount)) {
-            cerr << "Ошибка: Некорректный формат файла или пустой файл." << endl;
-            return;
+            throw runtime_error("Error: Incorrect file format or empty file: " + filename);
         }
         
         table = Array<HashNode<T>>(newTableSize + 1);
@@ -301,8 +300,8 @@ class CuckooHash {
                 // как она была при сохранении (без повторного хэширования)
                 table[idx] = HashNode<T>(key, value);
             } else {
-                cerr << "Предупреждение: Индекс в файле (" << idx 
-                     << ") выходит за границы таблицы (" << tableSize << ")" << endl;
+                 throw out_of_range("Error: File index (" + to_string(idx) 
+                     + ") is out of table bounds (" + to_string(tableSize) + ")");
             }
         }
 
@@ -319,8 +318,7 @@ class CuckooHash {
     void serialize_bin(const string& filename) const {
         ofstream outFile(filename, ios::binary);
         if (!outFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для записи: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open file for writing: " + filename);
         }
 
         // Записываем размер таблицы и количество элементов
@@ -353,8 +351,7 @@ class CuckooHash {
     void deserialize_bin(const string& filename) {
         ifstream inFile(filename, ios::binary);
         if (!inFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для чтения: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open file for reading: " + filename);
         }
 
         // Читаем размеры
@@ -363,6 +360,10 @@ class CuckooHash {
 
         inFile.read(reinterpret_cast<char*>(&newTableSize), sizeof(newTableSize));
         inFile.read(reinterpret_cast<char*>(&newElementsCount), sizeof(newElementsCount));
+
+        if (inFile.fail()) {
+             throw runtime_error("Error: Could not read file header (file might be corrupted).");
+        }
 
         // Пересоздаем таблицу под новый размер
         table = Array<HashNode<T>>(newTableSize + 1);
@@ -401,6 +402,11 @@ class CuckooHash {
             } else {
                 // Если ячейка пуста, она уже инициализирована конструктором HashNode() выше
                 table[i].isOccupied = false;
+            }
+
+            // Дополнительная проверка целостности потока после чтения элемента
+            if (inFile.fail()) {
+                throw runtime_error("Error: Unexpected end of file or read error at index " + to_string(i));
             }
         }
 

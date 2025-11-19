@@ -1,10 +1,12 @@
 ﻿#ifndef ARRAY_HPP
 #define ARRAY_HPP
+
 #include <iostream>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept> 
 
 using namespace std;
 
@@ -51,7 +53,7 @@ class Array {
         }
     }
 
-    //  Копирующий оператор присваивания
+    // Копирующий оператор присваивания
     auto operator=(const Array<T>& other) -> Array<T>& {
         if (this == &other) {  // Защита от a = a
             return *this;
@@ -69,9 +71,9 @@ class Array {
 
     // Неконстантная перегрузка оператора скобок
     auto operator[](uint32_t index) -> T& {
-        if (index < 0 || index > capacity) {
-            cerr << "Error: Index " << index
-             << " is out of bounds (size " << size << ").\n";
+        if (index >= size) {
+            throw out_of_range("Error: Index " + to_string(index) + 
+                               " is out of bounds (size " + to_string(size) + ").");
         }
         return data[index];
     }
@@ -89,43 +91,42 @@ class Array {
         if (size + 1 > capacity) {
             doubleArray();
         }
-        if (index >= 0 && index < capacity) {
-            if (index < size) {
-                for (uint32_t j = size - 1; j >= index && j < size; j--) {
-                    data[j + 1] = data[j];
-                }
+        if (index <= size) {
+            for (uint32_t j = size; j > index; j--) {
+                data[j] = data[j - 1];
             }
             data[index] = value;
             size++;
         } else {
-            cout << "Error: Index out of bounds" << endl;
+            throw out_of_range("Error: Index " + to_string(index) + " is out of bounds for insertion.");
         }
     }
 
     // Получение элемента по индексу
     auto MGET_BY_IND(uint32_t index) const -> T& {
-        if (index >= 0 && index < size)
+        if (index < size) {
             return data[index];
-        else
-            throw "Error: Index out of bounds\n";
+        } else {
+            throw out_of_range("Error: Index " + to_string(index) + " is out of bounds.");
+        }
     }
 
     void MDEL_BY_IND(uint32_t index) {
-        if (index >= 0 && index < size) {
+        if (index < size) {
             for (uint32_t i = index; i < size - 1; i++) {
                 data[i] = data[i + 1];
             }
             size--;
         } else {
-            cout << "Error: Index out of bounds" << endl;
+            throw out_of_range("Error: Index " + to_string(index) + " is out of bounds for deletion.");
         }
     }
 
     void MSWAP_BY_IND(uint32_t index, T value) {
-        if (index >= 0 && index < size) {
+        if (index < size) {
             data[index] = value;
         } else {
-            cout << "Error: Index out of bounds" << endl;
+            throw out_of_range("Error: Index " + to_string(index) + " is out of bounds for swap.");
         }
     }
 
@@ -140,8 +141,7 @@ class Array {
     void MSAVE(const string& filename) const {
         ofstream file(filename);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Error: Unable to open file for writing: " + filename);
         }
         file << size << endl;
         for (uint32_t i = 0; i < size; i++) {
@@ -154,14 +154,24 @@ class Array {
     // Загрузка массива из файла
     void MLOAD(const string& filename) {
         ifstream file(filename);
-        if (!file.is_open()) return;
+        if (!file.is_open()) {
+            throw runtime_error("Error: Unable to open file for reading: " + filename);
+        }
         uint32_t NewSize;
-        file >> NewSize;
+        if (!(file >> NewSize)) {
+             throw runtime_error("Error: Failed to read size from file: " + filename);
+        }
+        
         size = 0;
         T value;
-        while (file >> value && size < NewSize) {
+        while (size < NewSize && file >> value) {
             MPUSH_BACK(value);
         }
+
+        if (size != NewSize) {
+            throw runtime_error("Error: File corrupted or incomplete data.");
+        }
+
         file.close();
         cout << "Массив загружен из файла: " << filename << endl;
     }
@@ -170,17 +180,18 @@ class Array {
     void MSAVE_BINARY(const string& filename) const {
         ofstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cerr << "Error: Unable to open file for binary writing: " << filename << endl;
-            return;
+            throw runtime_error("Error: Unable to open file for binary writing: " + filename);
         }
 
-        // Записываем размер массива (uint32_t)
+        // Записываем размер массива
         file.write(reinterpret_cast<const char*>(&size), sizeof(size));
 
-        // Записываем сырые данные массива
-        // Работает корректно только для POD-типов (int, float и т.д.)
         if (size > 0) {
             file.write(reinterpret_cast<const char*>(data), size * sizeof(T));
+        }
+        
+        if (!file) {
+             throw runtime_error("Error: Write operation failed for file: " + filename);
         }
 
         file.close();
@@ -191,18 +202,15 @@ class Array {
     void MLOAD_BINARY(const string& filename) {
         ifstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cerr << "Error: Unable to open file for binary reading: " << filename << endl;
-            return;
+             throw runtime_error("Error: Unable to open file for binary reading: " + filename);
         }
 
         uint32_t newSize = 0;
         // Читаем размер массива
         file.read(reinterpret_cast<char*>(&newSize), sizeof(newSize));
 
-        // Если чтение не удалось или размер некорректен
         if (!file) { 
-            cerr << "Error: Failed to read size from binary file." << endl;
-            return;
+            throw runtime_error("Error: Failed to read size from binary file.");
         }
 
         // Подготовка памяти
@@ -216,6 +224,9 @@ class Array {
         // Читаем данные прямо в массив
         if (size > 0) {
             file.read(reinterpret_cast<char*>(data), size * sizeof(T));
+            if (!file) {
+                 throw runtime_error("Error: Failed to read data from binary file (incomplete file).");
+            }
         }
 
         file.close();
@@ -231,10 +242,16 @@ class Array {
     }
 
     void SetSize(uint32_t newSize) {
+        if (newSize > capacity) {
+             throw length_error("Error: New size exceeds current capacity.");
+        }
         size = newSize;
     }
 
     void SetCapacity(uint32_t newCapacity) {
+        if (newCapacity < size) {
+            throw length_error("Error: New capacity cannot be smaller than current size.");
+        }
         capacity = newCapacity;
     }
 };

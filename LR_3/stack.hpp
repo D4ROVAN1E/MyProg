@@ -1,10 +1,12 @@
 ﻿#ifndef STACK_HPP
 #define STACK_HPP
+
 #include <iostream>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -16,15 +18,15 @@ class Stack {
     uint32_t size;
 
     void doubleStack() {  // Удвоение стека при достижении лимита capacity
-    uint32_t cap = capacity;
-    T* newData = new T[cap * 2];
-    capacity = cap * 2;
-    for (uint32_t i = 0; i < size; i++) {
-        newData[i] = data[i];
+        uint32_t cap = capacity;
+        T* newData = new T[cap * 2];
+        capacity = cap * 2;
+        for (uint32_t i = 0; i < size; i++) {
+            newData[i] = data[i];
+        }
+        delete[] data;
+        data = newData;
     }
-    delete[] data;
-    data = newData;
-}
 
  public:
     Stack() {
@@ -37,6 +39,9 @@ class Stack {
     }
 
     explicit Stack(const uint32_t cap) {  // Конструктор
+        if (cap == 0) {
+            throw invalid_argument("Initial capacity must be greater than 0");
+        }
         capacity = cap;
         size = 0;
         data = new T[capacity];
@@ -82,6 +87,9 @@ class Stack {
     }
 
     auto SPOP() -> T {
+        if (size == 0) {
+            throw out_of_range("Stack underflow: cannot pop from an empty stack");
+        }
         T rt = data[size - 1];
         size--;
         return rt;
@@ -98,8 +106,7 @@ class Stack {
     void SSAVE(const string& filename) {
         ofstream file(filename);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Could not open file for writing (" + filename + ")");
         }
         file << size << endl;
         for (uint32_t i = 0; i < size; i++) {
@@ -113,13 +120,18 @@ class Stack {
     void SLOAD(const string& filename) {
         ifstream file(filename);
         if (!file.is_open()) {
-            return;
+            throw runtime_error("Could not open file for reading (" + filename + ")");
         }
         uint32_t nsize;
         file >> nsize;
+        
+        if (file.fail()) {
+             throw runtime_error("Failed to read stack size from " + filename);
+        }
+
         size = 0;
         T value;
-        while (file >> value && size < nsize) {
+        while (size < nsize && file >> value) {
             SPUSH(value);
         }
         file.close();
@@ -131,8 +143,7 @@ class Stack {
         // Открываем файл с флагом ios::binary
         ofstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для бинарной записи!" << endl;
-            return;
+            throw runtime_error("Could not open binary file for writing (" + filename + ")");
         }
 
         // Записываем размер стека (сколько элементов считывать)
@@ -141,6 +152,10 @@ class Stack {
         // Записываем массив данных целиком
         // reinterpret_cast преобразует указатель T* в char*, чтобы write мог записать байты
         file.write(reinterpret_cast<const char*>(data), size * sizeof(T));
+        
+        if (file.fail()) {
+            throw runtime_error("Failed to write data to binary file");
+        }
 
         file.close();
         cout << "Стек сохранён (bin): " << filename << endl;
@@ -150,13 +165,16 @@ class Stack {
     void SLOAD_BINARY(const string& filename) {
         ifstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для бинарного чтения!" << endl;
-            return;
+            throw runtime_error("Could not open binary file for reading (" + filename + ")");
         }
 
         uint32_t newSize = 0;
         // Читаем размер записанного стека
         file.read(reinterpret_cast<char*>(&newSize), sizeof(newSize));
+        
+        if (file.fail()) {
+             throw runtime_error("Failed to read size from binary file");
+        }
 
         // Если текущей ёмкости (capacity) не хватает, перевыделяем память
         if (newSize > capacity) {
@@ -168,6 +186,10 @@ class Stack {
         // Обновляем размер и читаем данные прямо в память
         size = newSize;
         file.read(reinterpret_cast<char*>(data), size * sizeof(T));
+
+        if (file.fail()) {
+             throw runtime_error("Failed to read data from binary file (unexpected EOF or format)");
+        }
 
         file.close();
         cout << "Стек загружен (bin): " << filename << endl;

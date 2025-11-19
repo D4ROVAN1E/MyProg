@@ -1,10 +1,12 @@
 ﻿#ifndef SINGLY_LIST_HPP
 #define SINGLY_LIST_HPP
+
 #include <iostream>
 #include <utility>  // Для swap
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept> 
 
 using namespace std;
 
@@ -61,7 +63,9 @@ class ForwardList {
 
     // Добавляет узел ПОСЛЕ указанного узла ptr
     void FPUSH_FORWARD(SNode<T>* ptr, T key) {
-        if (!ptr) return;
+        if (!ptr) {
+            throw invalid_argument("Pointer cannot be null.");
+        }
         SNode<T>* newSNode = new SNode<T>{ key, nullptr };
         newSNode->next = ptr->next;
         ptr->next = newSNode;
@@ -81,7 +85,7 @@ class ForwardList {
     // Выводит список в консоль
     void PRINT() const {
         if (!head) {
-            cout << "Список пуст" << endl;
+            cout << "Список пуст" << endl; 
             return;
         }
         SNode<T>* current = head;
@@ -118,7 +122,9 @@ class ForwardList {
 
     // Добавление элемента ДО узла с заданным значением
     void FPUSH_BEFORE(T targetKey, T newKey) {
-        if (!head) return;  // Список пуст
+        if (!head) {
+            throw runtime_error("List is empty, cannot find element.");
+        }
 
         if (head->key == targetKey) {
             FPUSH_HEAD(newKey);
@@ -132,12 +138,17 @@ class ForwardList {
 
         if (current->next != nullptr) {
             FPUSH_FORWARD(current, newKey);
+        } else {
+            // Если мы дошли до конца и не нашли ключ
+            throw runtime_error("Target key not found.");
         }
     }
 
     // Удаление первого элемента (головы) списка
     void FDEL_HEAD() {
-        if (!head) return;  // Список уже пуст
+        if (!head) {
+            throw runtime_error("Attempt to delete from an empty list.");
+        }
 
         SNode<T>* temp = head;
         head = head->next;
@@ -146,7 +157,9 @@ class ForwardList {
 
     // Удаление последнего элемента списка
     void FDEL_BACK() {
-        if (!head) return;
+        if (!head) {
+            throw runtime_error("Attempt to delete from an empty list.");
+        }
 
         if (head->next == nullptr) {
             delete head;
@@ -165,23 +178,33 @@ class ForwardList {
 
     // Удаление элемента ПОСЛЕ указанного узла
     void FDEL_AFTER(SNode<T>* ptr) {
-        // Если указанный узел не существует или он последний, ничего не делаем
-        if (!ptr || !ptr->next) {
-            return;
+        if (!ptr) {
+            throw invalid_argument("Pointer cannot be null.");
+        }
+        
+        if (!ptr->next) {
+            throw runtime_error("No element exists after the specified node.");
         }
 
-        SNode<T>* nodeToDelete = ptr->next;  // Узел, который нужно удалить
-        ptr->next = nodeToDelete->next;  // "Перепрыгиваем" через удаляемый узел
-        delete nodeToDelete;              // Освобождаем память
+        SNode<T>* nodeToDelete = ptr->next;
+        ptr->next = nodeToDelete->next;
+        delete nodeToDelete;
     }
 
     // Удаление элемента ДО узла с заданным значением
     void FDEL_BEFORE(T targetKey) {
-        // Если список пуст, содержит один элемент
-        // или искомый элемент - голова,
-        // то удалять нечего.
-        if (!head || !head->next || head->key == targetKey) {
-            return;
+        if (!head) {
+            throw runtime_error("List is empty.");
+        }
+        
+        // Если искомый элемент - это голова, то перед ним ничего нет
+        if (head->key == targetKey) {
+            throw logic_error("Cannot delete element before the head of the list.");
+        }
+
+        // Если в списке всего один элемент, а мы ищем его (уже обработано выше) или другой
+        if (!head->next) {
+             throw runtime_error("List is too short or element not found.");
         }
 
         // Нужно удалить голову списка (элемент перед вторым элементом)
@@ -190,23 +213,28 @@ class ForwardList {
             return;
         }
 
-        // Ищем узел, который находится за два шага до целевого
         SNode<T>* current = head;
+        bool found = false;
+        // Ищем узел, который находится за два шага до целевого
         while (current->next && current->next->next) {
             if (current->next->next->key == targetKey) {
-                // Мы нашли узел (current),
-                // после которого идет узел для удаления.
-                // Используем уже существующую функцию FDEL_AFTER.
                 FDEL_AFTER(current);
+                found = true;
                 return;
             }
             current = current->next;
+        }
+
+        if (!found) {
+            throw runtime_error("Target element not found.");
         }
     }
 
     // Удаление узла по значению (первое вхождение)
     void FDEL_BY_VALUE(T key) {
-        if (!head) return;
+        if (!head) {
+            throw runtime_error("List is empty.");
+        }
 
         if (head->key == key) {
             FDEL_HEAD();
@@ -222,9 +250,10 @@ class ForwardList {
             SNode<T>* deleteSNode = current->next;
             current->next = deleteSNode->next;
             delete deleteSNode;
+        } else {
+            throw runtime_error("Element with specified value not found.");
         }
     }
-
 
     // Чтение (поиск) элемента по значению
     auto FGET_BY_VALUE(T key) const -> SNode<T>* {
@@ -235,15 +264,14 @@ class ForwardList {
             }
             current = current->next;
         }
-        return nullptr;
+        return nullptr; 
     }
 
     // Сохранение списка в файл
     void FSAVE(const string& filename) const {
         ofstream file(filename);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Error opening file for writing: " + filename);
         }
         SNode<T>* current = head;
         while (current != nullptr) {
@@ -254,11 +282,10 @@ class ForwardList {
     }
 
     // Загрузка списка из файла
-
     void FLOAD(const string& filename) {
         ifstream file(filename);
         if (!file.is_open()) {
-            return;
+             throw runtime_error("Error opening file for reading: " + filename);
         }
         // Очищаем текущий список
         while (head) {
@@ -276,6 +303,13 @@ class ForwardList {
             }
         }
         file.close();
+        
+        // Проверка на пустой файл или ошибки чтения
+        if (first && file.eof()) {
+             // Файл был пуст, список остался пустым.
+        } else if (file.fail() && !file.eof()) {
+             throw runtime_error("Invalid data format in file.");
+        }
     }
 
     // Сериализация (сохранение в бинарный файл)
@@ -283,8 +317,7 @@ class ForwardList {
         // Открываем файл с флагом ios::binary
         ofstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Error opening file for writing: " + filename);
         }
 
         SNode<T>* current = head;
@@ -293,6 +326,9 @@ class ForwardList {
             // reinterpret_cast преобразует указатель на данные в указатель на char*,
             // который требуется функции write.
             file.write(reinterpret_cast<const char*>(&current->key), sizeof(T));
+            if (file.fail()) {
+                 throw runtime_error("Error writing to file.");
+            }
             current = current->next;
         }
         file.close();
@@ -302,8 +338,7 @@ class ForwardList {
     void FDESERIALIZE(const string& filename) {
         ifstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для чтения!" << endl;
-            return;
+            throw runtime_error("Error opening file for reading: " + filename);
         }
 
         // Очищаем текущий список перед загрузкой
@@ -312,7 +347,7 @@ class ForwardList {
         }
 
         T tempValue;
-        SNode<T>* tail = nullptr; // Локальный указатель на конец, чтобы вставка была быстрой O(1)
+        SNode<T>* tail = nullptr;
 
         // Читаем из файла блоками размером sizeof(T)
         while (file.read(reinterpret_cast<char*>(&tempValue), sizeof(T))) {
@@ -324,9 +359,15 @@ class ForwardList {
                 tail = newNode;
             } else {
                 tail->next = newNode;
-                tail = newNode; // Сдвигаем хвост
+                tail = newNode;
             }
         }
+        
+        // Проверка ошибок чтения (кроме EOF)
+        if (file.fail() && !file.eof()) {
+             throw runtime_error("Error reading binary data.");
+        }
+        
         file.close();
     }
 

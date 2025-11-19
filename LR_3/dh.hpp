@@ -1,10 +1,12 @@
 ﻿#ifndef DH_HPP
 #define DH_HPP
+
 #include <iostream>
 #include <cstdint>
 #include <cmath>
 #include <string>
 #include <fstream> 
+#include <stdexcept> 
 #include "array.hpp"
 
 using namespace std;
@@ -54,8 +56,7 @@ class DoubleHash {
             sum += static_cast<uint8_t>(c);
         }
 
-        // Возвращаем нечётное число (чтобы избежать совпадения с hash1)
-        // и не равное 0 (для корректной работы двойного хэширования)
+        // Возвращаем нечётное число
         uint32_t result = (sum % (tableSize - 1)) + 1;
 
         // Делаем результат нечётным, если размер таблицы чётный
@@ -68,6 +69,7 @@ class DoubleHash {
 
     // Функция для проверки необходимости расширения таблицы
     [[nodiscard]] auto needResize() const -> bool {
+        if (tableSize == 0) return true; // Защита от деления на ноль
         return (static_cast<double>(elementsCount) / tableSize) > 0.7;
     }
 
@@ -102,6 +104,9 @@ class DoubleHash {
     explicit DoubleHash(uint32_t size = 3) : tableSize(size)
                                     , elementsCount(0)
                                     , table(Array<HashNode<T>>(size + 1)) {
+        if (size == 0) {
+            throw invalid_argument("Table size cannot be zero");
+        }
         for (uint32_t i = 0; i < tableSize; i++) {
             table[i] = HashNode<T>();
         }
@@ -176,11 +181,14 @@ class DoubleHash {
             i++;
         }
 
-        cout << "Ошибка: таблица переполнена!" << endl;
+        // Если мы здесь, значит не удалось вставить элемент (таблица забита или проблема хэш-функции)
+        throw overflow_error("Error: Hash table is full, cannot insert key.");
     }
 
     // Поиск элемента по ключу
     auto find(const string& key) -> T* {
+        if (elementsCount == 0) return nullptr;
+
         uint32_t h1 = hash1(key);
         uint32_t h2 = hash2(key);
         uint32_t i = 0;
@@ -206,6 +214,8 @@ class DoubleHash {
 
     // Удаление элемента
     auto remove(const string& key) -> bool {
+        if (elementsCount == 0) return false;
+
         uint32_t h1 = hash1(key);
         uint32_t h2 = hash2(key);
         uint32_t i = 0;
@@ -247,22 +257,27 @@ class DoubleHash {
     void serialize_text(const string& filename) const {
         ofstream outFile(filename);
         if (!outFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для записи: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open file for writing: " + filename);
         }
 
         // Записываем заголовок
-        outFile << tableSize << " " << elementsCount << endl;
+        if (!(outFile << tableSize << " " << elementsCount << endl)) {
+            throw runtime_error("Error: Failed to write header to file " + filename);
+        }
 
         // Записываем только занятые ячейки
         for (uint32_t i = 0; i < tableSize; i++) {
             if (table[i].isOccupied) {
-                // Сохраняем индекс, чтобы при загрузке восстановить позицию без перехэширования
-                outFile << i << " " << table[i].key << " " << table[i].value << endl;
+                if (!(outFile << i << " " << table[i].key << " " << table[i].value << endl)) {
+                    throw runtime_error("Error: Failed to write data to file " + filename);
+                }
             }
         }
 
         outFile.close();
+        if (outFile.fail()) {
+             throw runtime_error("Error: File stream failed during closing: " + filename);
+        }
         cout << "Таблица (текст) успешно сохранена в " << filename << endl;
     }
 
@@ -270,8 +285,7 @@ class DoubleHash {
     void deserialize_text(const string& filename) {
         ifstream inFile(filename);
         if (!inFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для чтения: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open file for reading: " + filename);
         }
 
         uint32_t newTableSize = 0;
@@ -279,16 +293,19 @@ class DoubleHash {
 
         // Читаем заголовок
         if (!(inFile >> newTableSize >> newElementsCount)) {
-            cerr << "Ошибка: Некорректный формат файла или пустой файл." << endl;
-            return;
+            throw runtime_error("Error: Invalid file format or empty file: " + filename);
         }
 
         // Пересоздаем таблицу
-        table = Array<HashNode<T>>(newTableSize + 1);
-        for (uint32_t i = 0; i < newTableSize; i++) {
-            table[i] = HashNode<T>();
+        try {
+            table = Array<HashNode<T>>(newTableSize + 1);
+            for (uint32_t i = 0; i < newTableSize; i++) {
+                table[i] = HashNode<T>();
+            }
+            table.SetSize(newTableSize);
+        } catch (...) {
+            throw runtime_error("Error: Memory allocation failed during deserialization");
         }
-        table.SetSize(newTableSize);
 
         tableSize = newTableSize;
         elementsCount = newElementsCount;
@@ -298,14 +315,20 @@ class DoubleHash {
         string key;
         T value;
 
-        while (inFile >> idx >> key >> value) {
-            if (idx < tableSize) {
-                // Вставляем напрямую по индексу, чтобы сохранить структуру
-                table[idx] = HashNode<T>(key, value);
-            } else {
-                cerr << "Предупреждение: Индекс в файле (" << idx
-                     << ") выходит за границы таблицы (" << tableSize << ")" << endl;
+        // Читаем данные
+        while (true) {
+            inFile >> idx >> key >> value;
+            if (inFile.eof()) break;
+            
+            if (inFile.fail()) {
+                 throw runtime_error("Error: Corrupted data in file: " + filename);
             }
+
+            if (idx >= tableSize) {
+                throw out_of_range("Error: Index in file (" + to_string(idx) + 
+                                        ") exceeds table size (" + to_string(tableSize) + ")");
+            }
+            table[idx] = HashNode<T>(key, value);
         }
 
         inFile.close();
@@ -316,15 +339,17 @@ class DoubleHash {
     void serialize_bin(const string& filename) const {
         ofstream outFile(filename, ios::binary);
         if (!outFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для записи: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open binary file for writing: " + filename);
         }
 
         // Записываем размер таблицы и количество элементов
         outFile.write(reinterpret_cast<const char*>(&tableSize), sizeof(tableSize));
         outFile.write(reinterpret_cast<const char*>(&elementsCount), sizeof(elementsCount));
 
-        // Проходим по всей таблице
+        if (outFile.fail()) {
+             throw runtime_error("Error: Failed to write header to binary file");
+        }
+
         for (uint32_t i = 0; i < tableSize; i++) {
             bool occupied = table[i].isOccupied;
             outFile.write(reinterpret_cast<const char*>(&occupied), sizeof(bool));
@@ -339,6 +364,10 @@ class DoubleHash {
 
                 // Записываем значение (работает корректно для POD-типов)
                 outFile.write(reinterpret_cast<const char*>(&table[i].value), sizeof(T));
+                
+                if (outFile.fail()) {
+                    throw runtime_error("Error: Failed to write node data to binary file");
+                }
             }
         }
 
@@ -350,8 +379,7 @@ class DoubleHash {
     void deserialize_bin(const string& filename) {
         ifstream inFile(filename, ios::binary);
         if (!inFile.is_open()) {
-            cerr << "Ошибка: Не удалось открыть файл для чтения: " << filename << endl;
-            return;
+            throw runtime_error("Error: Could not open binary file for reading: " + filename);
         }
 
         // Читаем размеры
@@ -361,12 +389,19 @@ class DoubleHash {
         inFile.read(reinterpret_cast<char*>(&newTableSize), sizeof(newTableSize));
         inFile.read(reinterpret_cast<char*>(&newElementsCount), sizeof(newElementsCount));
 
-        // Пересоздаем таблицу под новый размер
-        table = Array<HashNode<T>>(newTableSize + 1);
-        for (uint32_t i = 0; i < newTableSize; i++) {
-            table[i] = HashNode<T>();
+        if (inFile.fail()) {
+             throw runtime_error("Error: Failed to read header from binary file");
         }
-        table.SetSize(newTableSize);
+
+        try {
+            table = Array<HashNode<T>>(newTableSize + 1);
+            for (uint32_t i = 0; i < newTableSize; i++) {
+                table[i] = HashNode<T>();
+            }
+            table.SetSize(newTableSize);
+        } catch (...) {
+             throw runtime_error("Error: Memory allocation failed (possibly corrupted size in file)");
+        }
 
         tableSize = newTableSize;
         elementsCount = newElementsCount;
@@ -376,14 +411,30 @@ class DoubleHash {
             bool occupied = false;
             inFile.read(reinterpret_cast<char*>(&occupied), sizeof(bool));
 
+            if (inFile.fail()) {
+                // Можно допустить EOF только если таблица закончилась корректно,
+                // но здесь мы в цикле for, так что преждевременный EOF - это ошибка
+                throw runtime_error("Error: Unexpected end of file or read error");
+            }
+
             if (occupied) {
                 // Читаем длину ключа
                 uint32_t keyLen = 0;
                 inFile.read(reinterpret_cast<char*>(&keyLen), sizeof(keyLen));
 
-                // Читаем ключ
+                // Защита от переполнения памяти при чтении длины строки
+                if (keyLen > 1000000) { // Разумный лимит
+                    throw length_error("Error: Key length in file seems too large (corrupted file?)");
+                }
+
                 char* keyBuf = new char[keyLen + 1];
                 inFile.read(keyBuf, keyLen);
+                
+                if (inFile.fail()) {
+                    delete[] keyBuf;
+                    throw runtime_error("Error: Failed to read key string");
+                }
+                
                 keyBuf[keyLen] = '\0';
                 string loadedKey(keyBuf);
                 delete[] keyBuf;
@@ -392,7 +443,10 @@ class DoubleHash {
                 T loadedValue;
                 inFile.read(reinterpret_cast<char*>(&loadedValue), sizeof(T));
 
-                // Записываем в узел напрямую
+                if (inFile.fail()) {
+                    throw runtime_error("Error: Failed to read value");
+                }
+
                 table[i] = HashNode<T>(loadedKey, loadedValue);
             } else {
                 table[i].isOccupied = false;

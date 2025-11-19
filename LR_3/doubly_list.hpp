@@ -1,10 +1,12 @@
 ﻿#ifndef DOUBLY_LIST_HPP
 #define DOUBLY_LIST_HPP
+
 #include <iostream>
 #include <string>
 #include <utility>
 #include <fstream>
 #include <sstream>
+#include <stdexcept> 
 
 using namespace std;
 
@@ -38,7 +40,7 @@ class DoublyList {
         cout << "nullptr" << endl;
     }
 
-    // Выводит список в консоль от конца до начала (для проверки)
+    // Выводит список в консоль от конца до начала
     void print_backward() const {
         if (!tail) {
             cout << "Список пуст." << endl;
@@ -92,6 +94,10 @@ class DoublyList {
 
     // Создает список с начальным элементом
     void LCREATE(T keyBegin) {
+        if (head) {
+            // Если список уже существует
+            throw logic_error("List already created. Use push methods.");
+        }
         DNode<T>* newDNode = new DNode<T>{ keyBegin, nullptr, nullptr };
         head = newDNode;
         tail = newDNode;
@@ -123,7 +129,9 @@ class DoublyList {
 
     // Удаление первого элемента (головы) списка
     void LDEL_HEAD() {
-        if (!head) return;  // Список пуст
+        if (!head) {
+            throw underflow_error("Attempt to delete head in an empty list.");
+        }
 
         DNode<T>* temp = head;
         head = head->next;
@@ -138,7 +146,9 @@ class DoublyList {
 
     // Удаление последнего элемента списка
     void LDEL_BACK() {
-        if (!tail) return;  // Список пуст
+        if (!tail) {
+            throw underflow_error("Attempt to delete tail in an empty list.");
+        }
 
         DNode<T>* temp = tail;
         tail = tail->prev;
@@ -165,8 +175,10 @@ class DoublyList {
     // Добавление элемента ДО узла с заданным значением
     void LPUSH_BEFORE(T targetKey, T newKey) {
         DNode<T>* targetDNode = LGET_BY_VALUE(targetKey);
-        // Элемент, перед которым нужно вставить, не найден
-        if (!targetDNode) return;
+        
+        if (!targetDNode) {
+            throw invalid_argument("Target element for insertion (BEFORE) not found.");
+        }
 
         if (targetDNode == head) {  // Если вставляем перед головой
             LPUSH_HEAD(newKey);
@@ -183,8 +195,11 @@ class DoublyList {
     // Добавление элемента ПОСЛЕ узла с заданным значением
     void LPUSH_AFTER(T targetKey, T newKey) {
         DNode<T>* targetDNode = LGET_BY_VALUE(targetKey);
-        // Элемент, после которого нужно вставить, не найден
-        if (!targetDNode) return;
+        
+        if (!targetDNode) {
+             throw invalid_argument("Target element for insertion (AFTER) not found.");
+        }
+
         if (targetDNode == tail) {  // Если вставляем после хвоста
             LPUSH_BACK(newKey);
             return;
@@ -200,10 +215,12 @@ class DoublyList {
     void LDEL_AFTER(T targetKey) {
         DNode<T>* targetNode = LGET_BY_VALUE(targetKey);
 
-        // Если целевой узел не найден или он является хвостом,
-        // то удалять нечего.
-        if (!targetNode || !targetNode->next) {
-            return;
+        if (!targetNode) {
+            throw invalid_argument("Target element for deletion (AFTER) not found.");
+        }
+        
+        if (!targetNode->next) {
+            throw logic_error("No elements after the specified node.");
         }
 
         DNode<T>* nodeToDelete = targetNode->next;
@@ -223,10 +240,12 @@ class DoublyList {
     void LDEL_BEFORE(T targetKey) {
         DNode<T>* targetNode = LGET_BY_VALUE(targetKey);
 
-        // Если целевой узел не найден или он является головой,
-        // то удалять нечего.
-        if (!targetNode || !targetNode->prev) {
-            return;
+        if (!targetNode) {
+             throw invalid_argument("Target element for deletion (BEFORE) not found.");
+        }
+        
+        if (!targetNode->prev) {
+            throw logic_error("No elements before the specified node (it is the head).");
         }
 
         DNode<T>* nodeToDelete = targetNode->prev;
@@ -245,7 +264,9 @@ class DoublyList {
     // Удаление узла по значению (первое вхождение)
     void LDEL_BY_VALUE(T key) {
         DNode<T>* targetDNode = LGET_BY_VALUE(key);
-        if (!targetDNode) return;  // Узел для удаления не найден
+        if (!targetDNode) {
+            throw invalid_argument("Element with such value not found, deletion impossible.");
+        }
 
         if (targetDNode == head) {
             LDEL_HEAD();
@@ -268,7 +289,7 @@ class DoublyList {
             print_backward();
             break;
         default:
-            break;
+            throw invalid_argument("Invalid print mode selection (expected 1 or 2).");
         }
     }
 
@@ -276,8 +297,7 @@ class DoublyList {
     void LSAVE(const string& filename) const {
         ofstream file(filename);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Error opening file for writing: " + filename);
         }
         DNode<T>* current = head;
         while (current != nullptr) {
@@ -292,18 +312,25 @@ class DoublyList {
     void LLOAD(const string& filename) {
         ifstream file(filename);
         if (!file.is_open()) {
-            return;
+             throw runtime_error("Error opening file for reading: " + filename);
         }
+        
         // Очищаем текущий список
         while (head) {
-            LDEL_HEAD();
+            DNode<T>* temp = head;
+            head = head->next;
+            delete temp; 
         }
+        // После цикла убеждаемся, что tail обнулен
+        tail = nullptr;
 
         T value;
         bool first = true;
         while (file >> value) {
             if (first) {
-                LCREATE(value);
+                DNode<T>* newDNode = new DNode<T>{ value, nullptr, nullptr };
+                head = newDNode;
+                tail = newDNode;
                 first = false;
             } else {
                 LPUSH_BACK(value);
@@ -317,8 +344,7 @@ class DoublyList {
     void LSAVE_BIN(const string& filename) const {
         ofstream file(filename, ios::binary); // Открываем в бинарном режиме
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+             throw runtime_error("Error opening binary file for writing: " + filename);
         }
 
         DNode<T>* current = head;
@@ -335,14 +361,16 @@ class DoublyList {
     void LLOAD_BIN(const string& filename) {
         ifstream file(filename, ios::binary); // Открываем в бинарном режиме
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для чтения!" << endl;
-            return;
+             throw runtime_error("Error opening binary file for reading: " + filename);
         }
 
         // Очищаем текущий список перед загрузкой
         while (head) {
-            LDEL_HEAD();
+            DNode<T>* temp = head;
+            head = head->next;
+            delete temp;
         }
+        tail = nullptr;
 
         T value;
         // Читаем байты размером sizeof(T) пока файл не закончится

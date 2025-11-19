@@ -1,10 +1,12 @@
 ﻿#ifndef BINARY_TREE_HPP
 #define BINARY_TREE_HPP
+
 #include <iostream>
 #include <utility>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept> 
 #include "queue.hpp"
 
 using namespace std;
@@ -51,7 +53,7 @@ class FullBinaryTree {
         }
     }
 
-        // Вспомогательная рекурсивная функция для красивой печати
+    // Вспомогательная рекурсивная функция для красивой печати
     void print_tree_recursive(TreeNode<T>* node,
                             const string& prefix,
                              bool isLeft) const {
@@ -62,8 +64,7 @@ class FullBinaryTree {
             // Выводим значение узла
             cout << node->key << endl;
 
-            // Рекурсивно вызываем для потомков, увеличивая отступ
-            // Правый потомок идет первым, чтобы дерево "росло" слева направо
+            // Рекурсивно вызываем для потомков
             print_tree_recursive(node->right,
                                 prefix + (isLeft ? "|   " : "    "),
                                 false);
@@ -86,7 +87,7 @@ class FullBinaryTree {
         print_tree_recursive(root->left, "", true);
     }
 
-    // Рекурсивные функцияы для обходов
+    // Рекурсивные функции для обходов
     void preorder_recursive(TreeNode<T>* node) const {
         if (node != nullptr) {
             cout << node->key << " ";
@@ -126,11 +127,18 @@ class FullBinaryTree {
         // Маркер существования узла: true - есть узел, false - nullptr
         bool exists = (node != nullptr);
         out.write(reinterpret_cast<const char*>(&exists), sizeof(bool));
+        
+        // Если запись не удалась (например, диск переполнен)
+        if (!out) {
+            throw runtime_error("Error writing to a binary file (perhaps there is no disk space).");
+        }
 
         if (exists) {
             // Сохраняем данные узла
             out.write(reinterpret_cast<const char*>(&node->key), sizeof(T));
-            // Рекурсивно сохраняем левое поддерево
+            if (!out) {
+                 throw runtime_error("Error writing node data to a binary file.");
+            }
             serialize_recursive(node->left, out);
             // Рекурсивно сохраняем правое поддерево
             serialize_recursive(node->right, out);
@@ -142,6 +150,9 @@ class FullBinaryTree {
         bool exists;
         // Читаем маркер
         if (!in.read(reinterpret_cast<char*>(&exists), sizeof(bool))) {
+            // Если файл закончился неожиданно во время рекурсии, это может быть ошибкой,
+            // но здесь мы полагаемся на структуру. Если это самый конец файла при корректном завершении - ок.
+            if (in.fail()) throw runtime_error("Error reading the tree structure (broken file).");
             return;
         }
 
@@ -149,10 +160,11 @@ class FullBinaryTree {
             node = nullptr;
         } else {
             T value;
-            // Читаем данные
-            in.read(reinterpret_cast<char*>(&value), sizeof(T));
+            // Читаем данные. Если маркер сказал "узел есть", а данных нет - это ошибка.
+            if (!in.read(reinterpret_cast<char*>(&value), sizeof(T))) {
+                throw runtime_error("Unexpected end of file or node data reading error.");
+            }
             
-            // Создаем узел и рекурсивно восстанавливаем потомков
             node = new TreeNode<T>(value);
             deserialize_recursive(node->left, in);
             deserialize_recursive(node->right, in);
@@ -175,8 +187,7 @@ class FullBinaryTree {
 
     // Копирующий оператор присваивания
     auto operator=(const FullBinaryTree& other) -> FullBinaryTree& {
-        if (this != &other) {   // Защита от самоприсваивания
-            // Очищаем текущие ресурсы
+        if (this != &other) {
             destroy_tree(root);
             // Копируем ресурсы из другого объекта
             root = copy_tree(other.root);
@@ -201,7 +212,7 @@ class FullBinaryTree {
 
         // Ищем подходящее место для вставки, спускаясь по дереву
         while (current != nullptr) {
-            parent = current;   // Запоминаем родителя
+            parent = current;
             if (value < current->key) {
                 // Если значение меньше ключа текущего узла, идем влево
                 current = current->left;
@@ -222,6 +233,7 @@ class FullBinaryTree {
 
     // Функция проверки на full
     [[nodiscard]] auto TFULL() const -> bool {
+        if (root == nullptr) return true; // Пустое дерево считается полным
         return isFullRecursive(root);
     }
 
@@ -254,49 +266,50 @@ class FullBinaryTree {
         case 1:
             printBreadthFirst();
             break;
-        case 2:   // Прямой обход (Pre-order):
-            preorder_recursive(root);   // Корень -> Лево -> Право
+        case 2:
+            preorder_recursive(root);
             cout << endl;
             break;
-        case 3:   // Центрированный обход (In-order):
-            inorder_recursive(root);   // Лево -> Корень -> Право
+        case 3:
+            inorder_recursive(root);
             cout << endl;
             break;
-        case 4:   // Обратный обход (Post-order):
-            postorder_recursive(root);    // Лево -> Право -> Корень
+        case 4:
+            postorder_recursive(root);
             cout << endl;
             break;
         case 5:
             printTreeVisual(root);
             break;
         default:
-            break;
+            throw invalid_argument("Invalid print operation code: " + to_string(choise));
         }
     }
 
-    // Сохранение дерева в файл (обход в ширину)
+    // Сохранение дерева в файл
     void TSAVE(const string& filename) const {
         ofstream file(filename);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Couldn't open the file for writing: " + filename);
         }
 
         if (root == nullptr) {
             file.close();
-            cout << "Дерево пустое, сохранён пустой файл: " << filename << endl;
+            // Можно просто выйти, создав пустой файл
             return;
         }
 
-        // Используем очередь для обхода в ширину, чтобы сохранить
-        // узлы в том же порядке, в котором они добавляются функцией TINSERT
         Queue<TreeNode<T>*> q;
         q.QPUSH(root);
 
         while (!q.empty()) {
             TreeNode<T>* current = q.QPOP();
-
-            file << current->key << " ";   // Записываем ключ узла в файл
+            file << current->key << " "; 
+            
+            // Проверка на ошибки записи (например, место кончилось)
+            if (file.fail()) {
+                throw runtime_error("Error when writing data to a file: " + filename);
+            }
 
             if (current->left != nullptr) {
                 q.QPUSH(current->left);
@@ -314,18 +327,19 @@ class FullBinaryTree {
     void TLOAD(const string& filename) {
         ifstream file(filename);
         if (!file.is_open()) {
-            return;
+            throw runtime_error("Couldn't open the file for reading: " + filename);
         }
 
-        // Очищаем текущее дерево, чтобы избежать утечек памяти
         destroy_tree(root);
         root = nullptr;
 
-        // Читаем значения из файла и вставляем их в дерево
         T value;
         while (file >> value) {
-            // Используем существующую функцию TINSERT для построения дерева
             TINSERT(value);
+        }
+
+        if (file.bad()) {
+             throw runtime_error("Critical I/O error when reading a file: " + filename);
         }
 
         file.close();
@@ -335,11 +349,9 @@ class FullBinaryTree {
 
     // Сохранение в бинарный файл
     void TSAVE_BINARY(const string& filename) const {
-        // Открываем с флагом ios::binary
         ofstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для записи!" << endl;
-            return;
+            throw runtime_error("Binary file could not be opened for writing: " + filename);
         }
 
         serialize_recursive(root, file);
@@ -352,15 +364,21 @@ class FullBinaryTree {
     void TLOAD_BINARY(const string& filename) {
         ifstream file(filename, ios::binary);
         if (!file.is_open()) {
-            cout << "Ошибка открытия файла для чтения!" << endl;
-            return;
+            throw runtime_error("The binary file could not be opened for reading: " + filename);
         }
 
-        // Очищаем текущее дерево перед загрузкой
         destroy_tree(root);
         root = nullptr;
 
-        deserialize_recursive(root, file);
+        try {
+            deserialize_recursive(root, file);
+        } catch (...) {
+            // В случае ошибки при загрузке очищаем частично загруженное дерево
+            destroy_tree(root);
+            root = nullptr;
+            file.close();
+            throw; // Пробрасываем ошибку дальше
+        }
 
         file.close();
         cout << "Дерево загружено из бинарного файла: " << filename << endl;
