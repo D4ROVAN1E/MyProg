@@ -9,7 +9,7 @@
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}\\${fileBasenameNoExtension}.exe", "-I", "C:\\local\\boost_1_89_0"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -29,7 +29,7 @@
             "command": "c:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "${file}",
-                "-I", "C:\\local\\boost_1_89_0",
+                "-I", "C:\\local\\boost_1_89_0", "--coverage",
                 "-o", "${fileDirname}\\t_${fileBasenameNoExtension}.exe;",
                 "if", "($?)", "{${fileDirname}\\t_${fileBasenameNoExtension}.exe}"
 
