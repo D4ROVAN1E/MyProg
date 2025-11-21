@@ -4,36 +4,36 @@
 #include "ch.hpp"
 #include <string>
 #include <vector>
-#include <cstdio> // Для удаления временных файлов
+#include <cstdio> 
 #include <stdexcept>
 
 using namespace std;
 
-// Вспомогательная функция для генерации случайных строк
-string random_string(size_t length) {
-    auto randchar = []() -> char {
-        const char charset[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
-        const size_t max_index = (sizeof(charset) - 1);
-        return charset[rand() % max_index];
-    };
-    string str(length, 0);
-    generate_n(str.begin(), length, randchar);
-    return str;
-}
+// Вспомогательная структура для перехвата cout
+struct CoutRedirect {
+    CoutRedirect() {
+        old = cout.rdbuf(buffer.rdbuf());
+    }
+    ~CoutRedirect() {
+        cout.rdbuf(old);
+    }
+    string getString() {
+        return buffer.str();
+    }
+    stringstream buffer;
+    streambuf* old;
+};
 
 BOOST_AUTO_TEST_SUITE(CoreFunctionality)
 
-// Тест 1: Базовая инициализация, проверка на пустоту и размер
+// Базовая инициализация, проверка на пустоту и размер
 BOOST_AUTO_TEST_CASE(ConstructionAndEmpty) {
     CuckooHash<int> hash(5);
     BOOST_CHECK(hash.empty());
     BOOST_CHECK_EQUAL(hash.size(), 0);
 }
 
-// Тест 2: Вставка, Поиск и Обновление
+// Вставка, Поиск и Обновление
 BOOST_AUTO_TEST_CASE(InsertFindUpdate) {
     CuckooHash<int> hash;
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(InsertFindUpdate) {
     BOOST_CHECK_EQUAL(*val, 200);
 }
 
-// Тест 3: Удаление элементов
+// Удаление элементов
 BOOST_AUTO_TEST_CASE(Remove) {
     CuckooHash<string> hash;
     hash.insert("alpha", "val1");
@@ -81,11 +81,7 @@ BOOST_AUTO_TEST_CASE(Remove) {
     BOOST_CHECK_EQUAL(hash.size(), 0);
 }
 
-// Тест 4: Resize и Вытеснение (Collision & Cuckoo Logic)
-// Этот тест вставляет много элементов, чтобы принудительно вызвать:
-// 1. Коллизии (срабатывание второй хэш-функции).
-// 2. Вытеснение (цикл swap).
-// 3. Расширение таблицы (resize).
+// Resize и Вытеснение 
 BOOST_AUTO_TEST_CASE(HeavyLoadAndResize) {
     // Начинаем с очень маленького размера, чтобы быстро вызвать resize
     CuckooHash<int> hash(2); 
@@ -99,8 +95,6 @@ BOOST_AUTO_TEST_CASE(HeavyLoadAndResize) {
 
     // Проверяем, что все элементы на месте после множественных resize
     for(int i = 0; i < n; ++i) {
-        if (i == 94) 
-            continue;
         int* val = hash.find("key" + to_string(i));
         BOOST_REQUIRE_MESSAGE(val != nullptr, "Key not found: key" + to_string(i));
         BOOST_CHECK_EQUAL(*val, i);
@@ -112,7 +106,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(CopySemantics)
 
-// Тест 5: Конструктор копирования
+// Конструктор копирования
 BOOST_AUTO_TEST_CASE(CopyConstructor) {
     CuckooHash<int> original;
     original.insert("a", 1);
@@ -131,7 +125,7 @@ BOOST_AUTO_TEST_CASE(CopyConstructor) {
     BOOST_CHECK(original.find("b") != nullptr);
 }
 
-// Тест 6: Оператор присваивания
+// Оператор присваивания
 BOOST_AUTO_TEST_CASE(AssignmentOperator) {
     CuckooHash<int> h1;
     h1.insert("x", 10);
@@ -160,7 +154,7 @@ BOOST_AUTO_TEST_SUITE(Serialization)
 const string TEXT_FILE = "test_db.txt";
 const string BIN_FILE = "test_db.bin";
 
-// Тест 7: Текстовая сериализация
+// Текстовая сериализация
 BOOST_AUTO_TEST_CASE(TextSerialization) {
     {
         CuckooHash<double> hash;
@@ -180,7 +174,7 @@ BOOST_AUTO_TEST_CASE(TextSerialization) {
     remove(TEXT_FILE.c_str());
 }
 
-// Тест 8: Бинарная сериализация
+// Бинарная сериализация
 BOOST_AUTO_TEST_CASE(BinarySerialization) {
     {
         CuckooHash<int> hash;
@@ -199,7 +193,7 @@ BOOST_AUTO_TEST_CASE(BinarySerialization) {
     remove(BIN_FILE.c_str());
 }
 
-// Тест 9: Обработка ошибок (несуществующие файлы)
+// Обработка ошибок (несуществующие файлы)
 BOOST_AUTO_TEST_CASE(FileErrors) {
     CuckooHash<int> hash;
     
@@ -210,7 +204,7 @@ BOOST_AUTO_TEST_CASE(FileErrors) {
     BOOST_CHECK_THROW(hash.deserialize_bin("non_existent_file.bin"), std::runtime_error);
 }
 
-// Тест 10: Обработка ошибок формата (битый файл)
+// Обработка ошибок формата (битый файл)
 BOOST_AUTO_TEST_CASE(CorruptedFile) {
     // Создаем "битый" файл
     {
@@ -227,12 +221,18 @@ BOOST_AUTO_TEST_CASE(CorruptedFile) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-// Тест 11: Print (визуальная проверка, просто чтобы покрыть код метода print)
+// Print 
 BOOST_AUTO_TEST_CASE(PrintMethod) {
     CuckooHash<int> hash;
-    hash.insert("test", 1);
-    
-    // Мы не можем легко проверить вывод в консоль через Boost.Test, 
-    // но вызов метода гарантирует, что код внутри него исполняется и не крашится.
-    BOOST_CHECK_NO_THROW(hash.print());
+    hash.insert("test1", 1);
+    hash.insert("test2", 2);
+    hash.insert("test3", 3);
+    {
+        CoutRedirect capture;
+        hash.print();
+        string output = capture.getString();
+        BOOST_CHECK(output.find("test1 => 1") != string::npos);
+        BOOST_CHECK(output.find("test2 => 2") != string::npos);
+        BOOST_CHECK(output.find("test2 => 2") != string::npos);
+    }
 }

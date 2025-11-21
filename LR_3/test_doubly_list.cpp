@@ -7,24 +7,24 @@
 
 using namespace std;
 
-// Фикстура для перенаправления cout (чтобы проверять вывод методов PRINT)
+// Вспомогательная структура для перехвата cout
 struct CoutRedirect {
-    CoutRedirect() : old(cout.rdbuf(buffer.rdbuf())) {}
-    ~CoutRedirect() { cout.rdbuf(old); }
-    
-    string getContent() {
-        string str = buffer.str();
-        buffer.str(""); // Очистка буфера
-        return str;
+    CoutRedirect() {
+        old = cout.rdbuf(buffer.rdbuf());
     }
-
+    ~CoutRedirect() {
+        cout.rdbuf(old);
+    }
+    string getString() {
+        return buffer.str();
+    }
     stringstream buffer;
     streambuf* old;
 };
 
 BOOST_AUTO_TEST_SUITE(DoublyListSuite)
 
-// --- Тесты конструктора и LCREATE ---
+// Тесты конструктора и LCREATE
 BOOST_AUTO_TEST_CASE(ConstructionAndCreate) {
     DoublyList<int> list;
     
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(ConstructionAndCreate) {
     BOOST_CHECK_THROW(list.LCREATE(20), logic_error);
 }
 
-// --- Тесты добавления элементов (HEAD/BACK) ---
+// Тесты добавления элементов (HEAD/BACK)
 BOOST_AUTO_TEST_CASE(PushHeadAndBack) {
     DoublyList<int> list;
     
@@ -61,14 +61,14 @@ BOOST_AUTO_TEST_CASE(PushHeadAndBack) {
     BOOST_CHECK_EQUAL(list.GetTail()->key, 20);
     BOOST_CHECK_EQUAL(list.GetTail()->prev->key, 10);
 
-    // Добавление в пустой список через BACK (покрытие ветки else в LPUSH_BACK)
+    // Добавление в пустой список через BACK
     DoublyList<int> list2;
     list2.LPUSH_BACK(100);
     BOOST_CHECK_EQUAL(list2.GetHead()->key, 100);
     BOOST_CHECK_EQUAL(list2.GetTail()->key, 100);
 }
 
-// --- Тесты удаления с концов (HEAD/BACK) ---
+// Тесты удаления с концов (HEAD/BACK)
 BOOST_AUTO_TEST_CASE(DeleteHeadAndBack) {
     DoublyList<int> list;
 
@@ -101,15 +101,14 @@ BOOST_AUTO_TEST_CASE(DeleteHeadAndBack) {
     BOOST_CHECK(list.GetHead() == nullptr);
 }
 
-// --- Тесты поиска и вставки рядом (BEFORE/AFTER) ---
+// Тесты поиска и вставки рядом (BEFORE/AFTER)
 BOOST_AUTO_TEST_CASE(InsertRelative) {
     DoublyList<int> list;
     list.LPUSH_BACK(10);
     list.LPUSH_BACK(30); // [10, 30]
 
-    // --- LPUSH_BEFORE ---
-    // Ошибка: элемент не найден
-    BOOST_CHECK_THROW(list.LPUSH_BEFORE(99, 5), invalid_argument);
+    // LPUSH_BEFORE
+    BOOST_CHECK_THROW(list.LPUSH_BEFORE(99, 5), invalid_argument); // Не найден
     
     // Вставка перед головой (особый случай)
     list.LPUSH_BEFORE(10, 5); // [5, 10, 30]
@@ -122,9 +121,8 @@ BOOST_AUTO_TEST_CASE(InsertRelative) {
     BOOST_CHECK_EQUAL(node20->prev->key, 10);
     BOOST_CHECK_EQUAL(node20->next->key, 30);
 
-    // --- LPUSH_AFTER ---
-    // Ошибка: элемент не найден
-    BOOST_CHECK_THROW(list.LPUSH_AFTER(99, 5), invalid_argument);
+    // LPUSH_AFTER
+    BOOST_CHECK_THROW(list.LPUSH_AFTER(99, 5), invalid_argument); // Не найден
 
     // Вставка после хвоста (особый случай)
     list.LPUSH_AFTER(30, 40); // [5, 10, 20, 30, 40]
@@ -137,7 +135,7 @@ BOOST_AUTO_TEST_CASE(InsertRelative) {
     BOOST_CHECK_EQUAL(node15->next->key, 20);
 }
 
-// --- Тесты удаления рядом (BEFORE/AFTER) и по значению ---
+// Тесты удаления рядом (BEFORE/AFTER) и по значению
 BOOST_AUTO_TEST_CASE(DeleteRelativeAndByValue) {
     DoublyList<int> list;
     list.LPUSH_BACK(1);
@@ -146,7 +144,7 @@ BOOST_AUTO_TEST_CASE(DeleteRelativeAndByValue) {
     list.LPUSH_BACK(4);
     list.LPUSH_BACK(5); // [1, 2, 3, 4, 5]
 
-    // --- LDEL_AFTER ---
+    // LDEL_AFTER
     BOOST_CHECK_THROW(list.LDEL_AFTER(99), invalid_argument); // Не найден
     BOOST_CHECK_THROW(list.LDEL_AFTER(5), logic_error);       // После хвоста нечего удалять
 
@@ -155,11 +153,11 @@ BOOST_AUTO_TEST_CASE(DeleteRelativeAndByValue) {
     BOOST_CHECK(list.LGET_BY_VALUE(3) == nullptr);
     BOOST_CHECK_EQUAL(list.LGET_BY_VALUE(2)->next->key, 4);
 
-    // Удаление после элемента (это хвост)
+    // Удаление после элемента 
     list.LDEL_AFTER(4); // Удаляем 5 -> [1, 2, 4]
     BOOST_CHECK_EQUAL(list.GetTail()->key, 4);
 
-    // --- LDEL_BEFORE ---
+    // LDEL_BEFORE
     BOOST_CHECK_THROW(list.LDEL_BEFORE(99), invalid_argument); // Не найден
     BOOST_CHECK_THROW(list.LDEL_BEFORE(1), logic_error);       // Перед головой нечего удалять
 
@@ -172,7 +170,7 @@ BOOST_AUTO_TEST_CASE(DeleteRelativeAndByValue) {
     list.LDEL_BEFORE(4); // Удаляем 1 -> [4]
     BOOST_CHECK_EQUAL(list.GetHead()->key, 4);
 
-    // --- LDEL_BY_VALUE ---
+    // LDEL_BY_VALUE
     list.LPUSH_BACK(5);
     list.LPUSH_BACK(6); // [4, 5, 6]
 
@@ -191,7 +189,7 @@ BOOST_AUTO_TEST_CASE(DeleteRelativeAndByValue) {
     BOOST_CHECK_EQUAL(list.GetTail()->prev->key, 5);
 }
 
-// --- Тест Копирования и Присваивания (Rule of Three) ---
+// Тест копирования и присваивания 
 BOOST_AUTO_TEST_CASE(CopyAndAssign) {
     DoublyList<int> list1;
     list1.LPUSH_BACK(1);
@@ -202,7 +200,7 @@ BOOST_AUTO_TEST_CASE(CopyAndAssign) {
     BOOST_CHECK_EQUAL(list2.GetHead()->key, 1);
     BOOST_CHECK_EQUAL(list2.GetTail()->key, 2);
 
-    // Проверка глубокой копии (изменение list1 не влияет на list2)
+    // Проверка глубокой копии
     list1.LDEL_HEAD();
     BOOST_CHECK_EQUAL(list1.GetHead()->key, 2);
     BOOST_CHECK_EQUAL(list2.GetHead()->key, 1); // list2 остался прежним
@@ -223,37 +221,38 @@ BOOST_AUTO_TEST_CASE(CopyAndAssign) {
     BOOST_CHECK(empty2.GetHead() == nullptr);
 }
 
-// --- Тест Вывода (PRINT) ---
+// Тест вывода
 BOOST_AUTO_TEST_CASE(PrintFunction) {
     DoublyList<int> list;
-    CoutRedirect capture;
+    {
+        CoutRedirect capture;
+        // Пустой список
+        list.PRINT(1);
+        BOOST_CHECK(capture.getString().find("Список пуст") != string::npos);
 
-    // Пустой список
-    list.PRINT(1);
-    BOOST_CHECK(capture.getContent().find("Список пуст") != string::npos);
+        list.PRINT(2);
+        BOOST_CHECK(capture.getString().find("Список пуст") != string::npos);
 
-    list.PRINT(2);
-    BOOST_CHECK(capture.getContent().find("Список пуст") != string::npos);
+        // Заполненный список
+        list.LPUSH_BACK(10);
+        list.LPUSH_BACK(20);
 
-    // Заполненный список
-    list.LPUSH_BACK(10);
-    list.LPUSH_BACK(20);
+        // Прямой вывод
+        list.PRINT(1);
+        string out1 = capture.getString();
+        BOOST_CHECK(out1.find("Голова -> 10 <-> 20 <-> nullptr") != string::npos);
 
-    // Прямой вывод
-    list.PRINT(1);
-    string out1 = capture.getContent();
-    BOOST_CHECK(out1.find("Голова -> 10 <-> 20 <-> nullptr") != string::npos);
-
-    // Обратный вывод
-    list.PRINT(2);
-    string out2 = capture.getContent();
-    BOOST_CHECK(out2.find("Хвост -> 20 <-> 10 <-> nullptr") != string::npos);
+        // Обратный вывод
+        list.PRINT(2);
+        string out2 = capture.getString();
+        BOOST_CHECK(out2.find("Хвост -> 20 <-> 10 <-> nullptr") != string::npos);
+    }
 
     // Неверный выбор
     BOOST_CHECK_THROW(list.PRINT(3), invalid_argument);
 }
 
-// --- Тест Файлового ввода/вывода (Текстовый) ---
+// Тест файлового ввода/вывода (Текстовый)
 BOOST_AUTO_TEST_CASE(FileIO_Text) {
     DoublyList<int> list;
     list.LPUSH_BACK(100);
@@ -262,7 +261,7 @@ BOOST_AUTO_TEST_CASE(FileIO_Text) {
     string filename = "test_list.txt";
 
     // Тест сохранения
-    CoutRedirect capture; // Чтобы не мусорить в консоль сообщением "сохранен в файл"
+    CoutRedirect capture; // Чтобы не мусорить в консоль
     list.LSAVE(filename);
     
     // Тест загрузки
@@ -277,13 +276,10 @@ BOOST_AUTO_TEST_CASE(FileIO_Text) {
     
     // Тест ошибок открытия файлов
     BOOST_CHECK_THROW(list.LLOAD("non_existent_file.txt"), runtime_error);
-    // Трудно проверить ошибку записи LSAVE без прав администратора или некорректных путей в ОС
 }
 
-// --- Тест Файлового ввода/вывода (Бинарный) ---
+// Тест Файлового ввода/вывода (Бинарный)
 BOOST_AUTO_TEST_CASE(FileIO_Binary) {
-    // ВАЖНО: Ваша реализация использует sizeof(T), поэтому работает корректно
-    // только с POD типами (int, double), но не string.
     DoublyList<double> list;
     list.LPUSH_BACK(1.1);
     list.LPUSH_BACK(2.2);

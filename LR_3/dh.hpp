@@ -260,23 +260,16 @@ class DoubleHash {
         }
 
         // Записываем заголовок
-        if (!(outFile << tableSize << " " << elementsCount << endl)) {
-            throw runtime_error("Error: Failed to write header to file " + filename);
-        }
+        outFile << tableSize << " " << elementsCount << endl;
 
         // Записываем только занятые ячейки
         for (uint32_t i = 0; i < tableSize; i++) {
             if (table[i].isOccupied) {
-                if (!(outFile << i << " " << table[i].key << " " << table[i].value << endl)) {
-                    throw runtime_error("Error: Failed to write data to file " + filename);
-                }
+                outFile << i << " " << table[i].key << " " << table[i].value << endl;
             }
         }
 
         outFile.close();
-        if (outFile.fail()) {
-             throw runtime_error("Error: File stream failed during closing: " + filename);
-        }
         cout << "Таблица (текст) успешно сохранена в " << filename << endl;
     }
 
@@ -291,9 +284,9 @@ class DoubleHash {
         uint32_t newElementsCount = 0;
 
         // Читаем заголовок
-        if (!(inFile >> newTableSize >> newElementsCount)) {
-            throw runtime_error("Error: Invalid file format or empty file: " + filename);
-        }
+        inFile >> newTableSize >> newElementsCount;
+        if (newTableSize == 0)
+            throw runtime_error("Could not read data from file. Size of table equal to zero");
 
         // Пересоздаем таблицу
         try {
@@ -315,9 +308,7 @@ class DoubleHash {
         T value;
 
         // Читаем данные
-        while (true) {
-            inFile >> idx >> key >> value;
-            if (inFile.eof()) break;
+        while (inFile >> idx >> key >> value) {
             
             if (inFile.fail()) {
                  throw runtime_error("Error: Corrupted data in file: " + filename);
@@ -345,10 +336,6 @@ class DoubleHash {
         outFile.write(reinterpret_cast<const char*>(&tableSize), sizeof(tableSize));
         outFile.write(reinterpret_cast<const char*>(&elementsCount), sizeof(elementsCount));
 
-        if (outFile.fail()) {
-             throw runtime_error("Error: Failed to write header to binary file");
-        }
-
         for (uint32_t i = 0; i < tableSize; i++) {
             bool occupied = table[i].isOccupied;
             outFile.write(reinterpret_cast<const char*>(&occupied), sizeof(bool));
@@ -363,10 +350,6 @@ class DoubleHash {
 
                 // Записываем значение (работает корректно для POD-типов)
                 outFile.write(reinterpret_cast<const char*>(&table[i].value), sizeof(T));
-                
-                if (outFile.fail()) {
-                    throw runtime_error("Error: Failed to write node data to binary file");
-                }
             }
         }
 
@@ -388,19 +371,11 @@ class DoubleHash {
         inFile.read(reinterpret_cast<char*>(&newTableSize), sizeof(newTableSize));
         inFile.read(reinterpret_cast<char*>(&newElementsCount), sizeof(newElementsCount));
 
-        if (inFile.fail()) {
-             throw runtime_error("Error: Failed to read header from binary file");
+        table = Array<HashNode<T>>(newTableSize + 1);
+        for (uint32_t i = 0; i < newTableSize; i++) {
+            table[i] = HashNode<T>();
         }
-
-        try {
-            table = Array<HashNode<T>>(newTableSize + 1);
-            for (uint32_t i = 0; i < newTableSize; i++) {
-                table[i] = HashNode<T>();
-            }
-            table.SetSize(newTableSize);
-        } catch (...) {
-             throw runtime_error("Error: Memory allocation failed (possibly corrupted size in file)");
-        }
+        table.SetSize(newTableSize);
 
         tableSize = newTableSize;
         elementsCount = newElementsCount;
@@ -411,8 +386,6 @@ class DoubleHash {
             inFile.read(reinterpret_cast<char*>(&occupied), sizeof(bool));
 
             if (inFile.fail()) {
-                // Можно допустить EOF только если таблица закончилась корректно,
-                // но здесь мы в цикле for, так что преждевременный EOF - это ошибка
                 throw runtime_error("Error: Unexpected end of file or read error");
             }
 

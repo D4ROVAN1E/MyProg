@@ -365,10 +365,6 @@ class CuckooHash {
         inFile.read(reinterpret_cast<char*>(&newTableSize), sizeof(newTableSize));
         inFile.read(reinterpret_cast<char*>(&newElementsCount), sizeof(newElementsCount));
 
-        if (inFile.fail()) {
-             throw runtime_error("Error: Could not read file header (file might be corrupted).");
-        }
-
         // Пересоздаем таблицу под новый размер
         table = Array<HashNode<T>>(newTableSize + 1);
         // Инициализируем пустыми узлами

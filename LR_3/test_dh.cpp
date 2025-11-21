@@ -1,18 +1,28 @@
 #define BOOST_TEST_MODULE DoubleHashTests
 #include <boost/test/included/unit_test.hpp>
 #include <string>
-#include <cstdio> // для remove() файла
+#include <cstdio> 
 #include "dh.hpp"
 
-// Вспомогательная функция для очистки тестовых файлов
-void clean_file(const std::string& filename) {
-    std::remove(filename.c_str());
-}
+// Вспомогательная структура для перехвата cout
+struct CoutRedirect {
+    CoutRedirect() {
+        old = cout.rdbuf(buffer.rdbuf());
+    }
+    ~CoutRedirect() {
+        cout.rdbuf(old);
+    }
+    string getString() {
+        return buffer.str();
+    }
+    stringstream buffer;
+    streambuf* old;
+};
+
 
 BOOST_AUTO_TEST_SUITE(DoubleHashSuite)
 
-// --- Тесты Конструкторов и Базовых свойств ---
-
+// Тесты Конструкторов и базовых свойств
 BOOST_AUTO_TEST_CASE(ConstructorTest) {
     // Проверка инициализации по умолчанию
     DoubleHash<int> dh(5);
@@ -20,7 +30,7 @@ BOOST_AUTO_TEST_CASE(ConstructorTest) {
     BOOST_CHECK_EQUAL(dh.size(), 0);
 
     // Проверка исключения при создании таблицы нулевого размера
-    BOOST_CHECK_THROW(DoubleHash<int> zero_dh(0), std::invalid_argument);
+    BOOST_CHECK_THROW(DoubleHash<int> zero_dh(0), invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(InsertAndFindTest) {
@@ -47,7 +57,7 @@ BOOST_AUTO_TEST_CASE(InsertAndFindTest) {
 }
 
 BOOST_AUTO_TEST_CASE(UpdateValueTest) {
-    DoubleHash<std::string> dh;
+    DoubleHash<string> dh;
     dh.insert("user", "Alice");
     
     BOOST_CHECK_EQUAL(*dh.find("user"), "Alice");
@@ -60,7 +70,7 @@ BOOST_AUTO_TEST_CASE(UpdateValueTest) {
 }
 
 BOOST_AUTO_TEST_CASE(RemoveTest) {
-    DoubleHash<int> dh;
+    DoubleHash<int> dh(20);
     dh.insert("A", 1);
     dh.insert("B", 2);
 
@@ -92,8 +102,7 @@ BOOST_AUTO_TEST_CASE(ClearTest) {
     BOOST_CHECK(dh.find("pi") == nullptr);
 }
 
-// --- Тест копирования и присваивания ---
-
+// Тест копирования и присваивания
 BOOST_AUTO_TEST_CASE(CopyAndAssignTest) {
     DoubleHash<int> original(5);
     original.insert("one", 1);
@@ -119,18 +128,15 @@ BOOST_AUTO_TEST_CASE(CopyAndAssignTest) {
     BOOST_CHECK_EQUAL(assigned_dh.size(), original.size());
 }
 
-// --- Тест расширения (Resize) ---
-
+//Тест расширения 
 BOOST_AUTO_TEST_CASE(ResizeTest) {
     // Создаем маленькую таблицу
     DoubleHash<int> dh(3); 
     
-    // Вставляем элементы, чтобы превысить load factor 0.7
-    // 3 * 0.7 = 2.1 -> при вставке 3-го элемента должно произойти расширение
+    // Вставляем элементы, чтобы превысить load factor
     dh.insert("1", 1);
     dh.insert("2", 2);
     
-    // Пока размер должен быть исходным (или близким, зависит от логики resize)
     // Проверяем, что вставка 3-го элемента вызывает resize и не ломает данные
     dh.insert("3", 3);
     dh.insert("4", 4); 
@@ -144,10 +150,9 @@ BOOST_AUTO_TEST_CASE(ResizeTest) {
     BOOST_CHECK_EQUAL(*dh.find("4"), 4);
 }
 
-// --- Тесты Сериализации (Текст) ---
-
+// Тесты текстовой сериализации 
 BOOST_AUTO_TEST_CASE(TextSerializationTest) {
-    std::string filename = "test_hash_dump.txt";
+    string filename = "test_hash_dump.txt";
     
     {
         DoubleHash<int> dh;
@@ -167,19 +172,14 @@ BOOST_AUTO_TEST_CASE(TextSerializationTest) {
 
     // Тест на чтение несуществующего файла
     DoubleHash<int> bad_dh;
-    BOOST_CHECK_THROW(bad_dh.deserialize_text("non_existent_file.txt"), std::runtime_error);
+    BOOST_CHECK_THROW(bad_dh.deserialize_text("non_existent_file.txt"), runtime_error);
 
-    clean_file(filename);
+    remove(filename.c_str());
 }
 
-// --- Тесты Сериализации (Бинарной) ---
-
+// Тесты бинарной сериализации
 BOOST_AUTO_TEST_CASE(BinarySerializationTest) {
-    std::string filename = "test_hash_dump.bin";
-    
-    // Важно: Бинарная сериализация в текущей реализации класса работает корректно 
-    // только для POD-типов (int, double), так как использует sizeof(T).
-    // std::string как T сломает логику чтения, поэтому тестируем на double.
+    string filename = "test_hash_dump.bin";
     
     {
         DoubleHash<double> dh;
@@ -205,40 +205,44 @@ BOOST_AUTO_TEST_CASE(BinarySerializationTest) {
     
     // Тест на чтение несуществующего бинарного файла
     DoubleHash<double> bad_dh;
-    BOOST_CHECK_THROW(bad_dh.deserialize_bin("non_existent_bin.bin"), std::runtime_error);
+    BOOST_CHECK_THROW(bad_dh.deserialize_bin("non_existent_bin.bin"), runtime_error);
 
-    clean_file(filename);
+    remove(filename.c_str());
 }
 
-// --- Тест исключений ввода-вывода ---
+// Тест исключений ввода-вывода
 
 BOOST_AUTO_TEST_CASE(FileIOErrorTest) {
     DoubleHash<int> dh;
     dh.insert("a", 1);
     
     // Попытка записи в некорректный путь (например, директорию как файл или запрещенный путь)
-    // Примечание: В Windows/Linux поведение может отличаться, используем заведомо "плохое" имя для теста.
     // Пустая строка часто вызывает ошибку открытия fstream.
-    BOOST_CHECK_THROW(dh.serialize_text(""), std::runtime_error);
+    BOOST_CHECK_THROW(dh.serialize_text(""), runtime_error);
     
     // Создадим битый файл
-    std::ofstream badFile("corrupted.txt");
-    badFile << "NotANumber " << "NotANumber"; // Заголовок испорчен
+    string filename = "corrupted.txt";
+    ofstream badFile(filename);
+    badFile << " NotANumber " <<  "NotANumber"; // Заголовок испорчен
     badFile.close();
     
     DoubleHash<int> loader;
-    BOOST_CHECK_THROW(loader.deserialize_text("corrupted.txt"), std::runtime_error);
+    BOOST_CHECK_THROW(loader.deserialize_bin(filename), bad_alloc);
+    BOOST_CHECK_THROW(loader.deserialize_text(filename), runtime_error);
     
-    clean_file("corrupted.txt");
+    remove(filename.c_str());
 }
 
-// --- Тест функции Print ---
-// Print выводит в cout, тестировать его сложно без перехвата потока.
-// Обычно достаточно проверить, что он просто не падает.
+//Тест функции Print
 BOOST_AUTO_TEST_CASE(PrintSmokeTest) {
-    DoubleHash<int> dh;
-    dh.insert("test", 1);
-    dh.print();
+    {
+        CoutRedirect capture;
+        DoubleHash<int> dh;
+        dh.insert("test", 1);
+        dh.print();
+        string output = capture.getString();
+        BOOST_CHECK(output.find("test") != string::npos);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

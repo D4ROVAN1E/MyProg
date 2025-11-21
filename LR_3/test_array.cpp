@@ -2,20 +2,20 @@
 #include <boost/test/included/unit_test.hpp>
 #include <string>
 #include <vector>
-#include <cstdio> // для std::remove
+#include <cstdio> // для remove
 
-#include "array.hpp" // Ваш заголовочный файл
+#include "array.hpp" 
 
 using namespace std;
 
 // Вспомогательная функция для очистки тестовых файлов
 void cleanFile(const string& filename) {
-    std::remove(filename.c_str());
+    remove(filename.c_str());
 }
 
 BOOST_AUTO_TEST_SUITE(ArrayTests)
 
-// 1. Тест конструкторов и базовых геттеров
+// Тест конструкторов и базовых геттеров
 BOOST_AUTO_TEST_CASE(ConstructorsAndGetters) {
     // Default constructor
     Array<int> arrDefault;
@@ -23,7 +23,6 @@ BOOST_AUTO_TEST_CASE(ConstructorsAndGetters) {
     BOOST_CHECK_EQUAL(arrDefault.GetCapacity(), 1);
 
     // Constructor with capacity
-    // Внимание: в вашем коде size инициализируется как cap - 1
     uint32_t initialCap = 10;
     Array<int> arrCap(initialCap);
     BOOST_CHECK_EQUAL(arrCap.GetCapacity(), initialCap);
@@ -35,7 +34,7 @@ BOOST_AUTO_TEST_CASE(ConstructorsAndGetters) {
     }
 }
 
-// 2. Тест добавления элементов и автоматического расширения (doubleArray)
+// Тест добавления элементов и автоматического расширения (doubleArray)
 BOOST_AUTO_TEST_CASE(PushBackAndResize) {
     Array<int> arr;
     // Изначальная емкость 1. Добавим 5 элементов, чтобы вызвать doubleArray несколько раз.
@@ -51,9 +50,10 @@ BOOST_AUTO_TEST_CASE(PushBackAndResize) {
     BOOST_CHECK_EQUAL(arr[4], 40);
 }
 
-// 3. Тест доступа по индексу и оператора []
+// Тест доступа по индексу и оператора []
 BOOST_AUTO_TEST_CASE(AccessAndExceptions) {
     Array<string> arr;
+    const Array<int> constArr(1);
     arr.MPUSH_BACK("test");
 
     // Valid access
@@ -61,20 +61,23 @@ BOOST_AUTO_TEST_CASE(AccessAndExceptions) {
     BOOST_CHECK_EQUAL(arr.MGET_BY_IND(0), "test");
 
     // Invalid access (Operator [])
-    BOOST_CHECK_THROW(arr[1], std::out_of_range);
+    BOOST_CHECK_THROW(arr[1], out_of_range);
+
+    //Invalid access (Operator const [])
+    BOOST_CHECK_THROW(constArr[5], out_of_range);
 
     // Invalid access (MGET_BY_IND)
-    BOOST_CHECK_THROW(arr.MGET_BY_IND(5), std::out_of_range);
+    BOOST_CHECK_THROW(arr.MGET_BY_IND(5), out_of_range);
 }
 
-// 4. Тест вставки, удаления и замены (Insert, Delete, Swap)
+// Тест вставки, удаления и замены (Insert, Delete, Swap)
 BOOST_AUTO_TEST_CASE(ModificationMethods) {
     Array<int> arr;
     arr.MPUSH_BACK(1);
     arr.MPUSH_BACK(3);
 
-    // MPUSH_BY_IND: Вставляем 2 между 1 и 3
-    // Индексы сейчас: [0]=1, [1]=3. Вставляем на [1].
+    // MВставляем 2 между 1 и 3
+    // [0]=1, [1]=3. Вставляем на [1].
     arr.MPUSH_BY_IND(1, 2); 
     
     BOOST_CHECK_EQUAL(arr.GetSize(), 3);
@@ -82,7 +85,7 @@ BOOST_AUTO_TEST_CASE(ModificationMethods) {
     BOOST_CHECK_EQUAL(arr[1], 2);
     BOOST_CHECK_EQUAL(arr[2], 3);
 
-    // Тест вставки с расширением (выход за capacity)
+    // Тест вставки с расширением 
     // Заполним массив до предела
     while(arr.GetSize() < arr.GetCapacity()) {
         arr.MPUSH_BACK(99);
@@ -93,7 +96,7 @@ BOOST_AUTO_TEST_CASE(ModificationMethods) {
     BOOST_CHECK(arr.GetCapacity() > oldCap);
     BOOST_CHECK_EQUAL(arr[0], 100);
 
-    // MDEL_BY_IND: Удаляем первый элемент
+    // Удаляем первый элемент
     arr.MDEL_BY_IND(0);
     BOOST_CHECK_EQUAL(arr[0], 1); // 1 сместилась на место 0
 
@@ -102,12 +105,12 @@ BOOST_AUTO_TEST_CASE(ModificationMethods) {
     BOOST_CHECK_EQUAL(arr[0], 555);
 
     // Ошибки границ
-    BOOST_CHECK_THROW(arr.MPUSH_BY_IND(100, 1), std::out_of_range);
-    BOOST_CHECK_THROW(arr.MDEL_BY_IND(100), std::out_of_range);
-    BOOST_CHECK_THROW(arr.MSWAP_BY_IND(100, 1), std::out_of_range);
+    BOOST_CHECK_THROW(arr.MPUSH_BY_IND(100, 1), out_of_range);
+    BOOST_CHECK_THROW(arr.MDEL_BY_IND(100), out_of_range);
+    BOOST_CHECK_THROW(arr.MSWAP_BY_IND(100, 1), out_of_range);
 }
 
-// 5. Тест конструктора копирования и оператора присваивания
+// Тест конструктора копирования и оператора присваивания
 BOOST_AUTO_TEST_CASE(CopyAndAssign) {
     Array<int> original;
     original.MPUSH_BACK(10);
@@ -118,52 +121,54 @@ BOOST_AUTO_TEST_CASE(CopyAndAssign) {
     BOOST_CHECK_EQUAL(copy.GetSize(), original.GetSize());
     BOOST_CHECK_EQUAL(copy[0], 10);
     
-    // Проверка Deep Copy (изменение копии не влияет на оригинал)
+    // Проверка Deep Copy
     copy.MSWAP_BY_IND(0, 999);
     BOOST_CHECK_EQUAL(copy[0], 999);
     BOOST_CHECK_EQUAL(original[0], 10);
 
-    // Assignment Operator
+    // Оператор присваивания
     Array<int> assigned;
     assigned = original;
     BOOST_CHECK_EQUAL(assigned.GetSize(), 2);
     BOOST_CHECK_EQUAL(assigned[1], 20);
 
-    // Self-assignment check (безопасность a = a)
+    // Самоприсваивание
     assigned = assigned;
     BOOST_CHECK_EQUAL(assigned.GetSize(), 2);
     BOOST_CHECK_EQUAL(assigned[0], 10);
 }
 
-// 6. Тест Setters (SetSize, SetCapacity)
+// Сеттеры
 BOOST_AUTO_TEST_CASE(SettersLogic) {
     Array<int> arr;
     arr.MPUSH_BACK(1);
-    arr.MPUSH_BACK(2); // size 2, cap 2 (обычно удваивается с 1)
+    arr.MPUSH_BACK(2); // size 2, cap 2 
 
     // SetCapacity
     arr.SetCapacity(10);
     BOOST_CHECK_EQUAL(arr.GetCapacity(), 10);
     
-    // Ошибка: новая capacity меньше текущего size
-    BOOST_CHECK_THROW(arr.SetCapacity(1), std::length_error);
+    // новая capacity меньше текущего size
+    BOOST_CHECK_THROW(arr.SetCapacity(1), length_error);
 
     // SetSize
     arr.SetSize(5); // Допустимо, так как capacity 10
     BOOST_CHECK_EQUAL(arr.GetSize(), 5);
 
-    // Ошибка: новый size больше capacity
-    BOOST_CHECK_THROW(arr.SetSize(20), std::length_error);
+    // новый size больше capacity
+    BOOST_CHECK_THROW(arr.SetSize(20), length_error);
 }
 
-// 7. Тест текстового сохранения и загрузки (MSAVE / MLOAD)
+// Тест текстового сохранения и загрузки (MSAVE / MLOAD)
 BOOST_AUTO_TEST_CASE(TextFileIO) {
     string filename = "test_array.txt";
+    string badFile = "/root/forbidden.txt";
     {
         Array<int> arrOut;
         arrOut.MPUSH_BACK(100);
         arrOut.MPUSH_BACK(200);
         arrOut.MSAVE(filename);
+        BOOST_CHECK_THROW(arrOut.MSAVE(badFile), runtime_error);
     }
 
     Array<int> arrIn;
@@ -176,17 +181,19 @@ BOOST_AUTO_TEST_CASE(TextFileIO) {
     cleanFile(filename);
 
     // Тест ошибки открытия файла
-    BOOST_CHECK_THROW(arrIn.MLOAD("non_existent_file.txt"), std::runtime_error);
+    BOOST_CHECK_THROW(arrIn.MLOAD("non_existent_file.txt"), runtime_error);
 }
 
-// 8. Тест бинарного сохранения и загрузки (MSAVE_BINARY / MLOAD_BINARY)
+// Тест бинарного сохранения и загрузки 
 BOOST_AUTO_TEST_CASE(BinaryFileIO) {
     string filename = "test_array.bin";
+    string badFile = "/root/forbidden.txt";
     {
         Array<double> arrOut;
         arrOut.MPUSH_BACK(1.1);
         arrOut.MPUSH_BACK(2.2);
         arrOut.MSAVE_BINARY(filename);
+        BOOST_CHECK_THROW(arrOut.MSAVE(badFile), runtime_error);
     }
 
     Array<double> arrIn;
@@ -199,7 +206,7 @@ BOOST_AUTO_TEST_CASE(BinaryFileIO) {
     cleanFile(filename);
     
     // Тест ошибки чтения
-    BOOST_CHECK_THROW(arrIn.MLOAD_BINARY("non_existent_bin.bin"), std::runtime_error);
+    BOOST_CHECK_THROW(arrIn.MLOAD_BINARY("non_existent_bin.bin"), runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
