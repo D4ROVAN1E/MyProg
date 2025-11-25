@@ -1,4 +1,4 @@
-﻿#ifndef QUEUE_HPP
+#ifndef QUEUE_HPP
 #define QUEUE_HPP
 
 #include <iostream>

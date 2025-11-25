@@ -1,0 +1,303 @@
+@startuml
+
+
+
+
+
+/' Objects '/
+
+class Array <template<typename T>> {
+	+Array()
+	+Array(const uint32_t cap)
+	+Array(const Array<T>& other)
+	+~Array()
+	-data : T*
+	+GetCapacity() : auto {query}
+	+GetSize() : auto {query}
+	+MGET_BY_IND(uint32_t index) : auto {query}
+	+operator=(const Array<T>& other) : auto
+	+operator[](uint32_t index) : auto
+	+operator[](uint32_t index) : auto {query}
+	-capacity : uint32_t
+	-size : uint32_t
+	+MDEL_BY_IND(uint32_t index) : void
+	+MLOAD(const string& filename) : void
+	+MLOAD_BINARY(const string& filename) : void
+	+MPUSH_BACK(T value) : void
+	+MPUSH_BY_IND(uint32_t index, T value) : void
+	+MSAVE(const string& filename) : void {query}
+	+MSAVE_BINARY(const string& filename) : void {query}
+	+MSWAP_BY_IND(uint32_t index, T value) : void
+	+PRINT() : void {query}
+	+SetCapacity(uint32_t newCapacity) : void
+	+SetSize(uint32_t newSize) : void
+	-doubleArray() : void
+}
+
+
+class CuckooHash <template<typename T>> {
+	+CuckooHash(uint32_t size)
+	+CuckooHash(CuckooHash<T>& other)
+	+~CuckooHash()
+	-table : Array<HashNode<T>>
+	+empty() : auto {query}
+	+find(const string& key) : auto
+	-hash1(const string& key) : auto {query}
+	-hash2(const string& key) : auto {query}
+	-needResize() : auto {query}
+	+operator=(CuckooHash<T>& other) : auto
+	+remove(const string& key) : auto
+	+size() : auto {query}
+	-A : const double
+	-elementsCount : uint32_t
+	-tableSize : uint32_t
+	+clear() : void
+	+deserialize_bin(const string& filename) : void
+	+deserialize_text(const string& filename) : void
+	+insert(const string& key, const T& value) : void
+	+print() : void {query}
+	-resize() : void
+	+serialize_bin(const string& filename) : void {query}
+	+serialize_text(const string& filename) : void {query}
+}
+
+
+class DoubleHash <template<typename T>> {
+	+DoubleHash(uint32_t size)
+	+DoubleHash(const DoubleHash<T>& other)
+	+~DoubleHash()
+	-table : Array<HashNode<T>>
+	+empty() : auto {query}
+	+find(const string& key) : auto
+	-hash1(const string& key) : auto {query}
+	-hash2(const string& key) : auto {query}
+	-needResize() : auto {query}
+	+operator=(const DoubleHash<T>& other) : auto
+	+remove(const string& key) : auto
+	+size() : auto {query}
+	-A : const double
+	-elementsCount : uint32_t
+	-tableSize : uint32_t
+	+clear() : void
+	+deserialize_bin(const string& filename) : void
+	+deserialize_text(const string& filename) : void
+	+insert(const string& key, const T& value) : void
+	+print() : void {query}
+	-resize() : void
+	+serialize_bin(const string& filename) : void {query}
+	+serialize_text(const string& filename) : void {query}
+}
+
+
+class DoublyList <template<typename T>> {
+	+DoublyList()
+	+DoublyList(const DoublyList& other)
+	+~DoublyList()
+	-head : DNode<T>*
+	-tail : DNode<T>*
+	+GetHead() : auto {query}
+	+GetTail() : auto {query}
+	+LGET_BY_VALUE(T key) : auto {query}
+	+operator=(const DoublyList& other) : auto
+	+LCREATE(T keyBegin) : void
+	+LDEL_AFTER(T targetKey) : void
+	+LDEL_BACK() : void
+	+LDEL_BEFORE(T targetKey) : void
+	+LDEL_BY_VALUE(T key) : void
+	+LDEL_HEAD() : void
+	+LLOAD(const string& filename) : void
+	+LLOAD_BIN(const string& filename) : void
+	+LPUSH_AFTER(T targetKey, T newKey) : void
+	+LPUSH_BACK(T key) : void
+	+LPUSH_BEFORE(T targetKey, T newKey) : void
+	+LPUSH_HEAD(T key) : void
+	+LSAVE(const string& filename) : void {query}
+	+LSAVE_BIN(const string& filename) : void {query}
+	+PRINT(int choice) : void {query}
+	-print_backward() : void {query}
+	-print_forward() : void {query}
+}
+
+
+class ForwardList <template<typename T>> {
+	+ForwardList()
+	+ForwardList(const ForwardList& other)
+	+~ForwardList()
+	-head : SNode<T>*
+	+FGET_BY_VALUE(T key) : auto {query}
+	+GetHead() : auto {query}
+	+operator=(const ForwardList& other) : auto
+	+FCREATE(T keyBegin) : void
+	+FDEL_AFTER(SNode<T>* ptr) : void
+	+FDEL_BACK() : void
+	+FDEL_BEFORE(T targetKey) : void
+	+FDEL_BY_VALUE(T key) : void
+	+FDEL_HEAD() : void
+	+FDESERIALIZE(const string& filename) : void
+	+FLOAD(const string& filename) : void
+	+FPUSH_BACK(T key) : void
+	+FPUSH_BEFORE(T targetKey, T newKey) : void
+	+FPUSH_FORWARD(SNode<T>* ptr, T key) : void
+	+FPUSH_HEAD(T key) : void
+	+FSAVE(const string& filename) : void {query}
+	+FSERIALIZE(const string& filename) : void {query}
+	+PRINT() : void {query}
+}
+
+
+class FullBinaryTree <template<typename T>> {
+	+FullBinaryTree()
+	+FullBinaryTree(const FullBinaryTree& other)
+	+~FullBinaryTree()
+	-root : TreeNode<T>*
+	+GetRoot() : auto {query}
+	+TFULL() : auto {query}
+	-copy_tree(const TreeNode<T>* other_node) : auto {query}
+	-isFullRecursive(TreeNode<T>* current) : auto {query}
+	+operator=(const FullBinaryTree& other) : auto
+	+PRINT(int choise) : void {query}
+	+TINSERT(T value) : void
+	+TLOAD(const string& filename) : void
+	+TLOAD_BINARY(const string& filename) : void
+	+TSAVE(const string& filename) : void {query}
+	+TSAVE_BINARY(const string& filename) : void {query}
+	-deserialize_recursive(TreeNode<T>*& node, ifstream& in) : void
+	-destroy_tree(TreeNode<T>* node) : void
+	-inorder_recursive(TreeNode<T>* node) : void {query}
+	-postorder_recursive(TreeNode<T>* node) : void {query}
+	-preorder_recursive(TreeNode<T>* node) : void {query}
+	+printBreadthFirst() : void {query}
+	-printTreeVisual(TreeNode<T>* root) : void {query}
+	-print_tree_recursive(TreeNode<T>* node, const string& prefix, bool isLeft) : void {query}
+	-serialize_recursive(TreeNode<T>* node, ofstream& out) : void {query}
+}
+
+
+class Queue <template<typename T>> {
+	+Queue()
+	+Queue(const uint32_t cap)
+	+Queue(const Queue<T>& other)
+	+~Queue()
+	-data : T*
+	+GetSize() : auto {query}
+	+QGET() : auto {query}
+	+QPOP() : auto
+	+empty() : auto {query}
+	+operator=(const Queue<T>& other) : auto
+	-capacity : uint32_t
+	-head : uint32_t
+	-size : uint32_t
+	-tail : uint32_t
+	+PRINT() : void {query}
+	+QLOAD(const string& filename) : void
+	+QLOAD_BINARY(const string& filename) : void
+	+QPUSH(T value) : void
+	+QSAVE(const string& filename) : void {query}
+	+QSAVE_BINARY(const string& filename) : void {query}
+	-resize() : void
+}
+
+
+class Stack <template<typename T>> {
+	+Stack()
+	+Stack(const uint32_t cap)
+	+Stack(const Stack<T>& other)
+	+~Stack()
+	-data : T*
+	+GetSize() : auto
+	+SPOP() : auto
+	+operator=(const Stack<T>& other) : auto
+	-capacity : uint32_t
+	-size : uint32_t
+	+PRINT() : void
+	+SLOAD(const string& filename) : void
+	+SLOAD_BINARY(const string& filename) : void
+	+SPUSH(T value) : void
+	+SSAVE(const string& filename) : void
+	+SSAVE_BINARY(const string& filename) : void
+	-doubleStack() : void
+}
+
+
+class DNode <template<typename T>> {
+	+next : DNode<T>*
+	+prev : DNode<T>*
+	+key : T
+}
+
+
+class HashNode <template<typename T>> {
+	+HashNode()
+	+HashNode(const string& newKey, const T& newValue)
+	+value : T
+	+isOccupied : bool
+	+key : string
+}
+
+
+class HashNode <template<typename T>> {
+	+HashNode()
+	+HashNode(const string& newKey, const T& newValue)
+	+value : T
+	+isOccupied : bool
+	+key : string
+}
+
+
+class SNode <template<typename T>> {
+	+next : SNode<T>*
+	+key : T
+}
+
+
+class TreeNode <template<typename T>> {
+	+TreeNode(T val)
+	+key : T
+	+left : TreeNode<T>*
+	+right : TreeNode<T>*
+}
+
+
+
+
+
+/' Inheritance relationships '/
+
+
+
+
+/' Aggregation relationships '/
+
+CuckooHash *-- Array
+
+
+DNode "2" *-- DNode
+
+
+DoubleHash *-- Array
+
+
+DoublyList "2" *-- DNode
+
+
+ForwardList *-- SNode
+
+
+FullBinaryTree *-- TreeNode
+
+
+SNode *-- SNode
+
+
+TreeNode "2" *-- TreeNode
+
+
+
+
+
+
+/' Nested objects '/
+
+
+
+@enduml

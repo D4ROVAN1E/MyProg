@@ -1,4 +1,4 @@
-﻿#ifndef SINGLY_LIST_HPP
+#ifndef SINGLY_LIST_HPP
 #define SINGLY_LIST_HPP
 
 #include <iostream>

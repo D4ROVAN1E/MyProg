@@ -1,4 +1,4 @@
-﻿#ifndef DOUBLY_LIST_HPP
+#ifndef DOUBLY_LIST_HPP
 #define DOUBLY_LIST_HPP
 
 #include <iostream>

@@ -1,4 +1,4 @@
-﻿#ifndef DH_HPP
+#ifndef DH_HPP
 #define DH_HPP
 
 #include <iostream>

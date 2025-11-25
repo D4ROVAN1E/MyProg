@@ -1,4 +1,4 @@
-﻿#ifndef CH_HPP
+#ifndef CH_HPP
 #define CH_HPP
 
 #include <iostream>
