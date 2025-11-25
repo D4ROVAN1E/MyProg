@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// --- Вспомогательные функции ---
+// Вспомогательные функции
 
 // captureOutput перехватывает вывод в stdout
 func captureOutput(f func()) string {
@@ -29,7 +29,7 @@ func captureOutput(f func()) string {
 	return buf.String()
 }
 
-// --- Основные функциональные тесты ---
+// Основные функциональные тесты
 
 func TestConstructor(t *testing.T) {
 	t.Run("ValidSize", func(t *testing.T) {
@@ -134,14 +134,6 @@ func TestResize(t *testing.T) {
 	// Создаем маленькую таблицу
 	dh, _ := NewDoubleHash[int](2)
 
-	// Порог: 2 * 0.7 = 1.4. При 2 элементах уже должно быть > 0.7?
-	// 1 элемент: 0.5. 2 элемента: 1.0 (>0.7).
-	// Resize сработает перед вставкой второго элемента?
-	// Логика кода: if (count / size) > 0.7 -> resize.
-	// 1. Insert "1": 0/2 = 0. OK. Count=1.
-	// 2. Insert "2": 1/2 = 0.5. OK (0.5 < 0.7). Count=2.
-	// 3. Insert "3": 2/2 = 1.0 (> 0.7). RESIZE вызывается.
-
 	dh.Insert("1", 1)
 	dh.Insert("2", 2)
 
@@ -182,10 +174,9 @@ func TestPrint(t *testing.T) {
 	}
 }
 
-// --- Тесты специфичной логики (Corner Cases) ---
+// Тесты специфичной логики
 
 // TestEvenTableSize проверяет логику hash2, когда размер таблицы четный.
-// В hash2 есть условие: if dh.tableSize%2 == 0 && result%2 == 0 { result++ }
 func TestEvenTableSize(t *testing.T) {
 	// Размер 4 (четный).
 	dh, _ := NewDoubleHash[int](4)
@@ -205,13 +196,13 @@ func TestEvenTableSize(t *testing.T) {
 	}
 }
 
-// --- Тесты сериализации (Text) ---
+// Тесты сериализации (Text)
 
 func TestSerializeText_Errors(t *testing.T) {
 	dh, _ := NewDoubleHash[int](5)
 	dh.Insert("A", 1)
 
-	// 1. Ошибка открытия файла на запись (пустое имя)
+	// Ошибка открытия файла на запись (пустое имя)
 	if err := dh.SerializeText(""); err == nil {
 		t.Error("Expected error for empty filename")
 	}
@@ -239,28 +230,28 @@ func TestDeserializeText_FullFlow(t *testing.T) {
 		t.Errorf("Expected 2 items, got %d", dhNew.Size())
 	}
 
-	// --- Тестирование ошибок загрузки ---
+	// Тестирование ошибок загрузки
 
-	// 1. Файл не существует
+	// Файл не существует
 	if err := dhNew.DeserializeText(filepath.Join(tmpDir, "missing.txt")); err == nil {
 		t.Error("Expected error for missing file")
 	}
 
-	// 2. Ошибка чтения заголовка (пустой файл)
+	// Ошибка чтения заголовка (пустой файл)
 	emptyFile := filepath.Join(tmpDir, "empty.txt")
 	os.WriteFile(emptyFile, []byte(""), 0644)
 	if err := dhNew.DeserializeText(emptyFile); err == nil {
 		t.Error("Expected error for empty file header")
 	}
 
-	// 3. Размер таблицы равен 0
+	// Размер таблицы равен 0
 	zeroSizeFile := filepath.Join(tmpDir, "zerosize.txt")
 	os.WriteFile(zeroSizeFile, []byte("0 10"), 0644)
 	if err := dhNew.DeserializeText(zeroSizeFile); err == nil || err.Error() != "size of table equal to zero" {
 		t.Errorf("Expected 'size of table equal to zero', got %v", err)
 	}
 
-	// 4. Ошибка формата данных (ожидаем int key T, даем мусор)
+	// Ошибка формата данных (ожидаем int key T, даем мусор)
 	badBodyFile := filepath.Join(tmpDir, "badbody.txt")
 	// Размер 5, элементов 1. Строка: "индекс(ок) ключ(ок) значение(BAD)"
 	os.WriteFile(badBodyFile, []byte("5 1\n0 key NOT_A_NUMBER"), 0644)
@@ -268,7 +259,7 @@ func TestDeserializeText_FullFlow(t *testing.T) {
 		t.Error("Expected error for bad data body")
 	}
 
-	// 5. Индекс превышает размер таблицы
+	// Индекс превышает размер таблицы
 	badIndexFile := filepath.Join(tmpDir, "badindex.txt")
 	// Размер 5, элементов 1. Индекс 10 ( > 5)
 	os.WriteFile(badIndexFile, []byte("5 1\n10 key 1.0"), 0644)
@@ -279,7 +270,7 @@ func TestDeserializeText_FullFlow(t *testing.T) {
 	}
 }
 
-// --- Тесты сериализации (Binary) ---
+// Тесты сериализации (Binary)
 
 func TestSerializeBin_Errors(t *testing.T) {
 	dh, _ := NewDoubleHash[int](5)
@@ -289,27 +280,25 @@ func TestSerializeBin_Errors(t *testing.T) {
 	if err := dh.SerializeBin(""); err == nil {
 		t.Error("Expected error for empty filename")
 	}
-	// Примечание: ошибки binary.Write сложно симулировать без мока io.Writer,
-	// но проверка открытия файла покрывает основную точку отказа.
 }
 
 func TestDeserializeBin_Errors(t *testing.T) {
 	tmpDir := t.TempDir()
 	dh, _ := NewDoubleHash[int](1)
 
-	// 1. Файл не существует
+	// Файл не существует
 	if err := dh.DeserializeBin("non_existent.bin"); err == nil {
 		t.Error("Expected error for missing bin file")
 	}
 
-	// 2. Файл слишком короткий (нет заголовка)
+	// Файл слишком короткий (нет заголовка)
 	shortFile := filepath.Join(tmpDir, "short.bin")
 	os.WriteFile(shortFile, []byte{1, 2}, 0644)
 	if err := dh.DeserializeBin(shortFile); err == nil {
 		t.Error("Expected error for short binary header")
 	}
 
-	// 3. Неожиданный конец файла при чтении occupied флага
+	// Неожиданный конец файла при чтении occupied флага
 	// Записываем корректный заголовок (size=5, count=1), но ничего больше
 	truncatedFile := filepath.Join(tmpDir, "truncated.bin")
 	buf := new(bytes.Buffer)
@@ -321,7 +310,7 @@ func TestDeserializeBin_Errors(t *testing.T) {
 		t.Error("Expected error when reading occupied flag from truncated file")
 	}
 
-	// 4. Ошибка чтения длины ключа (occupied = true, но файла нет дальше)
+	// Ошибка чтения длины ключа (occupied = true, но файла нет дальше)
 	truncKeyLenFile := filepath.Join(tmpDir, "trunckeylen.bin")
 	buf.Reset()
 	binary.Write(buf, binary.LittleEndian, uint32(5)) // size
@@ -333,7 +322,7 @@ func TestDeserializeBin_Errors(t *testing.T) {
 		t.Error("Expected error when reading key len from truncated file")
 	}
 
-	// 5. Длина ключа слишком большая (> 1000000)
+	// Длина ключа слишком большая (> 1000000)
 	hugeKeyFile := filepath.Join(tmpDir, "hugekey.bin")
 	buf.Reset()
 	binary.Write(buf, binary.LittleEndian, uint32(5))       // size
@@ -348,7 +337,7 @@ func TestDeserializeBin_Errors(t *testing.T) {
 		t.Errorf("Expected 'failed to read key string', got %v", err)
 	}
 
-	// 6. Ошибка чтения самого ключа (keyLen нормальный, но данных нет)
+	// Ошибка чтения самого ключа (keyLen нормальный, но данных нет)
 	noKeyDataFile := filepath.Join(tmpDir, "nokeydata.bin")
 	buf.Reset()
 	binary.Write(buf, binary.LittleEndian, uint32(5)) // size
@@ -362,7 +351,7 @@ func TestDeserializeBin_Errors(t *testing.T) {
 		t.Error("Expected error when reading key data")
 	}
 
-	// 7. Ошибка декодирования значения (Gob decode fail)
+	// Ошибка декодирования значения
 	// Ситуация: записали всё корректно, но байты значения битые или не соответствуют типу
 	badGobFile := filepath.Join(tmpDir, "badgob.bin")
 	buf.Reset()
@@ -411,13 +400,7 @@ func TestFullBinaryCycle(t *testing.T) {
 }
 
 // TestCollisionCycle проверяет, что мы можем найти элемент, даже если он стоит
-// далеко в цепочке проб (проверка логики цикла for i < tableSize).
 func TestCollisionCycle(t *testing.T) {
-	// Размер 5. Вставим 4 элемента. Load factor = 0.8 -> вызовет ресайз.
-	// Нам нужно избежать ресайза, чтобы проверить коллизии в тесной таблице?
-	// Нет, мы тестируем логику поиска.
-	// Просто заполним таблицу полностью (до ресайза таблица расширится).
-	// Но мы можем создать таблицу побольше, и вставить ключи, которые (возможно) дадут коллизии.
 
 	dh, _ := NewDoubleHash[int](10)
 	// Вставляем много элементов

@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// --- Тесты базовой логики дерева ---
+// Тесты базовой логики дерева
 
 func TestConstructorAndInsert(t *testing.T) {
 	tree := NewFullBinaryTree[int]()
@@ -27,7 +27,7 @@ func TestConstructorAndInsert(t *testing.T) {
 	// Вставка детей
 	tree.Insert(5)  // Меньше 10 -> влево
 	tree.Insert(15) // Больше 10 -> вправо
-	// Вставка дубликатов (по логике implementation: else -> right)
+	// Вставка дубликатов
 	tree.Insert(15) // Равно 15 -> вправо от 15
 
 	root := tree.GetRoot()
@@ -117,7 +117,7 @@ func TestClone(t *testing.T) {
 	}
 }
 
-// --- Тесты вывода (Print) ---
+// Тесты вывода (Print)
 
 func TestPrintMethods(t *testing.T) {
 	tree := NewFullBinaryTree[int]()
@@ -127,7 +127,7 @@ func TestPrintMethods(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	// 1. Тест всех валидных опций
+	// Тест всех валидных опций
 	tests := []struct {
 		choice   int
 		expected string
@@ -153,14 +153,14 @@ func TestPrintMethods(t *testing.T) {
 		})
 	}
 
-	// 2. Тест ошибочного выбора
+	// Тест ошибочного выбора
 	t.Run("Invalid Choice", func(t *testing.T) {
 		if err := tree.Print(99, &buf); err == nil {
 			t.Error("Expected error for invalid print choice")
 		}
 	})
 
-	// 3. Тест визуализации пустого дерева
+	// Тест визуализации пустого дерева
 	t.Run("Visual Empty", func(t *testing.T) {
 		empty := NewFullBinaryTree[int]()
 		buf.Reset()
@@ -170,7 +170,7 @@ func TestPrintMethods(t *testing.T) {
 		}
 	})
 
-	// 4. Тест BreadthFirst пустого дерева (для покрытия return)
+	// Тест BreadthFirst пустого дерева
 	t.Run("BreadthFirst Empty", func(t *testing.T) {
 		empty := NewFullBinaryTree[int]()
 		buf.Reset()
@@ -181,7 +181,7 @@ func TestPrintMethods(t *testing.T) {
 	})
 }
 
-// --- Тесты Generics ---
+// Тесты Generics
 
 func TestTemplateTypes(t *testing.T) {
 	// Float64
@@ -203,7 +203,7 @@ func TestTemplateTypes(t *testing.T) {
 	}
 }
 
-// --- Тесты I/O: Текстовый формат ---
+// Тесты I/O: Текстовый формат
 
 func TestFileIO_Text_Success(t *testing.T) {
 	tree := NewFullBinaryTree[int]()
@@ -234,7 +234,7 @@ func TestFileIO_Text_Success(t *testing.T) {
 }
 
 func TestFileIO_Text_EmptyAndErrors(t *testing.T) {
-	// 1. Save Empty Tree
+	// Save Empty Tree
 	tree := NewFullBinaryTree[int]()
 	tmpDir := t.TempDir()
 	filename := filepath.Join(tmpDir, "empty.txt")
@@ -248,12 +248,12 @@ func TestFileIO_Text_EmptyAndErrors(t *testing.T) {
 		t.Error("Empty tree should result in empty file")
 	}
 
-	// 2. Load Non-Existent
+	// Load Non-Existent
 	if err := tree.LoadText("missing_file.txt"); err == nil {
 		t.Error("Expected error loading missing file")
 	}
 
-	// 3. Load Malformed Data (Срабатывание Fscan error)
+	// Load Malformed Data (Срабатывание Fscan error)
 	badFile := filepath.Join(tmpDir, "bad_data.txt")
 	os.WriteFile(badFile, []byte("NOT_A_NUMBER"), 0644)
 	if err := tree.LoadText(badFile); err == nil {
@@ -275,7 +275,7 @@ func TestFileIO_WriteErrors(t *testing.T) {
 	}
 }
 
-// --- Тесты I/O: Бинарный формат ---
+// Тесты I/O: Бинарный формат
 
 func TestFileIO_Binary_Success(t *testing.T) {
 	tree := NewFullBinaryTree[int32]()
@@ -304,12 +304,12 @@ func TestFileIO_Binary_EdgeCases(t *testing.T) {
 	tmpDir := t.TempDir()
 	tree := NewFullBinaryTree[int32]()
 
-	// 1. Load Missing File
+	// Load Missing File
 	if err := tree.LoadBinary("missing.bin"); err == nil {
 		t.Error("Expected error for missing binary file")
 	}
 
-	// 2. Invalid Marker (Ожидается 0 или 1, пишем 5)
+	// Invalid Marker (Ожидается 0 или 1, пишем 5)
 	// Формат рекурсии: [Marker(int8)] [Value(T) if Marker=1]
 	badMarkerFile := filepath.Join(tmpDir, "bad_marker.bin")
 	// Пишем один байт '5'
@@ -319,7 +319,7 @@ func TestFileIO_Binary_EdgeCases(t *testing.T) {
 		t.Errorf("Expected 'invalid file format' error, got: %v", err)
 	}
 
-	// 3. Truncated File (Маркер 1 есть, а данных нет)
+	// Truncated File (Маркер 1 есть, а данных нет)
 	truncatedFile := filepath.Join(tmpDir, "truncated.bin")
 	// Пишем маркер '1' (существует), но не пишем int32 значение
 	os.WriteFile(truncatedFile, []byte{1}, 0644)
@@ -328,8 +328,7 @@ func TestFileIO_Binary_EdgeCases(t *testing.T) {
 		t.Error("Expected error reading truncated binary file")
 	}
 
-	// 4. Empty File (EOF сразу) -> Должно трактоваться как nil root (или error, зависит от логики)
-	// В коде: binary.Read вернет EOF. deserializeRecursive проверяет err == io.EOF -> return nil.
+	// Empty File (EOF сразу) -> Должно трактоваться как nil root
 	// Значит пустое дерево загрузится без ошибок.
 	emptyBin := filepath.Join(tmpDir, "empty.bin")
 	os.WriteFile(emptyBin, []byte{}, 0644)
@@ -339,12 +338,6 @@ func TestFileIO_Binary_EdgeCases(t *testing.T) {
 	if tree.GetRoot() != nil {
 		t.Error("Expected nil root from empty binary file")
 	}
-}
-
-func TestBinaryWriteError_Internal(t *testing.T) {
-	// Сложно сэмулировать ошибку binary.Write внутри memory buffer без моков Writer,
-	// но мы уже проверили ошибку открытия файла в TestFileIO_WriteErrors.
-	// Этого обычно достаточно для покрытия ветки `err != nil` в SaveBinary.
 }
 
 // Сценарий для тестирования ошибки чтения ВНУТРИ рекурсии

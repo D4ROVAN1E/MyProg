@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// Stack реализует структуру данных стек с использованием дженериков (Go 1.18+).
+// Stack реализует структуру данных стек
 type Stack[T any] struct {
 	data []T
 }
@@ -15,7 +15,7 @@ type Stack[T any] struct {
 // NewStack создает новый пустой стек.
 func NewStack[T any]() *Stack[T] {
 	return &Stack[T]{
-		data: make([]T, 0, 1), // Начальная емкость 1, как в C++
+		data: make([]T, 0, 1),
 	}
 }
 
@@ -30,13 +30,11 @@ func NewStackWithCapacity[T any](cap int) (*Stack[T], error) {
 }
 
 // Push добавляет элемент в стек.
-// В Go append автоматически управляет памятью (аналог doubleStack).
 func (s *Stack[T]) Push(value T) {
 	s.data = append(s.data, value)
 }
 
 // Pop извлекает элемент с вершины стека.
-// Возвращает ошибку вместо throw.
 func (s *Stack[T]) Pop() (T, error) {
 	var zero T
 	if len(s.data) == 0 {
@@ -65,15 +63,14 @@ func (s *Stack[T]) Print() {
 	fmt.Println()
 }
 
-// Clone создает глубокую копию стека.
-// Это аналог конструктора копирования C++.
+// Clone создает глубокую копию стека
 func (s *Stack[T]) Clone() *Stack[T] {
 	newData := make([]T, len(s.data), cap(s.data))
 	copy(newData, s.data)
 	return &Stack[T]{data: newData}
 }
 
-// SaveText сохраняет стек в текстовый файл.
+// SaveText сохраняет стек в текстовый файл
 func (s *Stack[T]) SaveText(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -96,7 +93,7 @@ func (s *Stack[T]) SaveText(filename string) error {
 	return nil
 }
 
-// LoadText загружает стек из текстового файла.
+// LoadText загружает стек из текстового файла
 func (s *Stack[T]) LoadText(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -125,8 +122,7 @@ func (s *Stack[T]) LoadText(filename string) error {
 	return nil
 }
 
-// SaveBinary сохраняет стек в бинарном формате.
-// Использует encoding/gob для безопасной сериализации любых типов (включая string).
+// SaveBinary сохраняет стек в бинарном формате
 func (s *Stack[T]) SaveBinary(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -143,7 +139,7 @@ func (s *Stack[T]) SaveBinary(filename string) error {
 	return nil
 }
 
-// LoadBinary загружает стек из бинарного файла.
+// LoadBinary загружает стек из бинарного файла
 func (s *Stack[T]) LoadBinary(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {

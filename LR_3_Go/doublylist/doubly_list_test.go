@@ -22,14 +22,14 @@ func checkHeadTail[T comparable](t *testing.T, list *DoublyList[T], headVal, tai
 func TestLCreate(t *testing.T) {
 	list := NewDoublyList[int]()
 
-	// 1. Успешное создание
+	// Успешное создание
 	err := list.LCreate(10)
 	if err != nil {
 		t.Errorf("LCreate failed: %v", err)
 	}
 	checkHeadTail(t, list, 10, 10)
 
-	// 2. Ошибка: список уже создан
+	// Ошибка: список уже создан
 	if err := list.LCreate(20); err == nil {
 		t.Error("Expected error when calling LCreate on non-empty list")
 	}
@@ -111,7 +111,7 @@ func TestPushRelative(t *testing.T) {
 	list.LPushBack(10)
 	list.LPushBack(20)
 
-	// --- Push Before ---
+	// Push Before
 
 	// Ошибка: элемент не найден
 	if err := list.LPushBefore(999, 5); err == nil {
@@ -129,7 +129,7 @@ func TestPushRelative(t *testing.T) {
 		t.Error("Links broken after PushBefore (middle)")
 	}
 
-	// --- Push After ---
+	// Push After
 
 	// Ошибка: элемент не найден
 	if err := list.LPushAfter(999, 30); err == nil {
@@ -149,7 +149,7 @@ func TestPushRelative(t *testing.T) {
 }
 
 func TestDeleteRelative(t *testing.T) {
-	// --- LDelAfter ---
+	// LDelAfter
 	list := NewDoublyList[int]()
 	list.LPushBack(1)
 	list.LPushBack(2)
@@ -175,7 +175,7 @@ func TestDeleteRelative(t *testing.T) {
 		t.Error("Links broken after LDelAfter middle")
 	}
 
-	// --- LDelBefore ---
+	// LDelBefore
 	list2 := NewDoublyList[int]()
 	list2.LPushBack(1)
 	list2.LPushBack(2)
@@ -271,14 +271,14 @@ func TestPrint(t *testing.T) {
 	list := NewDoublyList[int]()
 	var buf bytes.Buffer
 
-	// 1. Пустой список (Forward)
+	// Пустой список (Forward)
 	list.Print(&buf, 1)
 	if !strings.Contains(buf.String(), "Список пуст") {
 		t.Error("Wrong output for empty list forward")
 	}
 	buf.Reset()
 
-	// 2. Пустой список (Backward)
+	// Пустой список (Backward)
 	list.Print(&buf, 2)
 	if !strings.Contains(buf.String(), "Список пуст") {
 		t.Error("Wrong output for empty list backward")
@@ -289,12 +289,12 @@ func TestPrint(t *testing.T) {
 	list.LPushBack(1)
 	list.LPushBack(2)
 
-	// 3. Невалидный выбор
+	// Невалидный выбор
 	if err := list.Print(&buf, 3); err == nil {
 		t.Error("Expected error for invalid print choice")
 	}
 
-	// 4. Нормальный вывод Forward
+	// Нормальный вывод Forward
 	buf.Reset()
 	list.Print(&buf, 1)
 	out := buf.String()
@@ -302,7 +302,7 @@ func TestPrint(t *testing.T) {
 		t.Errorf("Forward print mismatch: %s", out)
 	}
 
-	// 5. Нормальный вывод Backward
+	// Нормальный вывод Backward
 	buf.Reset()
 	list.Print(&buf, 2)
 	out = buf.String()
@@ -336,8 +336,7 @@ func TestFileIO_Text(t *testing.T) {
 		t.Error("Expected error loading non-existent file")
 	}
 
-	// Ошибка: Сохранение в недопустимый путь (например, пустая строка или директория)
-	// Используем заведомо некорректный путь для создания файла
+	// Ошибка: Сохранение в недопустимый путь
 	if err := list.LSave(""); err == nil {
 		t.Error("Expected error saving to invalid path")
 	}

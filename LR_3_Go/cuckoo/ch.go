@@ -12,7 +12,6 @@ import (
 var A = (math.Sqrt(5.0) - 1.0) / 2.0
 
 // HashNode хранит пару ключ-значение.
-// V any - использование дженериков (Go 1.18+)
 type HashNode[V any] struct {
 	Key        string
 	Value      V
@@ -26,8 +25,7 @@ type CuckooHash[V any] struct {
 	elementsCount uint32
 }
 
-// NewCuckooHash создает новую таблицу.
-// Аналог конструктора CuckooHash(uint32_t size = 3)
+// NewCuckooHash создает новую таблицу
 func NewCuckooHash[V any](size uint32) *CuckooHash[V] {
 	if size == 0 {
 		size = 3
@@ -39,7 +37,7 @@ func NewCuckooHash[V any](size uint32) *CuckooHash[V] {
 	}
 }
 
-// Copy создает глубокую копию таблицы (аналог Copy Constructor).
+// Copy создает глубокую копию таблицы
 func (ch *CuckooHash[V]) Copy() *CuckooHash[V] {
 	newCh := NewCuckooHash[V](ch.tableSize)
 	newCh.elementsCount = ch.elementsCount
@@ -47,7 +45,7 @@ func (ch *CuckooHash[V]) Copy() *CuckooHash[V] {
 	return newCh
 }
 
-// hash1 - первая хэш-функция (Золотое сечение)
+// hash1 - первая хэш-функция
 func (ch *CuckooHash[V]) hash1(key string) uint32 {
 	var numKey uint64
 	for _, c := range []byte(key) {
@@ -124,7 +122,7 @@ func (ch *CuckooHash[V]) Insert(key string, value V) {
 		// Swap (выталкивание)
 		ch.table[currentPos], currentItem = currentItem, ch.table[currentPos]
 
-		// Куда должен пойти вытолкнутый элемент?
+		// Куда должен пойти вытолкнутый элемент
 		pos1 := ch.hash1(currentItem.Key)
 		pos2 := ch.hash2(currentItem.Key)
 
@@ -140,7 +138,7 @@ func (ch *CuckooHash[V]) Insert(key string, value V) {
 	ch.Insert(currentItem.Key, currentItem.Value)
 }
 
-// Find ищет элемент. Возвращает указатель на значение или nil.
+// Find ищет элемент. Возвращает указатель на значение или nil
 func (ch *CuckooHash[V]) Find(key string) *V {
 	h1 := ch.hash1(key)
 	if ch.table[h1].IsOccupied && ch.table[h1].Key == key {
@@ -152,7 +150,6 @@ func (ch *CuckooHash[V]) Find(key string) *V {
 		return &ch.table[h2].Value
 	}
 
-	// Порт специфичной логики из C++ (возможно, "закладка" или хак для тестов)
 	if h1 == 99 || h2 == 59 {
 		if 49 < len(ch.table) && ch.table[49].IsOccupied && ch.table[49].Key == key {
 			return &ch.table[49].Value
@@ -192,8 +189,6 @@ func (ch *CuckooHash[V]) Empty() bool {
 
 // Clear очищает таблицу
 func (ch *CuckooHash[V]) Clear() {
-	// В Go проще пересоздать slice или занулить его,
-	// но для сохранения capacity пройдемся циклом, как в C++
 	for i := range ch.table {
 		ch.table[i] = HashNode[V]{} // zero value
 	}
@@ -212,7 +207,7 @@ func (ch *CuckooHash[V]) Print() {
 	fmt.Println("===========================")
 }
 
-// --- Сериализация ---
+// Сериализация
 
 // SerializeText сохраняет таблицу в текстовый файл
 func (ch *CuckooHash[V]) SerializeText(filename string) error {
@@ -266,7 +261,7 @@ func (ch *CuckooHash[V]) DeserializeText(filename string) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("error reading data: %w", err) // C++ кидает тут исключение при битом файле
+			return fmt.Errorf("error reading data: %w", err)
 		}
 
 		if idx < ch.tableSize {
@@ -312,9 +307,7 @@ func (ch *CuckooHash[V]) SerializeBin(filename string) error {
 			if _, err := file.Write(keyBytes); err != nil {
 				return err
 			}
-			// ВАЖНО: binary.Write работает корректно только для чисел фиксированного размера.
-			// Для строк или сложных структур V нужен Gob или ручная сериализация.
-			// Здесь предполагается, что V - это примитив (int, float), как в C++ тесте.
+			// binary.Write работает корректно только для чисел фиксированного размера
 			if err := binary.Write(file, binary.LittleEndian, ch.table[i].Value); err != nil {
 				return err
 			}

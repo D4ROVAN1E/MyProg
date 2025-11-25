@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// --- Вспомогательная функция для перехвата stdout ---
+// Вспомогательная функция для перехвата stdout
 func captureOutput(f func()) string {
 	r, w, _ := os.Pipe()
 	origOut := os.Stdout
@@ -27,10 +27,10 @@ func captureOutput(f func()) string {
 	return buf.String()
 }
 
-// --- Core Functionality ---
+// Core Functionality
 
 func TestConstructionAndEmpty(t *testing.T) {
-	// Тест дефолтной инициализации (size 0 -> 3)
+	// Тест дефолтной инициализации
 	hash := NewCuckooHash[int](0)
 	if !hash.Empty() {
 		t.Error("Expected empty hash")
@@ -185,8 +185,7 @@ func TestRemoveFromHash2Slot(t *testing.T) {
 		}
 	}
 
-	// Вставляем key2. Он должен занять слот h1, а key1 улетит (или наоборот),
-	// в итоге один из них окажется на позиции hash2 (или ресайз, если не повезет с циклами, но на пустой таблице маловероятно)
+	// Вставляем key2. Он должен занять слот h1, а key1 улетит
 	hash.Insert(key2, 2)
 
 	// Удаляем оба
@@ -230,7 +229,6 @@ func TestHeavyLoadAndResize(t *testing.T) {
 func TestCycleForce(t *testing.T) {
 	// Создаем маленькую таблицу
 	hash := NewCuckooHash[int](2)
-	// Забиваем её значениями, которые вызовут множество коллизий
 	// Вставка 5 элементов в таблицу размером 2 гарантированно вызовет resize
 	hash.Insert("a", 1)
 	hash.Insert("b", 2)
@@ -243,14 +241,13 @@ func TestCycleForce(t *testing.T) {
 	}
 }
 
-// --- Specific Logic Coverage ---
+// Specific Logic Coverage
 
-// TestMagicFindLogic покрывает странное условие: if h1 == 99 || h2 == 59 ... table[49]
+// TestMagicFindLogic
 func TestMagicFindLogic(t *testing.T) {
-	// Нам нужен размер таблицы >= 100, чтобы hash1 мог вернуть 99
 	hash := NewCuckooHash[int](120)
 
-	// 1. Находим ключ, дающий hash1 == 99
+	// Находим ключ, дающий hash1 == 99
 	var magicKey string
 	found := false
 	for i := 0; i < 50000; i++ {
@@ -266,7 +263,7 @@ func TestMagicFindLogic(t *testing.T) {
 		t.Skip("Could not find a key with hash1 == 99, skipping magic logic test")
 	}
 
-	// 2. "Закладка" работает, если table[49] занят и ключи совпадают.
+	// "Закладка" работает, если table[49] занят и ключи совпадают.
 	// Поскольку мы в том же пакете, можем модифицировать table напрямую.
 	// Но сначала убедимся, что table[49] существует
 	if len(hash.table) <= 49 {
@@ -281,14 +278,6 @@ func TestMagicFindLogic(t *testing.T) {
 		IsOccupied: true,
 	}
 
-	// Обычный Find пойдет искать в hash1 (99) -> там пусто.
-	// Потом hash2 -> допустим там пусто.
-	// Потом сработает условие if h1 == 99 ... check table[49].
-
-	// Чтобы это сработало точно, нам нужно убедиться, что слоты hash1(99) и hash2(...)
-	// НЕ содержат этот ключ (они пустые или там другой ключ).
-	// Сейчас они пустые.
-
 	val := hash.Find(magicKey)
 	if val == nil {
 		t.Fatal("Magic logic failed: key not found at index 49 when h1=99")
@@ -298,37 +287,26 @@ func TestMagicFindLogic(t *testing.T) {
 	}
 }
 
-// TestHash2EvenLogic покрывает ветку: if ch.tableSize%2 == 0 && result%2 == 0
+// TestHash2EvenLogic
 func TestHash2EvenLogic(t *testing.T) {
 	// Создаем таблицу с ЧЕТНЫМ размером
 	hash := NewCuckooHash[int](100)
 
 	// Нам нужен ключ, у которого (sum % (tableSize - 1)) + 1 будет четным.
-	// tableSize = 100. tableSize-1 = 99.
-	// (sum % 99) + 1. Пусть sum=1. (1%99)+1 = 2 (четное).
-	// Если tableSize(100) четное и result(2) четное -> result++ -> 3.
-
-	// Ключ с суммой байт 1 сделать сложно (char 1), возьмем char 'b' (код 98).
-	// 98 % 99 = 98. + 1 = 99 (нечет). Не подходит.
-	// Возьмем ключ, дающий четный result.
-	// Пусть sum = 100. 100 % 99 = 1. +1 = 2. Четное!
+	// Пусть sum = 100. 100 % 99 = +1
 	// Ключ "d" (код 100).
 
 	key := "d"
 	h2 := hash.hash2(key)
 
-	// sum('d') = 100.
-	// result_raw = (100 % 99) + 1 = 2.
-	// Условие tableSize%2==0 (100%2==0) - True.
-	// Условие result%2==0 (2%2==0) - True.
-	// Должен сработать инкремент: result = 3.
+	// Должен сработать инкремент: result =
 
 	if h2 != 3 {
 		t.Errorf("Expected hash2 to be odd (incremented) for even table size. Got %d", h2)
 	}
 }
 
-// --- Copy Semantics ---
+// Copy Semantics
 
 func TestCopySemantics(t *testing.T) {
 	original := NewCuckooHash[int](3)
@@ -356,7 +334,7 @@ func TestCopySemantics(t *testing.T) {
 	}
 }
 
-// --- Serialization ---
+// Serialization
 
 const TEXT_FILE = "test_db.txt"
 const BIN_FILE = "test_db.bin"
@@ -394,26 +372,26 @@ func TestTextSerialization(t *testing.T) {
 func TestTextSerializationErrors(t *testing.T) {
 	defer os.Remove(TEXT_FILE)
 
-	// 1. Missing file
+	// Missing file
 	h := NewCuckooHash[int](1)
 	if err := h.DeserializeText("missing_file.txt"); err == nil {
 		t.Error("Expected error for missing file")
 	}
 
-	// 2. Bad header (not numbers)
+	// Bad header (not numbers)
 	os.WriteFile(TEXT_FILE, []byte("BAD HEADER\n"), 0644)
 	if err := h.DeserializeText(TEXT_FILE); err == nil {
 		t.Error("Expected error for bad header")
 	}
 
-	// 3. Index out of bounds
+	// Index out of bounds
 	// Header says size 5, but index is 10
 	os.WriteFile(TEXT_FILE, []byte("5 1\n10 key 123\n"), 0644)
 	if err := h.DeserializeText(TEXT_FILE); err == nil {
 		t.Error("Expected error for index out of bounds")
 	}
 
-	// 4. Write error (invalid path, e.g. directory)
+	// Write error (invalid path, e.g. directory)
 	// This depends on OS, skipping usually or using / invalid path
 	if err := h.SerializeText(""); err == nil {
 		t.Error("Expected error for empty filename")
@@ -451,18 +429,18 @@ func TestBinarySerializationCorrupt(t *testing.T) {
 	defer os.Remove(BIN_FILE)
 	h := NewCuckooHash[int](3)
 
-	// 1. Missing file
+	// Missing file
 	if err := h.DeserializeBin("missing.bin"); err == nil {
 		t.Error("Expected error for missing bin file")
 	}
 
-	// 2. Corrupt Table Size (Empty file)
+	// Corrupt Table Size (Empty file)
 	os.WriteFile(BIN_FILE, []byte{}, 0644)
 	if err := h.DeserializeBin(BIN_FILE); err == nil {
 		t.Error("Expected error for empty file (reading size)")
 	}
 
-	// 3. Corrupt Elements Count (File has size, misses count)
+	// Corrupt Elements Count (File has size, misses count)
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.LittleEndian, uint32(5)) // tableSize
 	// no count
@@ -471,7 +449,7 @@ func TestBinarySerializationCorrupt(t *testing.T) {
 		t.Error("Expected error for missing elements count")
 	}
 
-	// 4. Corrupt Occupied Flag (truncated loop)
+	// Corrupt Occupied Flag (truncated loop)
 	buf.Reset()
 	binary.Write(buf, binary.LittleEndian, uint32(1)) // tableSize
 	binary.Write(buf, binary.LittleEndian, uint32(1)) // count
@@ -481,7 +459,7 @@ func TestBinarySerializationCorrupt(t *testing.T) {
 		t.Error("Expected error reading occupied flag")
 	}
 
-	// 5. Corrupt Key Length
+	// Corrupt Key Length
 	buf.Reset()
 	binary.Write(buf, binary.LittleEndian, uint32(1)) // size
 	binary.Write(buf, binary.LittleEndian, uint32(1)) // count
@@ -492,7 +470,7 @@ func TestBinarySerializationCorrupt(t *testing.T) {
 		t.Error("Expected error reading key len")
 	}
 
-	// 6. Corrupt Key Data (len is 5, but EOF)
+	// Corrupt Key Data (len is 5, but EOF)
 	buf.Reset()
 	binary.Write(buf, binary.LittleEndian, uint32(1))
 	binary.Write(buf, binary.LittleEndian, uint32(1))
@@ -504,7 +482,7 @@ func TestBinarySerializationCorrupt(t *testing.T) {
 		t.Error("Expected error reading key buffer")
 	}
 
-	// 7. Corrupt Value
+	// Corrupt Value
 	buf.Reset()
 	binary.Write(buf, binary.LittleEndian, uint32(1))
 	binary.Write(buf, binary.LittleEndian, uint32(1))
@@ -518,13 +496,13 @@ func TestBinarySerializationCorrupt(t *testing.T) {
 		t.Error("Expected error reading value")
 	}
 
-	// 8. Write Error test
+	// Write Error test
 	if err := h.SerializeBin(""); err == nil {
 		t.Error("Expected error writing to empty filename")
 	}
 }
 
-// --- Print ---
+// Print
 
 func TestPrintMethod(t *testing.T) {
 	hash := NewCuckooHash[int](3)

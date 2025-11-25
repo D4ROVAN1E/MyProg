@@ -8,26 +8,25 @@ import (
 	"os"
 )
 
-// Node представляет узел двусвязного списка.
+// Node представляет узел двусвязного списка
 type Node[T comparable] struct {
 	Key  T
 	Next *Node[T]
 	Prev *Node[T]
 }
 
-// DoublyList представляет двусвязный список.
+// DoublyList представляет двусвязный список
 type DoublyList[T comparable] struct {
 	Head *Node[T]
 	Tail *Node[T]
 }
 
-// NewDoublyList создает новый пустой список.
+// NewDoublyList создает новый пустой список
 func NewDoublyList[T comparable]() *DoublyList[T] {
 	return &DoublyList[T]{}
 }
 
-// LCreate инициализирует список первым элементом.
-// Аналог LCREATE из C++.
+// LCreate инициализирует список первым элементом
 func (l *DoublyList[T]) LCreate(keyBegin T) error {
 	if l.Head != nil {
 		return errors.New("logic_error: List already created. Use push methods")
@@ -38,7 +37,7 @@ func (l *DoublyList[T]) LCreate(keyBegin T) error {
 	return nil
 }
 
-// LPushHead добавляет элемент в начало.
+// LPushHead добавляет элемент в начало
 func (l *DoublyList[T]) LPushHead(key T) {
 	newNode := &Node[T]{Key: key, Next: l.Head, Prev: nil}
 	if l.Head != nil {
@@ -49,7 +48,7 @@ func (l *DoublyList[T]) LPushHead(key T) {
 	l.Head = newNode
 }
 
-// LPushBack добавляет элемент в конец.
+// LPushBack добавляет элемент в конец
 func (l *DoublyList[T]) LPushBack(key T) {
 	newNode := &Node[T]{Key: key, Next: nil, Prev: l.Tail}
 	if l.Tail != nil {
@@ -60,7 +59,7 @@ func (l *DoublyList[T]) LPushBack(key T) {
 	l.Tail = newNode
 }
 
-// LDelHead удаляет первый элемент.
+// LDelHead удаляет первый элемент
 func (l *DoublyList[T]) LDelHead() error {
 	if l.Head == nil {
 		return errors.New("underflow_error: Attempt to delete head in an empty list")
@@ -74,7 +73,7 @@ func (l *DoublyList[T]) LDelHead() error {
 	return nil
 }
 
-// LDelBack удаляет последний элемент.
+// LDelBack удаляет последний элемент
 func (l *DoublyList[T]) LDelBack() error {
 	if l.Tail == nil {
 		return errors.New("underflow_error: Attempt to delete tail in an empty list")
@@ -88,7 +87,7 @@ func (l *DoublyList[T]) LDelBack() error {
 	return nil
 }
 
-// LGetByValue ищет узел по значению.
+// LGetByValue ищет узел по значению
 func (l *DoublyList[T]) LGetByValue(key T) *Node[T] {
 	current := l.Head
 	for current != nil {
@@ -100,7 +99,7 @@ func (l *DoublyList[T]) LGetByValue(key T) *Node[T] {
 	return nil
 }
 
-// LPushBefore вставляет элемент перед указанным значением.
+// LPushBefore вставляет элемент перед указанным значением
 func (l *DoublyList[T]) LPushBefore(targetKey T, newKey T) error {
 	targetNode := l.LGetByValue(targetKey)
 	if targetNode == nil {
@@ -118,7 +117,7 @@ func (l *DoublyList[T]) LPushBefore(targetKey T, newKey T) error {
 	return nil
 }
 
-// LPushAfter вставляет элемент после указанного значения.
+// LPushAfter вставляет элемент после указанного значения
 func (l *DoublyList[T]) LPushAfter(targetKey T, newKey T) error {
 	targetNode := l.LGetByValue(targetKey)
 	if targetNode == nil {
@@ -136,7 +135,7 @@ func (l *DoublyList[T]) LPushAfter(targetKey T, newKey T) error {
 	return nil
 }
 
-// LDelAfter удаляет элемент после указанного значения.
+// LDelAfter удаляет элемент после указанного значения
 func (l *DoublyList[T]) LDelAfter(targetKey T) error {
 	targetNode := l.LGetByValue(targetKey)
 	if targetNode == nil {
@@ -159,7 +158,7 @@ func (l *DoublyList[T]) LDelAfter(targetKey T) error {
 	return nil
 }
 
-// LDelBefore удаляет элемент перед указанным значением.
+// LDelBefore удаляет элемент перед указанным значением
 func (l *DoublyList[T]) LDelBefore(targetKey T) error {
 	targetNode := l.LGetByValue(targetKey)
 	if targetNode == nil {
@@ -181,7 +180,7 @@ func (l *DoublyList[T]) LDelBefore(targetKey T) error {
 	return nil
 }
 
-// LDelByValue удаляет первое вхождение элемента по значению.
+// LDelByValue удаляет первое вхождение элемента по значению
 func (l *DoublyList[T]) LDelByValue(key T) error {
 	targetNode := l.LGetByValue(key)
 	if targetNode == nil {
@@ -200,7 +199,7 @@ func (l *DoublyList[T]) LDelByValue(key T) error {
 	return nil
 }
 
-// Clone создает глубокую копию списка (аналог конструктора копирования).
+// Clone создает глубокую копию списка
 func (l *DoublyList[T]) Clone() *DoublyList[T] {
 	newList := NewDoublyList[T]()
 	current := l.Head
@@ -212,7 +211,6 @@ func (l *DoublyList[T]) Clone() *DoublyList[T] {
 }
 
 // Print выводит список.
-// Мы принимаем io.Writer, чтобы можно было перехватывать вывод в тестах или писать в stdout.
 func (l *DoublyList[T]) Print(w io.Writer, choice int) error {
 	switch choice {
 	case 1: // Forward
@@ -245,7 +243,7 @@ func (l *DoublyList[T]) Print(w io.Writer, choice int) error {
 	return nil
 }
 
-// LSave сохраняет список в текстовый файл.
+// LSave сохраняет список в текстовый файл
 func (l *DoublyList[T]) LSave(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -264,7 +262,7 @@ func (l *DoublyList[T]) LSave(filename string) error {
 	return nil
 }
 
-// LLoad загружает список из текстового файла.
+// LLoad загружает список из текстового файла
 func (l *DoublyList[T]) LLoad(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -291,7 +289,7 @@ func (l *DoublyList[T]) LLoad(filename string) error {
 	return nil
 }
 
-// LSaveBin сохраняет список в бинарный файл.
+// LSaveBin сохраняет список в бинарный файл
 func (l *DoublyList[T]) LSaveBin(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -311,7 +309,7 @@ func (l *DoublyList[T]) LSaveBin(filename string) error {
 	return nil
 }
 
-// LLoadBin загружает список из бинарного файла.
+// LLoadBin загружает список из бинарного файла
 func (l *DoublyList[T]) LLoadBin(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {

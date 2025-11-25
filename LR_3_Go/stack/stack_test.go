@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// --- Вспомогательные функции ---
+// Вспомогательные функции
 
 // captureOutput перехватывает вывод в stdout для проверки метода Print
 func captureOutput(f func()) string {
@@ -28,7 +28,7 @@ func captureOutput(f func()) string {
 	return buf.String()
 }
 
-// --- Тесты базовой функциональности ---
+// Тесты базовой функциональности
 
 func TestNewStack(t *testing.T) {
 	s := NewStack[int]()
@@ -38,12 +38,11 @@ func TestNewStack(t *testing.T) {
 	if s.Size() != 0 {
 		t.Errorf("Expected size 0, got %d", s.Size())
 	}
-	// Проверка начальной емкости (внутренняя проверка через рефлексию или косвенно)
-	// В данном случае просто убеждаемся, что он работает.
+	// Проверка начальной емкости
 }
 
 func TestNewStackWithCapacity(t *testing.T) {
-	// Сценарий 1: Успешное создание
+	// Успешное создание
 	s, err := NewStackWithCapacity[string](10)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -52,7 +51,7 @@ func TestNewStackWithCapacity(t *testing.T) {
 		t.Errorf("Expected size 0, got %d", s.Size())
 	}
 
-	// Сценарий 2: Ошибка (capacity <= 0)
+	// Ошибка (capacity <= 0)
 	_, err = NewStackWithCapacity[string](0)
 	if err == nil {
 		t.Error("Expected error for capacity 0, got nil")
@@ -144,22 +143,21 @@ func TestPrint(t *testing.T) {
 		s.Print()
 	})
 
-	expected := "A B \n" // fmt.Println добавляет \n в конце
+	expected := "A B \n"
 	if output != expected {
-		// В зависимости от ОС переводы строк могут отличаться, упростим проверку
 		if !strings.Contains(output, "A B") {
 			t.Errorf("Expected output containing 'A B', got %q", output)
 		}
 	}
 }
 
-// --- Тесты сохранения/загрузки (включая ошибки) ---
+// Тесты сохранения/загрузки (включая ошибки)
 
 func TestSaveText(t *testing.T) {
 	tmpDir := t.TempDir()
 	goodFile := filepath.Join(tmpDir, "stack.txt")
 
-	// Сценарий 1: Успешное сохранение
+	// Успешное сохранение
 	s := NewStack[int]()
 	s.Push(100)
 	s.Push(200)
@@ -174,8 +172,7 @@ func TestSaveText(t *testing.T) {
 		t.Errorf("File content unexpected: %s", strContent)
 	}
 
-	// Сценарий 2: Ошибка создания файла (передаем директорию вместо файла или пустую строку)
-	// В Linux/Unix попытка открыть директорию на запись вызовет ошибку.
+	// Ошибка создания файла
 	if err := s.SaveText(tmpDir); err == nil {
 		t.Error("Expected error when saving to a directory path, got nil")
 	}
@@ -184,7 +181,7 @@ func TestSaveText(t *testing.T) {
 func TestLoadText(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Сценарий 1: Успешная загрузка
+	// Успешная загрузка
 	goodFile := filepath.Join(tmpDir, "good_load.txt")
 	// Создаем валидный файл: Размер 2, данные 10 20
 	os.WriteFile(goodFile, []byte("2\n10 20"), 0644)
@@ -197,12 +194,12 @@ func TestLoadText(t *testing.T) {
 		t.Errorf("Expected size 2, got %d", s.Size())
 	}
 
-	// Сценарий 2: Ошибка открытия файла (нет файла)
+	// Ошибка открытия файла (нет файла)
 	if err := s.LoadText(filepath.Join(tmpDir, "non_existent.txt")); err == nil {
 		t.Error("Expected error loading non-existent file")
 	}
 
-	// Сценарий 3: Ошибка чтения размера (файл пустой или мусор)
+	// Ошибка чтения размера (файл пустой или мусор)
 	badSizeFile := filepath.Join(tmpDir, "bad_size.txt")
 	os.WriteFile(badSizeFile, []byte("NOT_A_NUMBER"), 0644)
 	if err := s.LoadText(badSizeFile); err == nil {
@@ -211,7 +208,7 @@ func TestLoadText(t *testing.T) {
 		t.Errorf("Unexpected error message: %v", err)
 	}
 
-	// Сценарий 4: Ошибка чтения данных (размер указан больше, чем данных)
+	// Ошибка чтения данных (размер указан больше, чем данных)
 	badDataFile := filepath.Join(tmpDir, "bad_data.txt")
 	// Обещаем 5 элементов, даем 1
 	os.WriteFile(badDataFile, []byte("5\n10"), 0644)
@@ -229,21 +226,15 @@ func TestSaveBinary(t *testing.T) {
 	s := NewStack[float64]()
 	s.Push(3.14)
 
-	// Сценарий 1: Успешное сохранение
+	// Успешное сохранение
 	if err := s.SaveBinary(goodFile); err != nil {
 		t.Fatalf("SaveBinary failed: %v", err)
 	}
 
-	// Сценарий 2: Ошибка создания файла (путь - директория)
+	// Ошибка создания файла (путь - директория)
 	if err := s.SaveBinary(tmpDir); err == nil {
 		t.Error("Expected error saving binary to directory")
 	}
-
-	// Сценарий 3 (теоретический): Ошибка gob encoding.
-	// gob очень надежен для базовых типов слайсов, вызвать ошибку encode
-	// сложно без моков или специфичных типов, не поддерживаемых gob.
-	// Но так как Stack[T] дженерик, можно попробовать создать стек с функцией или каналом,
-	// которые gob не поддерживает.
 
 	sFunc := NewStack[func()]()
 	sFunc.Push(func() {}) // Функции нельзя сериализовать
@@ -263,7 +254,7 @@ func TestLoadBinary(t *testing.T) {
 	sOrig.Push(1.23)
 	sOrig.SaveBinary(goodFile)
 
-	// Сценарий 1: Успешная загрузка
+	// Успешная загрузка
 	sLoad := NewStack[float64]()
 	if err := sLoad.LoadBinary(goodFile); err != nil {
 		t.Fatalf("LoadBinary failed: %v", err)
@@ -273,12 +264,12 @@ func TestLoadBinary(t *testing.T) {
 		t.Errorf("Expected 1.23, got %f", val)
 	}
 
-	// Сценарий 2: Ошибка открытия (файл не существует)
+	// Ошибка открытия (файл не существует)
 	if err := sLoad.LoadBinary("non_existent.bin"); err == nil {
 		t.Error("Expected error opening non-existent binary file")
 	}
 
-	// Сценарий 3: Ошибка декодирования (коррумпированный файл)
+	// Ошибка декодирования (коррумпированный файл)
 	badFile := filepath.Join(tmpDir, "corrupt.bin")
 	os.WriteFile(badFile, []byte("THIS IS NOT GOB DATA"), 0644)
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// --- Helper Functions ---
+// Helper Functions
 
 // createTempFile создает временный файл и возвращает путь и функцию очистки
 func createTempFile(t *testing.T, pattern string) (string, func()) {
@@ -20,7 +20,7 @@ func createTempFile(t *testing.T, pattern string) (string, func()) {
 	}
 }
 
-// --- Core Logic Tests ---
+// Core Logic Tests
 
 func TestConstructor(t *testing.T) {
 	q1 := NewQueue[int](10)
@@ -73,11 +73,11 @@ func TestPushPopGet(t *testing.T) {
 }
 
 func TestResizeLogic(t *testing.T) {
-	// 1. Standard resize
+	// Standard resize
 	q := NewQueue[int](2)
 	q.Push(1)
 	q.Push(2)
-	q.Push(3) // Triggers resize 2 -> 4
+	q.Push(3)
 
 	if q.capacity != 4 {
 		t.Errorf("expected capacity 4, got %d", q.capacity)
@@ -86,9 +86,7 @@ func TestResizeLogic(t *testing.T) {
 		t.Errorf("expected count 3, got %d", q.Size())
 	}
 
-	// 2. Resize with circular wrapping (Unwrapping logic)
-	// [2, 3] -> Pop 2 -> [nil, 3] -> Push 4, 5 -> [4, 3, 5] (logical) -> [5, 3, 4] (physical in size 3 cap?)
-	// Let's simulate strict wrap scenario
+	// Resize with circular wrapping
 	q2 := NewQueue[int](2)
 	q2.Push(10) // [10, nil] head=0, tail=1
 	q2.Pop()    // [nil, nil] head=1, tail=1
@@ -96,7 +94,7 @@ func TestResizeLogic(t *testing.T) {
 	q2.Push(30) // [30, 20] head=1, tail=1 (full)
 
 	// Trigger resize while wrapped
-	q2.Push(40) // Should unwrap to: 20, 30, 40, nil...
+	q2.Push(40)
 
 	expected := []int{20, 30, 40}
 	for i, exp := range expected {
@@ -106,8 +104,7 @@ func TestResizeLogic(t *testing.T) {
 		}
 	}
 
-	// 3. Edge Case: Resize from 0 (forcing private field manipulation)
-	// NewQueue always sets cap >= 1, but to cover the `if newCapacity == 0` branch:
+	// Edge Case: Resize from 0
 	qZero := NewQueue[int](1)
 	qZero.capacity = 0 // Manually break it to test recovery
 	qZero.data = []int{}
@@ -165,14 +162,14 @@ func TestPrint(t *testing.T) {
 	}
 }
 
-// --- Text Serialization Tests ---
+// Text Serialization Tests
 
 func TestSaveText(t *testing.T) {
 	q := NewQueue[int](5)
 	q.Push(10)
 	q.Push(20)
 
-	// 1. Success
+	// Success
 	filename, cleanup := createTempFile(t, "queue_text_*.txt")
 	defer cleanup()
 
@@ -180,15 +177,14 @@ func TestSaveText(t *testing.T) {
 		t.Errorf("SaveText failed: %v", err)
 	}
 
-	// 2. Error: Invalid path (Directory as file or invalid permissions)
-	// Trying to create a file with empty name usually fails or fails on permissions
+	// Error: Invalid path
 	if err := q.SaveText(""); err == nil {
 		t.Error("Expected error saving to empty filename")
 	}
 }
 
 func TestLoadText(t *testing.T) {
-	// 1. Success Case
+	// Success Case
 	{
 		filename, cleanup := createTempFile(t, "good_queue.txt")
 		defer cleanup()
@@ -208,7 +204,7 @@ func TestLoadText(t *testing.T) {
 		}
 	}
 
-	// 2. Error: File not found
+	// Error: File not found
 	{
 		q := NewQueue[int](1)
 		if err := q.LoadText("non_existent_file_XYZ.txt"); err == nil {
@@ -216,7 +212,7 @@ func TestLoadText(t *testing.T) {
 		}
 	}
 
-	// 3. Error: Corrupt Header (Size is not int)
+	// Error: Corrupt Header (Size is not int)
 	{
 		filename, cleanup := createTempFile(t, "bad_header.txt")
 		defer cleanup()
@@ -233,7 +229,7 @@ func TestLoadText(t *testing.T) {
 		}
 	}
 
-	// 4. Error: Corrupt Data (Type mismatch)
+	// Error: Corrupt Data (Type mismatch)
 	{
 		filename, cleanup := createTempFile(t, "bad_data_type.txt")
 		defer cleanup()
@@ -245,7 +241,7 @@ func TestLoadText(t *testing.T) {
 		}
 	}
 
-	// 5. Error: EOF before all items read (Size 3, but only 1 item)
+	// Error: EOF before all items read (Size 3, but only 1 item)
 	{
 		filename, cleanup := createTempFile(t, "short_file.txt")
 		defer cleanup()
@@ -256,33 +252,27 @@ func TestLoadText(t *testing.T) {
 			t.Errorf("Expected ErrFileCorrupt for premature EOF, got %v", err)
 		}
 	}
-
-	// 6. Error: Count mismatch check (fails safely if newSize > actual items logic passed)
-	// This is defensive. If we claim size 2, read 2 items, but count != 2?
-	// Hard to trigger unless logic changes, but strictly covered by "EOF" check usually.
 }
 
-// --- Binary Serialization Tests ---
+// Binary Serialization Tests
 
 func TestSaveBinary(t *testing.T) {
 	q := NewQueue[float64](5)
 	q.Push(1.1)
 
-	// 1. Success
+	// Success
 	filename, cleanup := createTempFile(t, "queue_bin_*.gob")
 	defer cleanup()
 	if err := q.SaveBinary(filename); err != nil {
 		t.Errorf("SaveBinary failed: %v", err)
 	}
 
-	// 2. Error: File creation
+	// Error: File creation
 	if err := q.SaveBinary(""); err == nil {
 		t.Error("Expected error on invalid filename")
 	}
 
-	// 3. Error: Encoding failure
-	// Gob fails to encode channels or functions.
-	// We need a queue of a type that fails gob encoding.
+	// Error: Encoding failure
 	qBad := NewQueue[func()](1)
 	qBad.Push(func() {})
 
@@ -296,7 +286,7 @@ func TestSaveBinary(t *testing.T) {
 }
 
 func TestLoadBinary(t *testing.T) {
-	// 1. Success
+	// Success
 	{
 		filename, cleanup := createTempFile(t, "queue_good.gob")
 		defer cleanup()
@@ -315,7 +305,7 @@ func TestLoadBinary(t *testing.T) {
 		}
 	}
 
-	// 2. Error: Open file
+	// Error: Open file
 	{
 		q := NewQueue[int](1)
 		if err := q.LoadBinary("missing_bin.gob"); err == nil {
@@ -323,7 +313,7 @@ func TestLoadBinary(t *testing.T) {
 		}
 	}
 
-	// 3. Error: Header decode (Empty file or garbage)
+	// Error: Header decode (Empty file or garbage)
 	{
 		filename, cleanup := createTempFile(t, "garbage.gob")
 		defer cleanup()
@@ -335,7 +325,7 @@ func TestLoadBinary(t *testing.T) {
 		}
 	}
 
-	// 4. Error: Data decode (EOF / corruption)
+	// Error: Data decode (EOF / corruption)
 	{
 		// Create a valid file, then truncate it to simulate partial write
 		filename, cleanup := createTempFile(t, "truncated.gob")
@@ -347,16 +337,14 @@ func TestLoadBinary(t *testing.T) {
 		qOrig.SaveBinary(filename)
 
 		// Truncate file: Keep header (size) but cut off data
-		// Gob creates a stream, cutting it arbitrarily might leave size intact but kill data
 		data, _ := os.ReadFile(filename)
-		// Write back only first few bytes (enough for header size, not enough for data)
+		// Write back only first few bytes
 		os.WriteFile(filename, data[:10], 0644)
 
 		qLoad := NewQueue[int](1)
 		err := qLoad.LoadBinary(filename)
 
 		// Depending on where it cut, it might be unexpected EOF or a decoding error.
-		// Our code wraps EOF into ErrFileCorrupt OR returns raw error.
 		if err == nil {
 			t.Error("Expected error loading truncated file")
 		}

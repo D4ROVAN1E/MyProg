@@ -8,23 +8,23 @@ import (
 	"os"
 )
 
-// SNode представляет узел списка.
+// SNode представляет узел списка
 type SNode[T any] struct {
 	Key  T
 	Next *SNode[T]
 }
 
-// ForwardList реализует односвязный список.
+// ForwardList реализует односвязный список
 type ForwardList[T comparable] struct {
 	Head *SNode[T]
 }
 
-// NewForwardList создает новый пустой список.
+// NewForwardList создает новый пустой список
 func NewForwardList[T comparable]() *ForwardList[T] {
 	return &ForwardList[T]{Head: nil}
 }
 
-// DeepCopy создает глубокую копию списка.
+// DeepCopy создает глубокую копию списка
 func (l *ForwardList[T]) DeepCopy() *ForwardList[T] {
 	newList := NewForwardList[T]()
 	if l.Head == nil {
@@ -43,7 +43,7 @@ func (l *ForwardList[T]) DeepCopy() *ForwardList[T] {
 	return newList
 }
 
-// PushForward добавляет узел ПОСЛЕ указанного узла ptr.
+// PushForward добавляет узел ПОСЛЕ указанного узла ptr
 func (l *ForwardList[T]) PushForward(ptr *SNode[T], key T) error {
 	if ptr == nil {
 		return fmt.Errorf("pointer cannot be null")
@@ -53,13 +53,12 @@ func (l *ForwardList[T]) PushForward(ptr *SNode[T], key T) error {
 	return nil
 }
 
-// Create создает список с начальным элементом (сбрасывает текущий).
+// Create создает список с начальным элементом (сбрасывает текущий)
 func (l *ForwardList[T]) Create(keyBegin T) {
-	// В Go память освободит GC, просто зануляем Head
 	l.Head = &SNode[T]{Key: keyBegin, Next: nil}
 }
 
-// Print выводит список в консоль.
+// Print выводит список в консоль
 func (l *ForwardList[T]) Print() {
 	if l.Head == nil {
 		fmt.Println("Список пуст")
@@ -73,7 +72,7 @@ func (l *ForwardList[T]) Print() {
 	fmt.Println("nil")
 }
 
-// GetPrintString возвращает строковое представление (для тестов).
+// GetPrintString возвращает строковое представление (для тестов)
 func (l *ForwardList[T]) GetPrintString() string {
 	if l.Head == nil {
 		return "Список пуст\n"
@@ -88,13 +87,13 @@ func (l *ForwardList[T]) GetPrintString() string {
 	return buffer.String()
 }
 
-// PushHead добавляет элемент в НАЧАЛО списка.
+// PushHead добавляет элемент в НАЧАЛО списка
 func (l *ForwardList[T]) PushHead(key T) {
 	newNode := &SNode[T]{Key: key, Next: l.Head}
 	l.Head = newNode
 }
 
-// PushBack добавляет элемент в КОНЕЦ списка.
+// PushBack добавляет элемент в КОНЕЦ списка
 func (l *ForwardList[T]) PushBack(key T) {
 	newNode := &SNode[T]{Key: key, Next: nil}
 	if l.Head == nil {
@@ -108,7 +107,7 @@ func (l *ForwardList[T]) PushBack(key T) {
 	current.Next = newNode
 }
 
-// PushBefore добавляет элемент ДО узла с заданным значением.
+// PushBefore добавляет элемент ДО узла с заданным значением
 func (l *ForwardList[T]) PushBefore(targetKey T, newKey T) error {
 	if l.Head == nil {
 		return fmt.Errorf("list is empty, cannot find element")
@@ -130,17 +129,16 @@ func (l *ForwardList[T]) PushBefore(targetKey T, newKey T) error {
 	return fmt.Errorf("target key not found")
 }
 
-// DelHead удаляет первый элемент списка.
+// DelHead удаляет первый элемент списка
 func (l *ForwardList[T]) DelHead() error {
 	if l.Head == nil {
 		return fmt.Errorf("attempt to delete from an empty list")
 	}
-	// GC удалит старый Head, так как ссылок на него не останется
 	l.Head = l.Head.Next
 	return nil
 }
 
-// DelBack удаляет последний элемент списка.
+// DelBack удаляет последний элемент списка
 func (l *ForwardList[T]) DelBack() error {
 	if l.Head == nil {
 		return fmt.Errorf("attempt to delete from an empty list")
@@ -159,7 +157,7 @@ func (l *ForwardList[T]) DelBack() error {
 	return nil
 }
 
-// DelAfter удаляет элемент ПОСЛЕ указанного узла.
+// DelAfter удаляет элемент ПОСЛЕ указанного узла
 func (l *ForwardList[T]) DelAfter(ptr *SNode[T]) error {
 	if ptr == nil {
 		return fmt.Errorf("pointer cannot be null")
@@ -171,7 +169,7 @@ func (l *ForwardList[T]) DelAfter(ptr *SNode[T]) error {
 	return nil
 }
 
-// DelBefore удаляет элемент ДО узла с заданным значением.
+// DelBefore удаляет элемент ДО узла с заданным значением
 func (l *ForwardList[T]) DelBefore(targetKey T) error {
 	if l.Head == nil {
 		return fmt.Errorf("list is empty")
@@ -205,7 +203,7 @@ func (l *ForwardList[T]) DelBefore(targetKey T) error {
 	return nil
 }
 
-// DelByValue удаляет узел по значению (первое вхождение).
+// DelByValue удаляет узел по значению (первое вхождение)
 func (l *ForwardList[T]) DelByValue(key T) error {
 	if l.Head == nil {
 		return fmt.Errorf("list is empty")
@@ -227,7 +225,7 @@ func (l *ForwardList[T]) DelByValue(key T) error {
 	return fmt.Errorf("element with specified value not found")
 }
 
-// GetByValue ищет элемент по значению.
+// GetByValue ищет элемент по значению
 func (l *ForwardList[T]) GetByValue(key T) *SNode[T] {
 	current := l.Head
 	for current != nil {
@@ -239,7 +237,7 @@ func (l *ForwardList[T]) GetByValue(key T) *SNode[T] {
 	return nil
 }
 
-// Save сохраняет список в текстовый файл.
+// Save сохраняет список в текстовый файл
 func (l *ForwardList[T]) Save(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -257,7 +255,7 @@ func (l *ForwardList[T]) Save(filename string) error {
 	return nil
 }
 
-// Load загружает список из текстового файла.
+// Load загружает список из текстового файла
 func (l *ForwardList[T]) Load(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -289,7 +287,7 @@ func (l *ForwardList[T]) Load(filename string) error {
 	return nil
 }
 
-// Serialize сохраняет список в бинарный формат (gob).
+// Serialize сохраняет список в бинарный формат (gob)
 func (l *ForwardList[T]) Serialize(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -311,7 +309,7 @@ func (l *ForwardList[T]) Serialize(filename string) error {
 	return nil
 }
 
-// Deserialize загружает список из бинарного формата (gob).
+// Deserialize загружает список из бинарного формата (gob)
 func (l *ForwardList[T]) Deserialize(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {

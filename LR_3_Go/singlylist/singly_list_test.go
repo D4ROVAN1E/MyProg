@@ -39,12 +39,12 @@ func checkListManual[T comparable](t *testing.T, list *ForwardList[T], expected 
 }
 
 func TestNewListAndDeepCopy(t *testing.T) {
-	// 1. Empty Copy
+	// Empty Copy
 	list := NewForwardList[int]()
 	copyList := list.DeepCopy()
 	checkListManual(t, copyList, []int{})
 
-	// 2. Non-empty Copy
+	// Non-empty Copy
 	list.PushBack(1)
 	list.PushBack(2)
 	list.PushBack(3)
@@ -130,7 +130,7 @@ func TestPushBefore(t *testing.T) {
 }
 
 func TestDelHeadAndBack(t *testing.T) {
-	// --- DelHead ---
+	// DelHead
 	l1 := NewForwardList[int]()
 	if err := l1.DelHead(); err == nil {
 		t.Error("DelHead on empty list should error")
@@ -140,7 +140,7 @@ func TestDelHeadAndBack(t *testing.T) {
 	l1.DelHead()
 	checkListManual(t, l1, []int{})
 
-	// --- DelBack ---
+	// DelBack
 	l2 := NewForwardList[int]()
 	if err := l2.DelBack(); err == nil {
 		t.Error("DelBack on empty list should error")
@@ -261,9 +261,6 @@ func TestGetByValue(t *testing.T) {
 }
 
 func TestPrint(t *testing.T) {
-	// Этот тест нужен просто чтобы пройтись по строкам Print() для coverage.
-	// Мы не захватываем stdout, так как логика идентична GetPrintString,
-	// которая проверена в checkListManual.
 	list := NewForwardList[int]()
 	list.Print() // "Список пуст"
 
@@ -280,19 +277,19 @@ func TestFileIOSaveLoad(t *testing.T) {
 	tmpDir := t.TempDir()
 	validFile := filepath.Join(tmpDir, "list.txt")
 
-	// 1. Save Success
+	// Save Success
 	if err := list.Save(validFile); err != nil {
 		t.Fatalf("Save failed: %v", err)
 	}
 
-	// 2. Load Success
+	// Load Success
 	list2 := NewForwardList[int]()
 	if err := list2.Load(validFile); err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}
 	checkListManual(t, list2, []int{10, 20})
 
-	// 3. Load logic: check correct append ordering
+	// Load logic: check correct append ordering
 	// Create a file manually: "1 2 3"
 	manualFile := filepath.Join(tmpDir, "manual.txt")
 	os.WriteFile(manualFile, []byte("1 2 3"), 0644)
@@ -300,17 +297,17 @@ func TestFileIOSaveLoad(t *testing.T) {
 	list3.Load(manualFile)
 	checkListManual(t, list3, []int{1, 2, 3})
 
-	// 4. Save Error (Invalid path)
+	// Save Error (Invalid path)
 	if err := list.Save(filepath.Join(tmpDir, "nonexistent_dir", "file.txt")); err == nil {
 		t.Error("Expected error saving to invalid path")
 	}
 
-	// 5. Load Error (File not found)
+	// Load Error (File not found)
 	if err := list.Load(filepath.Join(tmpDir, "missing.txt")); err == nil {
 		t.Error("Expected error loading missing file")
 	}
 
-	// 6. Load Error (Bad data format)
+	// Load Error (Bad data format)
 	badFile := filepath.Join(tmpDir, "bad.txt")
 	os.WriteFile(badFile, []byte("10 ABC 30"), 0644)
 	if err := list.Load(badFile); err == nil {
@@ -326,36 +323,36 @@ func TestFileIOSerialize(t *testing.T) {
 	tmpDir := t.TempDir()
 	validBin := filepath.Join(tmpDir, "list.bin")
 
-	// 1. Serialize Success
+	// Serialize Success
 	if err := list.Serialize(validBin); err != nil {
 		t.Fatalf("Serialize failed: %v", err)
 	}
 
-	// 2. Deserialize Success
+	// Deserialize Success
 	list2 := NewForwardList[int]()
 	if err := list2.Deserialize(validBin); err != nil {
 		t.Fatalf("Deserialize failed: %v", err)
 	}
 	checkListManual(t, list2, []int{100, 200})
 
-	// 3. Serialize Error (Invalid path)
+	// Serialize Error (Invalid path)
 	if err := list.Serialize(filepath.Join(tmpDir, "no_dir", "file.bin")); err == nil {
 		t.Error("Expected error serializing to invalid path")
 	}
 
-	// 4. Deserialize Error (File not found)
+	// Deserialize Error (File not found)
 	if err := list2.Deserialize(filepath.Join(tmpDir, "missing.bin")); err == nil {
 		t.Error("Expected error deserializing missing file")
 	}
 
-	// 5. Deserialize Error (Bad Gob data)
+	// Deserialize Error (Bad Gob data)
 	badBin := filepath.Join(tmpDir, "bad.bin")
 	os.WriteFile(badBin, []byte("Not a gob file"), 0644)
 	if err := list2.Deserialize(badBin); err == nil {
 		t.Error("Expected error deserializing bad gob data")
 	}
 
-	// 6. Deserialize Empty/EOF (Should be valid empty list)
+	// Deserialize Empty/EOF (Should be valid empty list)
 	emptyBin := filepath.Join(tmpDir, "empty.bin")
 	os.Create(emptyBin) // create empty file
 	listEmpty := NewForwardList[int]()

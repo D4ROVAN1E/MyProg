@@ -32,12 +32,12 @@ func NewFullBinaryTree[T cmp.Ordered]() *FullBinaryTree[T] {
 	return &FullBinaryTree[T]{}
 }
 
-// GetRoot возвращает корень (для тестов)
+// GetRoot возвращает корень
 func (t *FullBinaryTree[T]) GetRoot() *TreeNode[T] {
 	return t.root
 }
 
-// Insert (TINSERT) вставка элемента по принципу BST
+// Insert вставка элемента по принципу BST
 func (t *FullBinaryTree[T]) Insert(value T) {
 	newNode := &TreeNode[T]{Key: value}
 
@@ -65,7 +65,7 @@ func (t *FullBinaryTree[T]) Insert(value T) {
 	}
 }
 
-// IsFull (TFULL) проверяет, является ли дерево полным
+// IsFull проверяет, является ли дерево полным
 func (t *FullBinaryTree[T]) IsFull() bool {
 	if t.root == nil {
 		return true
@@ -89,7 +89,7 @@ func isFullRecursive[T cmp.Ordered](node *TreeNode[T]) bool {
 	return true
 }
 
-// Clone (аналог копирующего конструктора) создает глубокую копию дерева
+// Clone создает глубокую копию дерева
 func (t *FullBinaryTree[T]) Clone() *FullBinaryTree[T] {
 	newTree := NewFullBinaryTree[T]()
 	newTree.root = copyTreeRecursive(t.root)
@@ -106,7 +106,7 @@ func copyTreeRecursive[T cmp.Ordered](node *TreeNode[T]) *TreeNode[T] {
 	return newNode
 }
 
-// Print (PRINT) - единый метод вывода.
+// Print - единый метод вывода.
 // w - куда писать (os.Stdout для консоли или bytes.Buffer для тестов)
 func (t *FullBinaryTree[T]) Print(choice int, w io.Writer) error {
 	switch choice {
@@ -129,7 +129,7 @@ func (t *FullBinaryTree[T]) Print(choice int, w io.Writer) error {
 	return nil
 }
 
-// --- Методы обхода ---
+// Методы обхода
 
 func (t *FullBinaryTree[T]) printBreadthFirst(w io.Writer) {
 	if t.root == nil {
@@ -178,7 +178,7 @@ func (t *FullBinaryTree[T]) postOrderRecursive(node *TreeNode[T], w io.Writer) {
 	}
 }
 
-// --- Визуализация ---
+// Визуализация
 
 func (t *FullBinaryTree[T]) printTreeVisual(node *TreeNode[T], w io.Writer) {
 	if node == nil {
@@ -212,7 +212,7 @@ func printTreeVisualRecursive[T cmp.Ordered](node *TreeNode[T], prefix string, i
 	}
 }
 
-// --- Файловый ввод-вывод (Текстовый) ---
+// Файловый ввод-вывод (Текстовый)
 
 func (t *FullBinaryTree[T]) SaveText(filename string) error {
 	file, err := os.Create(filename)
@@ -269,7 +269,7 @@ func (t *FullBinaryTree[T]) LoadText(filename string) error {
 	return nil
 }
 
-// --- Файловый ввод-вывод (Бинарный) ---
+// Файловый ввод-вывод (Бинарный)
 
 func (t *FullBinaryTree[T]) SaveBinary(filename string) error {
 	file, err := os.Create(filename)
@@ -318,7 +318,7 @@ func (t *FullBinaryTree[T]) LoadBinary(filename string) error {
 
 	err = deserializeRecursive(&root, file)
 	if err != nil {
-		// В случае ошибки дерево остается пустым или частично заполненным (в C++ очищалось)
+		// В случае ошибки дерево остается пустым или частично заполненным
 		t.root = nil
 		return err
 	}

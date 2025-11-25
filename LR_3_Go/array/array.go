@@ -6,48 +6,46 @@ import (
 	"os"
 )
 
-// Array представляет собой динамический массив с дженериками.
+// Array представляет собой динамический массив с дженериками
 type Array[T any] struct {
 	data []T
 }
 
-// NewArray создает пустой массив (аналог Array()).
+// NewArray создает пустой массив
 func NewArray[T any]() *Array[T] {
 	return &Array[T]{
 		data: make([]T, 0, 1), // size 0, capacity 1
 	}
 }
 
-// NewArrayWithCap создает массив с заданной емкостью.
-// ВАЖНО: Логика скопирована из C++ кода: size = cap - 1.
+// NewArrayWithCap создает массив с заданной емкостью
 func NewArrayWithCap[T any](cap int) *Array[T] {
 	if cap < 1 {
 		cap = 1
 	}
 	// Создаем слайс длиной cap-1 и емкостью cap
-	// Значения инициализируются "нулевыми значениями" для типа T (0, "", nil и т.д.)
 	return &Array[T]{
 		data: make([]T, cap-1, cap),
 	}
 }
 
-// GetSize возвращает текущий размер.
+// GetSize возвращает текущий размер
 func (a *Array[T]) GetSize() int {
 	return len(a.data)
 }
 
-// GetCapacity возвращает текущую емкость.
+// GetCapacity возвращает текущую емкость
 func (a *Array[T]) GetCapacity() int {
 	return cap(a.data)
 }
 
-// PushBack добавляет элемент в конец.
+// PushBack добавляет элемент в конец
 func (a *Array[T]) PushBack(value T) {
 	// Go append автоматически управляет capacity (удваивает при необходимости)
 	a.data = append(a.data, value)
 }
 
-// Get возвращает элемент по индексу или ошибку.
+// Get возвращает элемент по индексу или ошибку
 func (a *Array[T]) Get(index int) (T, error) {
 	if index < 0 || index >= len(a.data) {
 		var empty T
@@ -56,7 +54,7 @@ func (a *Array[T]) Get(index int) (T, error) {
 	return a.data[index], nil
 }
 
-// Set заменяет элемент по индексу (аналог operator[] для записи).
+// Set заменяет элемент по индексу
 func (a *Array[T]) Set(index int, value T) error {
 	if index < 0 || index >= len(a.data) {
 		return fmt.Errorf("error: Index %d is out of bounds", index)
@@ -80,17 +78,16 @@ func (a *Array[T]) InsertByInd(index int, value T) error {
 	return nil
 }
 
-// DeleteByInd удаляет элемент по индексу.
+// DeleteByInd удаляет элемент по индексу
 func (a *Array[T]) DeleteByInd(index int) error {
 	if index < 0 || index >= len(a.data) {
 		return fmt.Errorf("error: Index %d is out of bounds for deletion", index)
 	}
-	// Трюк со слайсами для удаления: data[:i] + data[i+1:]
 	a.data = append(a.data[:index], a.data[index+1:]...)
 	return nil
 }
 
-// SwapByInd заменяет значение (аналог MSWAP_BY_IND).
+// SwapByInd заменяет значение
 func (a *Array[T]) SwapByInd(index int, value T) error {
 	if index < 0 || index >= len(a.data) {
 		return fmt.Errorf("error: Index %d is out of bounds for swap", index)
@@ -99,14 +96,14 @@ func (a *Array[T]) SwapByInd(index int, value T) error {
 	return nil
 }
 
-// Clone создает глубокую копию массива.
+// Clone создает глубокую копию массива
 func (a *Array[T]) Clone() *Array[T] {
 	newData := make([]T, len(a.data), cap(a.data))
 	copy(newData, a.data)
 	return &Array[T]{data: newData}
 }
 
-// SetCapacity изменяет емкость массива вручную.
+// SetCapacity изменяет емкость массива вручную
 func (a *Array[T]) SetCapacity(newCap int) error {
 	if newCap < len(a.data) {
 		return fmt.Errorf("error: New capacity cannot be smaller than current size")
@@ -118,19 +115,16 @@ func (a *Array[T]) SetCapacity(newCap int) error {
 	return nil
 }
 
-// SetSize изменяет размер массива.
+// SetSize изменяет размер массива
 func (a *Array[T]) SetSize(newSize int) error {
 	if newSize > cap(a.data) {
 		return fmt.Errorf("error: New size exceeds current capacity")
 	}
-	// В Go изменение размера слайса в пределах capacity делается через slicing
-	// Но если мы увеличиваем size, нам нужно знать, что там лежит.
-	// Слайс [:newSize] работает только если базовый массив позволяет.
 	a.data = a.data[:newSize]
 	return nil
 }
 
-// SaveText сохраняет массив в текстовый файл.
+// SaveText сохраняет массив в текстовый файл
 func (a *Array[T]) SaveText(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -146,7 +140,7 @@ func (a *Array[T]) SaveText(filename string) error {
 	return nil
 }
 
-// LoadText загружает массив из текстового файла.
+// LoadText загружает массив из текстового файла
 func (a *Array[T]) LoadText(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -165,7 +159,6 @@ func (a *Array[T]) LoadText(filename string) error {
 	for i := 0; i < newSize; i++ {
 		var val T
 		// Fscan требует, чтобы T был сканируемым (int, float, string и т.д.)
-		// Для сложных структур это не сработает.
 		if _, err := fmt.Fscan(file, &val); err != nil {
 			// Если данные кончились раньше времени
 			break
@@ -180,7 +173,6 @@ func (a *Array[T]) LoadText(filename string) error {
 }
 
 // SaveBinary сохраняет массив в бинарном формате.
-// Примечание: Работает корректно только для типов фиксированного размера (int, float), но не string.
 func (a *Array[T]) SaveBinary(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -188,7 +180,7 @@ func (a *Array[T]) SaveBinary(filename string) error {
 	}
 	defer file.Close()
 
-	size := int32(len(a.data)) // Используем int32 для совместимости с C++ uint32_t
+	size := int32(len(a.data)) // Используем int32 для совместимости
 	if err := binary.Write(file, binary.LittleEndian, size); err != nil {
 		return err
 	}

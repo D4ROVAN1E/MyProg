@@ -14,8 +14,7 @@ var (
 	ErrFileCorrupt = errors.New("file corrupted or invalid data size")
 )
 
-// Queue реализует кольцевой буфер.
-// Используем дженерик T (any).
+// Queue реализует кольцевой буфер
 type Queue[T any] struct {
 	data     []T
 	head     int
@@ -24,7 +23,7 @@ type Queue[T any] struct {
 	capacity int // Вместимость
 }
 
-// NewQueue создает новую очередь с заданной начальной вместимостью.
+// NewQueue создает новую очередь с заданной начальной вместимостью
 func NewQueue[T any](initialCap int) *Queue[T] {
 	if initialCap < 1 {
 		initialCap = 1
@@ -38,7 +37,7 @@ func NewQueue[T any](initialCap int) *Queue[T] {
 	}
 }
 
-// resize увеличивает размер внутреннего массива в 2 раза.
+// resize увеличивает размер внутреннего массива в 2 раза
 func (q *Queue[T]) resize() {
 	newCapacity := q.capacity * 2
 	if newCapacity == 0 {
@@ -57,7 +56,7 @@ func (q *Queue[T]) resize() {
 	q.tail = q.count
 }
 
-// Push добавляет элемент в конец очереди.
+// Push добавляет элемент в конец очереди
 func (q *Queue[T]) Push(value T) {
 	if q.count >= q.capacity {
 		q.resize()
@@ -67,7 +66,7 @@ func (q *Queue[T]) Push(value T) {
 	q.count++
 }
 
-// Pop извлекает элемент из начала очереди.
+// Pop извлекает элемент из начала очереди
 func (q *Queue[T]) Pop() (T, error) {
 	var empty T
 	if q.count == 0 {
@@ -75,8 +74,6 @@ func (q *Queue[T]) Pop() (T, error) {
 	}
 
 	value := q.data[q.head]
-	// В Go полезно занулить ссылку для GC, если T - это указатель,
-	// но для примитивов это не обязательно. Оставим generic-friendly вариант:
 	var zero T
 	q.data[q.head] = zero
 
@@ -85,7 +82,7 @@ func (q *Queue[T]) Pop() (T, error) {
 	return value, nil
 }
 
-// Get возвращает первый элемент без удаления.
+// Get возвращает первый элемент без удаления
 func (q *Queue[T]) Get() (T, error) {
 	if q.count == 0 {
 		var empty T
@@ -94,18 +91,17 @@ func (q *Queue[T]) Get() (T, error) {
 	return q.data[q.head], nil
 }
 
-// IsEmpty проверяет, пуста ли очередь.
+// IsEmpty проверяет, пуста ли очередь
 func (q *Queue[T]) IsEmpty() bool {
 	return q.count == 0
 }
 
-// Size возвращает количество элементов.
+// Size возвращает количество элементов
 func (q *Queue[T]) Size() int {
 	return q.count
 }
 
-// Clone создает глубокую копию очереди.
-// Аналог копирующего конструктора C++.
+// Clone создает глубокую копию очереди
 func (q *Queue[T]) Clone() *Queue[T] {
 	newQ := &Queue[T]{
 		capacity: q.capacity,
@@ -118,8 +114,7 @@ func (q *Queue[T]) Clone() *Queue[T] {
 	return newQ
 }
 
-// Print выводит содержимое очереди.
-// Принимает io.Writer для удобства тестирования (можно передать os.Stdout).
+// Print выводит содержимое очереди
 func (q *Queue[T]) Print(w io.Writer) {
 	fmt.Fprint(w, "Содержимое очереди (от головы к хвосту): ")
 	if q.count == 0 {
@@ -133,7 +128,7 @@ func (q *Queue[T]) Print(w io.Writer) {
 	fmt.Fprintln(w)
 }
 
-// --- Сериализация (Text) ---
+// Сериализация (Text)
 
 // SaveText сохраняет очередь в текстовый файл.
 func (q *Queue[T]) SaveText(filename string) error {
@@ -158,7 +153,7 @@ func (q *Queue[T]) SaveText(filename string) error {
 	return nil
 }
 
-// LoadText загружает очередь из текстового файла.
+// LoadText загружает очередь из текстового файла
 func (q *Queue[T]) LoadText(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -179,7 +174,7 @@ func (q *Queue[T]) LoadText(filename string) error {
 
 	for i := 0; i < newSize; i++ {
 		var val T
-		// fmt.Fscan работает хорошо для базовых типов (int, string, float).
+		// fmt.Fscan работает хорошо для базовых типов (int, string, float)
 		// Для сложных структур потребуется кастомная логика.
 		if _, err := fmt.Fscan(file, &val); err != nil {
 			// Если достигли конца файла раньше времени или ошибка парсинга
@@ -195,10 +190,9 @@ func (q *Queue[T]) LoadText(filename string) error {
 	return nil
 }
 
-// --- Сериализация (Binary) ---
+// Сериализация (Binary)
 
-// SaveBinary сохраняет данные используя encoding/gob (Go Binary).
-// Это безопаснее, чем сырой дамп памяти C++, так как поддерживает сложные типы (string, map, slice).
+// SaveBinary сохраняет данные
 func (q *Queue[T]) SaveBinary(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -208,12 +202,12 @@ func (q *Queue[T]) SaveBinary(filename string) error {
 
 	encoder := gob.NewEncoder(file)
 
-	// 1. Пишем размер
+	// Пишем размер
 	if err := encoder.Encode(q.count); err != nil {
 		return err
 	}
 
-	// 2. Пишем элементы в логическом порядке
+	// Пишем элементы в логическом порядке
 	for i := 0; i < q.count; i++ {
 		val := q.data[(q.head+i)%q.capacity]
 		if err := encoder.Encode(val); err != nil {
@@ -223,7 +217,7 @@ func (q *Queue[T]) SaveBinary(filename string) error {
 	return nil
 }
 
-// LoadBinary загружает данные используя encoding/gob.
+// LoadBinary загружает данные используя encoding/gob
 func (q *Queue[T]) LoadBinary(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {

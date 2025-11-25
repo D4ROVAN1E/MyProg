@@ -8,33 +8,33 @@ import (
 	"os"
 )
 
-// HashNode представляет узел хеш-таблицы.
+// HashNode представляет узел хеш-таблицы
 type HashNode[T any] struct {
 	Key        string
 	Value      T
 	IsOccupied bool
 }
 
-// DoubleHash реализует хеш-таблицу с двойным хешированием.
+// DoubleHash реализует хеш-таблицу с двойным хешированием
 type DoubleHash[T any] struct {
 	table         []HashNode[T]
 	tableSize     uint32
 	elementsCount uint32
 }
 
-// NewDoubleHash создает новую таблицу заданного размера.
+// NewDoubleHash создает новую таблицу заданного размера
 func NewDoubleHash[T any](size uint32) (*DoubleHash[T], error) {
 	if size == 0 {
 		return nil, fmt.Errorf("table size cannot be zero")
 	}
 	return &DoubleHash[T]{
-		table:         make([]HashNode[T], size+1), // +1 для совместимости с логикой C++ (хотя в Go достаточно size)
+		table:         make([]HashNode[T], size+1),
 		tableSize:     size,
 		elementsCount: 0,
 	}, nil
 }
 
-// hash1 реализует метод умножения (золотое сечение).
+// hash1 реализует метод умножения (золотое сечение)
 func (dh *DoubleHash[T]) hash1(key string) uint32 {
 	var numKey uint64 = 0
 	for _, c := range []byte(key) {
@@ -48,7 +48,7 @@ func (dh *DoubleHash[T]) hash1(key string) uint32 {
 	return uint32(math.Floor(float64(dh.tableSize) * temp))
 }
 
-// hash2 реализует метод свертки.
+// hash2 реализует метод свертки
 func (dh *DoubleHash[T]) hash2(key string) uint32 {
 	var sum uint32 = 0
 	for _, c := range []byte(key) {
@@ -64,7 +64,7 @@ func (dh *DoubleHash[T]) hash2(key string) uint32 {
 	return result
 }
 
-// needResize проверяет load factor > 0.7.
+// needResize проверяет load factor > 0.7
 func (dh *DoubleHash[T]) needResize() bool {
 	if dh.tableSize == 0 {
 		return true
@@ -72,7 +72,7 @@ func (dh *DoubleHash[T]) needResize() bool {
 	return (float64(dh.elementsCount) / float64(dh.tableSize)) > 0.7
 }
 
-// resize увеличивает таблицу и перехеширует элементы.
+// resize увеличивает таблицу и перехеширует элементы
 func (dh *DoubleHash[T]) resize() {
 	oldTable := dh.table
 	oldSize := dh.tableSize
@@ -88,7 +88,7 @@ func (dh *DoubleHash[T]) resize() {
 	}
 }
 
-// Insert вставляет элемент или обновляет значение.
+// Insert вставляет элемент или обновляет значение
 func (dh *DoubleHash[T]) Insert(key string, value T) error {
 	if dh.needResize() {
 		dh.resize()
@@ -120,7 +120,7 @@ func (dh *DoubleHash[T]) Insert(key string, value T) error {
 	return fmt.Errorf("error: Hash table is full, cannot insert key")
 }
 
-// Find ищет элемент по ключу. Возвращает указатель на значение или nil.
+// Find ищет элемент по ключу. Возвращает указатель на значение или nil
 func (dh *DoubleHash[T]) Find(key string) *T {
 	if dh.elementsCount == 0 {
 		return nil
@@ -133,9 +133,6 @@ func (dh *DoubleHash[T]) Find(key string) *T {
 	for i < dh.tableSize {
 		index := (h1 + i*h2) % dh.tableSize
 
-		// В вашей логике C++: если ячейка не занята — стоп.
-		// (Примечание: Это ломает поиск цепочки после удаления элемента в классическом Double Hashing,
-		// но я сохраняю вашу логику C++ "как есть").
 		if !dh.table[index].IsOccupied {
 			return nil
 		}
@@ -148,7 +145,7 @@ func (dh *DoubleHash[T]) Find(key string) *T {
 	return nil
 }
 
-// Remove удаляет элемент по ключу (ленивое удаление).
+// Remove удаляет элемент по ключу
 func (dh *DoubleHash[T]) Remove(key string) bool {
 	if dh.elementsCount == 0 {
 		return false
@@ -167,8 +164,7 @@ func (dh *DoubleHash[T]) Remove(key string) bool {
 
 		if dh.table[index].Key == key {
 			dh.table[index].IsOccupied = false
-			// В Go нужно занулить значения, чтобы сборщик мусора мог очистить память,
-			// если T содержит указатели.
+			// В Go нужно занулить значения, чтобы сборщик мусора мог очистить память
 			var empty T
 			dh.table[index].Value = empty
 			dh.table[index].Key = ""
@@ -180,23 +176,23 @@ func (dh *DoubleHash[T]) Remove(key string) bool {
 	return false
 }
 
-// Size возвращает количество элементов.
+// Size возвращает количество элементов
 func (dh *DoubleHash[T]) Size() uint32 {
 	return dh.elementsCount
 }
 
-// Empty проверяет, пуста ли таблица.
+// Empty проверяет, пуста ли таблица
 func (dh *DoubleHash[T]) Empty() bool {
 	return dh.elementsCount == 0
 }
 
-// Clear очищает таблицу.
+// Clear очищает таблицу
 func (dh *DoubleHash[T]) Clear() {
 	dh.table = make([]HashNode[T], dh.tableSize+1)
 	dh.elementsCount = 0
 }
 
-// Print выводит таблицу в stdout.
+// Print выводит таблицу в stdout
 func (dh *DoubleHash[T]) Print() {
 	fmt.Println("=== Хэш-таблица ===")
 	fmt.Printf("Размер: %d, Элементов: %d\n", dh.tableSize, dh.elementsCount)
@@ -208,7 +204,7 @@ func (dh *DoubleHash[T]) Print() {
 	fmt.Println("===================")
 }
 
-// SerializeText сохраняет таблицу в текстовый файл.
+// SerializeText сохраняет таблицу в текстовый файл
 func (dh *DoubleHash[T]) SerializeText(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -232,7 +228,7 @@ func (dh *DoubleHash[T]) SerializeText(filename string) error {
 	return nil
 }
 
-// DeserializeText загружает таблицу из текстового файла.
+// DeserializeText загружает таблицу из текстового файла
 func (dh *DoubleHash[T]) DeserializeText(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -280,7 +276,7 @@ func (dh *DoubleHash[T]) DeserializeText(filename string) error {
 	return nil
 }
 
-// SerializeBin сохраняет таблицу в бинарный файл.
+// SerializeBin сохраняет таблицу в бинарный файл
 func (dh *DoubleHash[T]) SerializeBin(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -288,7 +284,7 @@ func (dh *DoubleHash[T]) SerializeBin(filename string) error {
 	}
 	defer file.Close()
 
-	// 1. Записываем размеры заголовка
+	// Записываем размеры заголовка
 	if err := binary.Write(file, binary.LittleEndian, dh.tableSize); err != nil {
 		return err
 	}
@@ -299,26 +295,25 @@ func (dh *DoubleHash[T]) SerializeBin(filename string) error {
 	for i := uint32(0); i < dh.tableSize; i++ {
 		occupied := dh.table[i].IsOccupied
 
-		// 2. Пишем флаг занятости
+		// Пишем флаг занятости
 		if err := binary.Write(file, binary.LittleEndian, occupied); err != nil {
 			return err
 		}
 
 		if occupied {
-			// 3. Пишем длину ключа
+			// Пишем длину ключа
 			keyBytes := []byte(dh.table[i].Key)
 			keyLen := uint32(len(keyBytes))
 			if err := binary.Write(file, binary.LittleEndian, keyLen); err != nil {
 				return err
 			}
 
-			// 4. Пишем сам ключ
+			// Пишем сам ключ
 			if _, err := file.Write(keyBytes); err != nil {
 				return err
 			}
 
-			// 5. Пишем значение НАПРЯМУЮ (без Gob)
-			// ВАЖНО: T должен быть фиксированного размера (int32, float64 и т.д.)
+			// Пишем значение
 			if err := binary.Write(file, binary.LittleEndian, dh.table[i].Value); err != nil {
 				return fmt.Errorf("failed to write value (type %T is likely not fixed-size): %w", dh.table[i].Value, err)
 			}
@@ -329,7 +324,7 @@ func (dh *DoubleHash[T]) SerializeBin(filename string) error {
 	return nil
 }
 
-// DeserializeBin загружает таблицу из бинарного файла.
+// DeserializeBin загружает таблицу из бинарного файла
 func (dh *DoubleHash[T]) DeserializeBin(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -337,7 +332,7 @@ func (dh *DoubleHash[T]) DeserializeBin(filename string) error {
 	}
 	defer file.Close()
 
-	// 1. Читаем заголовок
+	// Читаем заголовок
 	var newTableSize, newElementsCount uint32
 	if err := binary.Read(file, binary.LittleEndian, &newTableSize); err != nil {
 		return err
@@ -352,29 +347,28 @@ func (dh *DoubleHash[T]) DeserializeBin(filename string) error {
 
 	for i := uint32(0); i < dh.tableSize; i++ {
 		var occupied bool
-		// 2. Читаем флаг занятости
+		// Читаем флаг занятости
 		if err := binary.Read(file, binary.LittleEndian, &occupied); err != nil {
 			return fmt.Errorf("read error at index %d: %w", i, err)
 		}
 
 		if occupied {
-			// 3. Читаем длину ключа
+			// Читаем длину ключа
 			var keyLen uint32
 			if err := binary.Read(file, binary.LittleEndian, &keyLen); err != nil {
 				return err
 			}
 
-			// 4. Читаем сам ключ
+			// Читаем сам ключ
 			keyBuf := make([]byte, keyLen)
 			if _, err := io.ReadFull(file, keyBuf); err != nil {
 				return fmt.Errorf("failed to read key string")
 			}
 			key := string(keyBuf)
 
-			// 5. Читаем значение НАПРЯМУЮ (без Gob)
+			// Читаем значение
 			var value T
 			if err := binary.Read(file, binary.LittleEndian, &value); err != nil {
-				// Здесь ошибка возникнет, если T - это string или обычный int
 				return fmt.Errorf("failed to read value: %w", err)
 			}
 
