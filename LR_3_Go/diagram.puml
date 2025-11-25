@@ -1,0 +1,238 @@
+@startuml
+namespace array {
+    class "Array" as Array_generic_T <<[T]>> {
+        - data []T
+
+        + GetSize() int
+        + GetCapacity() int
+        + PushBack(value T) 
+        + Get(index int) (T, error)
+        + Set(index int, value T) error
+        + InsertByInd(index int, value T) error
+        + DeleteByInd(index int) error
+        + SwapByInd(index int, value T) error
+        + Clone() *Array
+        + SetCapacity(newCap int) error
+        + SetSize(newSize int) error
+        + SaveText(filename string) error
+        + LoadText(filename string) error
+        + SaveBinary(filename string) error
+        + LoadBinary(filename string) error
+
+    }
+    class "T" <<type parameter>> {
+        constraints: any
+    }
+}
+namespace binarytree {
+    class "FullBinaryTree" as FullBinaryTree_generic_T <<[T]>> {
+        - root *TreeNode
+
+        - printBreadthFirst(w io.Writer) 
+        - preOrderRecursive(node *TreeNode, w io.Writer) 
+        - inOrderRecursive(node *TreeNode, w io.Writer) 
+        - postOrderRecursive(node *TreeNode, w io.Writer) 
+        - printTreeVisual(node *TreeNode, w io.Writer) 
+
+        + GetRoot() *TreeNode
+        + Insert(value T) 
+        + IsFull() bool
+        + Clone() *FullBinaryTree
+        + Print(choice int, w io.Writer) error
+        + SaveText(filename string) error
+        + LoadText(filename string) error
+        + SaveBinary(filename string) error
+        + LoadBinary(filename string) error
+
+    }
+    class "TreeNode" as TreeNode_generic_T <<[T]>> {
+        + Key T
+        + Left *TreeNode
+        + Right *TreeNode
+
+    }
+}
+namespace cuckoo {
+    class "CuckooHash" as CuckooHash_generic_V <<[V]>> {
+        - table []HashNode
+        - tableSize uint32
+        - elementsCount uint32
+
+        - hash1(key string) uint32
+        - hash2(key string) uint32
+        - needResize() bool
+        - resize() 
+
+        + Copy() *CuckooHash
+        + Insert(key string, value V) 
+        + Find(key string) *V
+        + Remove(key string) bool
+        + Size() uint32
+        + Empty() bool
+        + Clear() 
+        + Print() 
+        + SerializeText(filename string) error
+        + DeserializeText(filename string) error
+        + SerializeBin(filename string) error
+        + DeserializeBin(filename string) error
+
+    }
+    class "V" <<type parameter>> {
+        constraints: any
+    }
+    class "HashNode" as HashNode_generic_V <<[V]>> {
+        + Key string
+        + Value V
+        + IsOccupied bool
+
+    }
+}
+namespace dhash {
+    class "DoubleHash" as DoubleHash_generic_T <<[T]>> {
+        - table []HashNode
+        - tableSize uint32
+        - elementsCount uint32
+
+        - hash1(key string) uint32
+        - hash2(key string) uint32
+        - needResize() bool
+        - resize() 
+
+        + Insert(key string, value T) error
+        + Find(key string) *T
+        + Remove(key string) bool
+        + Size() uint32
+        + Empty() bool
+        + Clear() 
+        + Print() 
+        + SerializeText(filename string) error
+        + DeserializeText(filename string) error
+        + SerializeBin(filename string) error
+        + DeserializeBin(filename string) error
+
+    }
+    class "HashNode" as HashNode_generic_T <<[T]>> {
+        + Key string
+        + Value T
+        + IsOccupied bool
+
+    }
+}
+namespace doublylist {
+    class "DoublyList" as DoublyList_generic_T <<[T]>> {
+        + Head *Node
+        + Tail *Node
+
+        + LCreate(keyBegin T) error
+        + LPushHead(key T) 
+        + LPushBack(key T) 
+        + LDelHead() error
+        + LDelBack() error
+        + LGetByValue(key T) *Node
+        + LPushBefore(targetKey T, newKey T) error
+        + LPushAfter(targetKey T, newKey T) error
+        + LDelAfter(targetKey T) error
+        + LDelBefore(targetKey T) error
+        + LDelByValue(key T) error
+        + Clone() *DoublyList
+        + Print(w io.Writer, choice int) error
+        + LSave(filename string) error
+        + LLoad(filename string) error
+        + LSaveBin(filename string) error
+        + LLoadBin(filename string) error
+
+    }
+    class "Node" as Node_generic_T <<[T]>> {
+        + Key T
+        + Next *Node
+        + Prev *Node
+
+    }
+}
+namespace queue {
+    class "Queue" as Queue_generic_T <<[T]>> {
+        - data []T
+        - head int
+        - tail int
+        - count int
+        - capacity int
+
+        - resize() 
+
+        + Push(value T) 
+        + Pop() (T, error)
+        + Get() (T, error)
+        + IsEmpty() bool
+        + Size() int
+        + Clone() *Queue
+        + Print(w io.Writer) 
+        + SaveText(filename string) error
+        + LoadText(filename string) error
+        + SaveBinary(filename string) error
+        + LoadBinary(filename string) error
+
+    }
+}
+namespace singlylist {
+    class "ForwardList" as ForwardList_generic_T <<[T]>> {
+        + Head *SNode
+
+        + DeepCopy() *ForwardList
+        + PushForward(ptr *SNode, key T) error
+        + Create(keyBegin T) 
+        + Print() 
+        + GetPrintString() string
+        + PushHead(key T) 
+        + PushBack(key T) 
+        + PushBefore(targetKey T, newKey T) error
+        + DelHead() error
+        + DelBack() error
+        + DelAfter(ptr *SNode) error
+        + DelBefore(targetKey T) error
+        + DelByValue(key T) error
+        + GetByValue(key T) *SNode
+        + Save(filename string) error
+        + Load(filename string) error
+        + Serialize(filename string) error
+        + Deserialize(filename string) error
+
+    }
+    class "SNode" as SNode_generic_T <<[T]>> {
+        + Key T
+        + Next *SNode
+
+    }
+}
+namespace stack {
+    class "Stack" as Stack_generic_T <<[T]>> {
+        - data []T
+
+        + Push(value T) 
+        + Pop() (T, error)
+        + Size() int
+        + Print() 
+        + Clone() *Stack
+        + SaveText(filename string) error
+        + LoadText(filename string) error
+        + SaveBinary(filename string) error
+        + LoadBinary(filename string) error
+
+    }
+}
+
+
+"T" <-- "param" "Array_generic_T"
+"T" <-- "param" "FullBinaryTree_generic_T"
+"T" <-- "param" "TreeNode_generic_T"
+"V" <-- "param" "CuckooHash_generic_V"
+"V" <-- "param" "HashNode_generic_V"
+"T" <-- "param" "DoubleHash_generic_T"
+"T" <-- "param" "HashNode_generic_T"
+"T" <-- "param" "DoublyList_generic_T"
+"T" <-- "param" "Node_generic_T"
+"T" <-- "param" "Queue_generic_T"
+"T" <-- "param" "ForwardList_generic_T"
+"T" <-- "param" "SNode_generic_T"
+"T" <-- "param" "Stack_generic_T"
+
+@enduml

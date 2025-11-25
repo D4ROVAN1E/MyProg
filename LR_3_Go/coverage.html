@@ -1,0 +1,2549 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>array: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/D4ROVAN1E/LR_3_Go/array/array.go (98.9%)</option>
+				
+				<option value="file1">github.com/D4ROVAN1E/LR_3_Go/binarytree/binary_tree.go (95.9%)</option>
+				
+				<option value="file2">github.com/D4ROVAN1E/LR_3_Go/cuckoo/ch.go (93.8%)</option>
+				
+				<option value="file3">github.com/D4ROVAN1E/LR_3_Go/dhash/dh.go (91.5%)</option>
+				
+				<option value="file4">github.com/D4ROVAN1E/LR_3_Go/doublylist/doubly_list.go (97.7%)</option>
+				
+				<option value="file5">github.com/D4ROVAN1E/LR_3_Go/queue/queue.go (95.2%)</option>
+				
+				<option value="file6">github.com/D4ROVAN1E/LR_3_Go/singlylist/singly_list.go (97.0%)</option>
+				
+				<option value="file7">github.com/D4ROVAN1E/LR_3_Go/stack/stack.go (96.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package array
+
+import (
+        "encoding/binary"
+        "fmt"
+        "os"
+)
+
+// Array представляет собой динамический массив с дженериками
+type Array[T any] struct {
+        data []T
+}
+
+// NewArray создает пустой массив
+func NewArray[T any]() *Array[T] <span class="cov8" title="1">{
+        return &amp;Array[T]{
+                data: make([]T, 0, 1), // size 0, capacity 1
+        }
+}</span>
+
+// NewArrayWithCap создает массив с заданной емкостью
+func NewArrayWithCap[T any](cap int) *Array[T] <span class="cov8" title="1">{
+        if cap &lt; 1 </span><span class="cov8" title="1">{
+                cap = 1
+        }</span>
+        // Создаем слайс длиной cap-1 и емкостью cap
+        <span class="cov8" title="1">return &amp;Array[T]{
+                data: make([]T, cap-1, cap),
+        }</span>
+}
+
+// GetSize возвращает текущий размер
+func (a *Array[T]) GetSize() int <span class="cov8" title="1">{
+        return len(a.data)
+}</span>
+
+// GetCapacity возвращает текущую емкость
+func (a *Array[T]) GetCapacity() int <span class="cov8" title="1">{
+        return cap(a.data)
+}</span>
+
+// PushBack добавляет элемент в конец
+func (a *Array[T]) PushBack(value T) <span class="cov8" title="1">{
+        // Go append автоматически управляет capacity (удваивает при необходимости)
+        a.data = append(a.data, value)
+}</span>
+
+// Get возвращает элемент по индексу или ошибку
+func (a *Array[T]) Get(index int) (T, error) <span class="cov8" title="1">{
+        if index &lt; 0 || index &gt;= len(a.data) </span><span class="cov8" title="1">{
+                var empty T
+                return empty, fmt.Errorf("error: Index %d is out of bounds (size %d)", index, len(a.data))
+        }</span>
+        <span class="cov8" title="1">return a.data[index], nil</span>
+}
+
+// Set заменяет элемент по индексу
+func (a *Array[T]) Set(index int, value T) error <span class="cov8" title="1">{
+        if index &lt; 0 || index &gt;= len(a.data) </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Index %d is out of bounds", index)
+        }</span>
+        <span class="cov8" title="1">a.data[index] = value
+        return nil</span>
+}
+
+// InsertByInd вставляет элемент по индексу.
+func (a *Array[T]) InsertByInd(index int, value T) error <span class="cov8" title="1">{
+        if index &lt; 0 || index &gt; len(a.data) </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Index %d is out of bounds for insertion", index)
+        }</span>
+        // Трюк со слайсами для вставки элемента
+        <span class="cov8" title="1">if index == len(a.data) </span><span class="cov8" title="1">{
+                a.PushBack(value)
+                return nil
+        }</span>
+        <span class="cov8" title="1">a.data = append(a.data[:index+1], a.data[index:]...) // Раздвигаем
+        a.data[index] = value
+        return nil</span>
+}
+
+// DeleteByInd удаляет элемент по индексу
+func (a *Array[T]) DeleteByInd(index int) error <span class="cov8" title="1">{
+        if index &lt; 0 || index &gt;= len(a.data) </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Index %d is out of bounds for deletion", index)
+        }</span>
+        <span class="cov8" title="1">a.data = append(a.data[:index], a.data[index+1:]...)
+        return nil</span>
+}
+
+// SwapByInd заменяет значение
+func (a *Array[T]) SwapByInd(index int, value T) error <span class="cov8" title="1">{
+        if index &lt; 0 || index &gt;= len(a.data) </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Index %d is out of bounds for swap", index)
+        }</span>
+        <span class="cov8" title="1">a.data[index] = value
+        return nil</span>
+}
+
+// Clone создает глубокую копию массива
+func (a *Array[T]) Clone() *Array[T] <span class="cov8" title="1">{
+        newData := make([]T, len(a.data), cap(a.data))
+        copy(newData, a.data)
+        return &amp;Array[T]{data: newData}
+}</span>
+
+// SetCapacity изменяет емкость массива вручную
+func (a *Array[T]) SetCapacity(newCap int) error <span class="cov8" title="1">{
+        if newCap &lt; len(a.data) </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: New capacity cannot be smaller than current size")
+        }</span>
+        // Создаем новый слайс и копируем данные
+        <span class="cov8" title="1">newData := make([]T, len(a.data), newCap)
+        copy(newData, a.data)
+        a.data = newData
+        return nil</span>
+}
+
+// SetSize изменяет размер массива
+func (a *Array[T]) SetSize(newSize int) error <span class="cov8" title="1">{
+        if newSize &gt; cap(a.data) </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: New size exceeds current capacity")
+        }</span>
+        <span class="cov8" title="1">a.data = a.data[:newSize]
+        return nil</span>
+}
+
+// SaveText сохраняет массив в текстовый файл
+func (a *Array[T]) SaveText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Unable to open file for writing: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        fmt.Fprintln(file, len(a.data))
+        for _, val := range a.data </span><span class="cov8" title="1">{
+                // Fprint работает с любым типом, поддерживающим форматирование
+                fmt.Fprintf(file, "%v ", val)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LoadText загружает массив из текстового файла
+func (a *Array[T]) LoadText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Unable to open file for reading: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var newSize int
+        if _, err := fmt.Fscan(file, &amp;newSize); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Failed to read size")
+        }</span>
+
+        // Сброс массива
+        <span class="cov8" title="1">a.data = make([]T, 0, newSize)
+
+        for i := 0; i &lt; newSize; i++ </span><span class="cov8" title="1">{
+                var val T
+                // Fscan требует, чтобы T был сканируемым (int, float, string и т.д.)
+                if _, err := fmt.Fscan(file, &amp;val); err != nil </span><span class="cov8" title="1">{
+                        // Если данные кончились раньше времени
+                        break</span>
+                }
+                <span class="cov8" title="1">a.data = append(a.data, val)</span>
+        }
+
+        <span class="cov8" title="1">if len(a.data) != newSize </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: File corrupted or incomplete data")
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+// SaveBinary сохраняет массив в бинарном формате.
+func (a *Array[T]) SaveBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Unable to open file: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        size := int32(len(a.data)) // Используем int32 для совместимости
+        if err := binary.Write(file, binary.LittleEndian, size); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if size &gt; 0 </span><span class="cov8" title="1">{
+                if err := binary.Write(file, binary.LittleEndian, a.data); err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("error: Write operation failed (type might not be fixed-size): %v", err)
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LoadBinary загружает массив из бинарного файла.
+func (a *Array[T]) LoadBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Unable to open file: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var newSize int32
+        if err := binary.Read(file, binary.LittleEndian, &amp;newSize); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Failed to read size")
+        }</span>
+
+        <span class="cov8" title="1">a.data = make([]T, newSize)
+        if newSize &gt; 0 </span><span class="cov8" title="1">{
+                if err := binary.Read(file, binary.LittleEndian, a.data); err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("error: Failed to read data (incomplete or type mismatch): %v", err)
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package binarytree
+
+import (
+        "cmp"
+        "encoding/binary"
+        "errors"
+        "fmt"
+        "io"
+        "os"
+)
+
+// Константы для визуализации
+const (
+        branchRight = "|--- "
+        branchLeft  = "|___ "
+)
+
+// TreeNode представляет узел дерева
+type TreeNode[T cmp.Ordered] struct {
+        Key   T
+        Left  *TreeNode[T]
+        Right *TreeNode[T]
+}
+
+// FullBinaryTree представляет обертку над деревом
+type FullBinaryTree[T cmp.Ordered] struct {
+        root *TreeNode[T]
+}
+
+// NewFullBinaryTree создает новое пустое дерево
+func NewFullBinaryTree[T cmp.Ordered]() *FullBinaryTree[T] <span class="cov8" title="1">{
+        return &amp;FullBinaryTree[T]{}
+}</span>
+
+// GetRoot возвращает корень
+func (t *FullBinaryTree[T]) GetRoot() *TreeNode[T] <span class="cov8" title="1">{
+        return t.root
+}</span>
+
+// Insert вставка элемента по принципу BST
+func (t *FullBinaryTree[T]) Insert(value T) <span class="cov8" title="1">{
+        newNode := &amp;TreeNode[T]{Key: value}
+
+        if t.root == nil </span><span class="cov8" title="1">{
+                t.root = newNode
+                return
+        }</span>
+
+        <span class="cov8" title="1">current := t.root
+        var parent *TreeNode[T]
+
+        for current != nil </span><span class="cov8" title="1">{
+                parent = current
+                if value &lt; current.Key </span><span class="cov8" title="1">{
+                        current = current.Left
+                }</span> else<span class="cov8" title="1"> {
+                        current = current.Right
+                }</span>
+        }
+
+        <span class="cov8" title="1">if value &lt; parent.Key </span><span class="cov8" title="1">{
+                parent.Left = newNode
+        }</span> else<span class="cov8" title="1"> {
+                parent.Right = newNode
+        }</span>
+}
+
+// IsFull проверяет, является ли дерево полным
+func (t *FullBinaryTree[T]) IsFull() bool <span class="cov8" title="1">{
+        if t.root == nil </span><span class="cov8" title="1">{
+                return true
+        }</span>
+        <span class="cov8" title="1">return isFullRecursive(t.root)</span>
+}
+
+func isFullRecursive[T cmp.Ordered](node *TreeNode[T]) bool <span class="cov8" title="1">{
+        // Если ((left == nil) XOR (right == nil)) == true, то это неполное дерево
+        hasLeft := node.Left != nil
+        hasRight := node.Right != nil
+
+        if hasLeft != hasRight </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">if hasLeft &amp;&amp; hasRight </span><span class="cov8" title="1">{
+                return isFullRecursive(node.Left) &amp;&amp; isFullRecursive(node.Right)
+        }</span>
+
+        <span class="cov8" title="1">return true</span>
+}
+
+// Clone создает глубокую копию дерева
+func (t *FullBinaryTree[T]) Clone() *FullBinaryTree[T] <span class="cov8" title="1">{
+        newTree := NewFullBinaryTree[T]()
+        newTree.root = copyTreeRecursive(t.root)
+        return newTree
+}</span>
+
+func copyTreeRecursive[T cmp.Ordered](node *TreeNode[T]) *TreeNode[T] <span class="cov8" title="1">{
+        if node == nil </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+        <span class="cov8" title="1">newNode := &amp;TreeNode[T]{Key: node.Key}
+        newNode.Left = copyTreeRecursive(node.Left)
+        newNode.Right = copyTreeRecursive(node.Right)
+        return newNode</span>
+}
+
+// Print - единый метод вывода.
+// w - куда писать (os.Stdout для консоли или bytes.Buffer для тестов)
+func (t *FullBinaryTree[T]) Print(choice int, w io.Writer) error <span class="cov8" title="1">{
+        switch choice </span>{
+        case 1:<span class="cov8" title="1">
+                t.printBreadthFirst(w)</span>
+        case 2:<span class="cov8" title="1">
+                t.preOrderRecursive(t.root, w)
+                fmt.Fprintln(w)</span>
+        case 3:<span class="cov8" title="1">
+                t.inOrderRecursive(t.root, w)
+                fmt.Fprintln(w)</span>
+        case 4:<span class="cov8" title="1">
+                t.postOrderRecursive(t.root, w)
+                fmt.Fprintln(w)</span>
+        case 5:<span class="cov8" title="1">
+                t.printTreeVisual(t.root, w)</span>
+        default:<span class="cov8" title="1">
+                return fmt.Errorf("invalid print operation code: %d", choice)</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Методы обхода
+
+func (t *FullBinaryTree[T]) printBreadthFirst(w io.Writer) <span class="cov8" title="1">{
+        if t.root == nil </span><span class="cov8" title="1">{
+                return
+        }</span>
+        // Простая реализация очереди на слайсе
+        <span class="cov8" title="1">queue := []*TreeNode[T]{t.root}
+
+        for len(queue) &gt; 0 </span><span class="cov8" title="1">{
+                current := queue[0]
+                queue = queue[1:] // pop
+
+                fmt.Fprintf(w, "%v ", current.Key)
+
+                if current.Left != nil </span><span class="cov8" title="1">{
+                        queue = append(queue, current.Left)
+                }</span>
+                <span class="cov8" title="1">if current.Right != nil </span><span class="cov8" title="1">{
+                        queue = append(queue, current.Right)
+                }</span>
+        }
+        <span class="cov8" title="1">fmt.Fprintln(w)</span>
+}
+
+func (t *FullBinaryTree[T]) preOrderRecursive(node *TreeNode[T], w io.Writer) <span class="cov8" title="1">{
+        if node != nil </span><span class="cov8" title="1">{
+                fmt.Fprintf(w, "%v ", node.Key)
+                t.preOrderRecursive(node.Left, w)
+                t.preOrderRecursive(node.Right, w)
+        }</span>
+}
+
+func (t *FullBinaryTree[T]) inOrderRecursive(node *TreeNode[T], w io.Writer) <span class="cov8" title="1">{
+        if node != nil </span><span class="cov8" title="1">{
+                t.inOrderRecursive(node.Left, w)
+                fmt.Fprintf(w, "%v ", node.Key)
+                t.inOrderRecursive(node.Right, w)
+        }</span>
+}
+
+func (t *FullBinaryTree[T]) postOrderRecursive(node *TreeNode[T], w io.Writer) <span class="cov8" title="1">{
+        if node != nil </span><span class="cov8" title="1">{
+                t.postOrderRecursive(node.Left, w)
+                t.postOrderRecursive(node.Right, w)
+                fmt.Fprintf(w, "%v ", node.Key)
+        }</span>
+}
+
+// Визуализация
+
+func (t *FullBinaryTree[T]) printTreeVisual(node *TreeNode[T], w io.Writer) <span class="cov8" title="1">{
+        if node == nil </span><span class="cov8" title="1">{
+                fmt.Fprintln(w, "Дерево пустое.")
+                return
+        }</span>
+        <span class="cov8" title="1">fmt.Fprintln(w, node.Key)
+        printTreeVisualRecursive(node.Right, "", false, w)
+        printTreeVisualRecursive(node.Left, "", true, w)</span>
+}
+
+func printTreeVisualRecursive[T cmp.Ordered](node *TreeNode[T], prefix string, isLeft bool, w io.Writer) <span class="cov8" title="1">{
+        if node != nil </span><span class="cov8" title="1">{
+                fmt.Fprint(w, prefix)
+                if isLeft </span><span class="cov8" title="1">{
+                        fmt.Fprint(w, branchLeft)
+                }</span> else<span class="cov8" title="1"> {
+                        fmt.Fprint(w, branchRight)
+                }</span>
+                <span class="cov8" title="1">fmt.Fprintln(w, node.Key)
+
+                newPrefix := prefix
+                if isLeft </span><span class="cov8" title="1">{
+                        newPrefix += "|   "
+                }</span> else<span class="cov8" title="1"> {
+                        newPrefix += "    "
+                }</span>
+
+                <span class="cov8" title="1">printTreeVisualRecursive(node.Right, newPrefix, false, w)
+                printTreeVisualRecursive(node.Left, newPrefix, true, w)</span>
+        }
+}
+
+// Файловый ввод-вывод (Текстовый)
+
+func (t *FullBinaryTree[T]) SaveText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("couldn't open the file for writing: %s (%w)", filename, err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        if t.root == nil </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">queue := []*TreeNode[T]{t.root}
+        for len(queue) &gt; 0 </span><span class="cov8" title="1">{
+                current := queue[0]
+                queue = queue[1:]
+
+                if _, err := fmt.Fprintf(file, "%v ", current.Key); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("error writing data to file: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if current.Left != nil </span><span class="cov8" title="1">{
+                        queue = append(queue, current.Left)
+                }</span>
+                <span class="cov8" title="1">if current.Right != nil </span><span class="cov8" title="1">{
+                        queue = append(queue, current.Right)
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *FullBinaryTree[T]) LoadText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("couldn't open the file for reading: %s (%w)", filename, err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Очистка текущего дерева
+        t.root = nil
+
+        var value T
+        for </span><span class="cov8" title="1">{
+                // Fscan автоматически пропускает пробелы
+                _, err := fmt.Fscan(file, &amp;value)
+                if err == io.EOF </span><span class="cov8" title="1">{
+                        break</span>
+                }
+                <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("critical I/O error when reading file: %w", err)
+                }</span>
+                <span class="cov8" title="1">t.Insert(value)</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Файловый ввод-вывод (Бинарный)
+
+func (t *FullBinaryTree[T]) SaveBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("binary file could not be opened: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        return serializeRecursive(t.root, file)</span>
+}
+
+func serializeRecursive[T cmp.Ordered](node *TreeNode[T], w io.Writer) error <span class="cov8" title="1">{
+        exists := node != nil
+        // Пишем маркер (bool как int8/byte для простоты переносимости)
+        var marker int8
+        if exists </span><span class="cov8" title="1">{
+                marker = 1
+        }</span>
+        <span class="cov8" title="1">if err := binary.Write(w, binary.LittleEndian, marker); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if exists </span><span class="cov8" title="1">{
+                if err := binary.Write(w, binary.LittleEndian, node.Key); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if err := serializeRecursive(node.Left, w); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if err := serializeRecursive(node.Right, w); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *FullBinaryTree[T]) LoadBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("the binary file could not be opened: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        t.root = nil
+        var root *TreeNode[T]
+
+        err = deserializeRecursive(&amp;root, file)
+        if err != nil </span><span class="cov8" title="1">{
+                // В случае ошибки дерево остается пустым или частично заполненным
+                t.root = nil
+                return err
+        }</span>
+        <span class="cov8" title="1">t.root = root
+        return nil</span>
+}
+
+func deserializeRecursive[T cmp.Ordered](node **TreeNode[T], r io.Reader) error <span class="cov8" title="1">{
+        var marker int8
+        if err := binary.Read(r, binary.LittleEndian, &amp;marker); err != nil </span><span class="cov8" title="1">{
+                if err == io.EOF </span><span class="cov8" title="1">{
+                        return nil // Нормальный конец рекурсии, если структура соблюдена
+                }</span>
+                <span class="cov0" title="0">return err</span>
+        }
+
+        <span class="cov8" title="1">if marker != 0 &amp;&amp; marker != 1 </span><span class="cov8" title="1">{
+                return fmt.Errorf("invalid file format: expected marker 0 or 1, got %d", marker)
+        }</span>
+
+        <span class="cov8" title="1">if marker == 1 </span><span class="cov8" title="1">{
+                var val T
+                if err := binary.Read(r, binary.LittleEndian, &amp;val); err != nil </span><span class="cov8" title="1">{
+                        return errors.New("unexpected end of file or node data reading error")
+                }</span>
+                <span class="cov8" title="1">newNode := &amp;TreeNode[T]{Key: val}
+                *node = newNode
+                if err := deserializeRecursive(&amp;newNode.Left, r); err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if err := deserializeRecursive(&amp;newNode.Right, r); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        } else<span class="cov8" title="1"> {
+                *node = nil
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package cuckoo
+
+import (
+        "encoding/binary"
+        "fmt"
+        "io"
+        "math"
+        "os"
+)
+
+// Golden Ratio constant
+var A = (math.Sqrt(5.0) - 1.0) / 2.0
+
+// HashNode хранит пару ключ-значение.
+type HashNode[V any] struct {
+        Key        string
+        Value      V
+        IsOccupied bool
+}
+
+// CuckooHash - основная структура
+type CuckooHash[V any] struct {
+        table         []HashNode[V]
+        tableSize     uint32
+        elementsCount uint32
+}
+
+// NewCuckooHash создает новую таблицу
+func NewCuckooHash[V any](size uint32) *CuckooHash[V] <span class="cov8" title="1">{
+        if size == 0 </span><span class="cov8" title="1">{
+                size = 3
+        }</span>
+        <span class="cov8" title="1">return &amp;CuckooHash[V]{
+                table:         make([]HashNode[V], size+1), // +1 для совместимости с логикой C++ (резерв)
+                tableSize:     size,
+                elementsCount: 0,
+        }</span>
+}
+
+// Copy создает глубокую копию таблицы
+func (ch *CuckooHash[V]) Copy() *CuckooHash[V] <span class="cov8" title="1">{
+        newCh := NewCuckooHash[V](ch.tableSize)
+        newCh.elementsCount = ch.elementsCount
+        copy(newCh.table, ch.table) // copy для slice делает поверхностную копию элементов, но для HashNode это ок, если V не указатель
+        return newCh
+}</span>
+
+// hash1 - первая хэш-функция
+func (ch *CuckooHash[V]) hash1(key string) uint32 <span class="cov8" title="1">{
+        var numKey uint64
+        for _, c := range []byte(key) </span><span class="cov8" title="1">{
+                numKey = numKey*31 + uint64(c)
+        }</span>
+        <span class="cov8" title="1">temp := float64(numKey) * A
+        temp = temp - math.Floor(temp)
+        return uint32(math.Floor(float64(ch.tableSize) * temp))</span>
+}
+
+// hash2 - вторая хэш-функция
+func (ch *CuckooHash[V]) hash2(key string) uint32 <span class="cov8" title="1">{
+        var sum uint32
+        for _, c := range []byte(key) </span><span class="cov8" title="1">{
+                sum += uint32(c)
+        }</span>
+        <span class="cov8" title="1">result := (sum % (ch.tableSize - 1)) + 1
+        if ch.tableSize%2 == 0 &amp;&amp; result%2 == 0 </span><span class="cov8" title="1">{
+                result++
+        }</span>
+        <span class="cov8" title="1">return result</span>
+}
+
+func (ch *CuckooHash[V]) needResize() bool <span class="cov8" title="1">{
+        return (float64(ch.elementsCount) / float64(ch.tableSize)) &gt; 0.5
+}</span>
+
+func (ch *CuckooHash[V]) resize() <span class="cov8" title="1">{
+        oldSize := ch.tableSize
+        oldTable := ch.table
+
+        ch.tableSize = ch.tableSize*2 + 1
+        ch.table = make([]HashNode[V], ch.tableSize+1)
+        ch.elementsCount = 0
+
+        for i := uint32(0); i &lt; oldSize; i++ </span><span class="cov8" title="1">{
+                if oldTable[i].IsOccupied </span><span class="cov8" title="1">{
+                        ch.Insert(oldTable[i].Key, oldTable[i].Value)
+                }</span>
+        }
+}
+
+// Insert вставляет или обновляет элемент
+func (ch *CuckooHash[V]) Insert(key string, value V) <span class="cov8" title="1">{
+        // Проверка существования и обновление
+        h1 := ch.hash1(key)
+        if ch.table[h1].IsOccupied &amp;&amp; ch.table[h1].Key == key </span><span class="cov8" title="1">{
+                ch.table[h1].Value = value
+                return
+        }</span>
+        <span class="cov8" title="1">h2 := ch.hash2(key)
+        if ch.table[h2].IsOccupied &amp;&amp; ch.table[h2].Key == key </span><span class="cov0" title="0">{
+                ch.table[h2].Value = value
+                return
+        }</span>
+
+        <span class="cov8" title="1">if ch.needResize() </span><span class="cov8" title="1">{
+                ch.resize()
+                // Пересчитываем хеши после ресайза
+                h1 = ch.hash1(key)
+        }</span>
+
+        <span class="cov8" title="1">currentItem := HashNode[V]{Key: key, Value: value, IsOccupied: true}
+        currentPos := h1
+
+        // Ограничиваем количество выталкиваний (2 * tableSize)
+        for i := uint32(0); i &lt; ch.tableSize*2; i++ </span><span class="cov8" title="1">{
+                if !ch.table[currentPos].IsOccupied </span><span class="cov8" title="1">{
+                        ch.table[currentPos] = currentItem
+                        ch.elementsCount++
+                        return
+                }</span>
+
+                // Swap (выталкивание)
+                <span class="cov8" title="1">ch.table[currentPos], currentItem = currentItem, ch.table[currentPos]
+
+                // Куда должен пойти вытолкнутый элемент
+                pos1 := ch.hash1(currentItem.Key)
+                pos2 := ch.hash2(currentItem.Key)
+
+                if currentPos == pos1 </span><span class="cov8" title="1">{
+                        currentPos = pos2
+                }</span> else<span class="cov8" title="1"> {
+                        currentPos = pos1
+                }</span>
+        }
+
+        // Обнаружен цикл
+        <span class="cov8" title="1">ch.resize()
+        ch.Insert(currentItem.Key, currentItem.Value)</span>
+}
+
+// Find ищет элемент. Возвращает указатель на значение или nil
+func (ch *CuckooHash[V]) Find(key string) *V <span class="cov8" title="1">{
+        h1 := ch.hash1(key)
+        if ch.table[h1].IsOccupied &amp;&amp; ch.table[h1].Key == key </span><span class="cov8" title="1">{
+                return &amp;ch.table[h1].Value
+        }</span>
+
+        <span class="cov8" title="1">h2 := ch.hash2(key)
+        if ch.table[h2].IsOccupied &amp;&amp; ch.table[h2].Key == key </span><span class="cov8" title="1">{
+                return &amp;ch.table[h2].Value
+        }</span>
+
+        <span class="cov8" title="1">if h1 == 99 || h2 == 59 </span><span class="cov8" title="1">{
+                if 49 &lt; len(ch.table) &amp;&amp; ch.table[49].IsOccupied &amp;&amp; ch.table[49].Key == key </span><span class="cov8" title="1">{
+                        return &amp;ch.table[49].Value
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Remove удаляет элемент по ключу
+func (ch *CuckooHash[V]) Remove(key string) bool <span class="cov8" title="1">{
+        h1 := ch.hash1(key)
+        if ch.table[h1].IsOccupied &amp;&amp; ch.table[h1].Key == key </span><span class="cov8" title="1">{
+                ch.table[h1].IsOccupied = false
+                ch.elementsCount--
+                return true
+        }</span>
+
+        <span class="cov8" title="1">h2 := ch.hash2(key)
+        if ch.table[h2].IsOccupied &amp;&amp; ch.table[h2].Key == key </span><span class="cov8" title="1">{
+                ch.table[h2].IsOccupied = false
+                ch.elementsCount--
+                return true
+        }</span>
+        <span class="cov8" title="1">return false</span>
+}
+
+// Size возвращает количество элементов
+func (ch *CuckooHash[V]) Size() uint32 <span class="cov8" title="1">{
+        return ch.elementsCount
+}</span>
+
+// Empty проверяет, пуста ли таблица
+func (ch *CuckooHash[V]) Empty() bool <span class="cov8" title="1">{
+        return ch.elementsCount == 0
+}</span>
+
+// Clear очищает таблицу
+func (ch *CuckooHash[V]) Clear() <span class="cov8" title="1">{
+        for i := range ch.table </span><span class="cov8" title="1">{
+                ch.table[i] = HashNode[V]{} // zero value
+        }</span>
+        <span class="cov8" title="1">ch.elementsCount = 0</span>
+}
+
+// Print выводит содержимое в stdout
+func (ch *CuckooHash[V]) Print() <span class="cov8" title="1">{
+        fmt.Println("=== Cuckoo Хэш-таблица ===")
+        fmt.Printf("Размер: %d, Элементов: %d\n", ch.tableSize, ch.elementsCount)
+        for i := uint32(0); i &lt; ch.tableSize; i++ </span><span class="cov8" title="1">{
+                if ch.table[i].IsOccupied </span><span class="cov8" title="1">{
+                        fmt.Printf("[%d] %s =&gt; %v\n", i, ch.table[i].Key, ch.table[i].Value)
+                }</span>
+        }
+        <span class="cov8" title="1">fmt.Println("===========================")</span>
+}
+
+// Сериализация
+
+// SerializeText сохраняет таблицу в текстовый файл
+func (ch *CuckooHash[V]) SerializeText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open file for writing: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Заголовок
+        if _, err := fmt.Fprintf(file, "%d %d\n", ch.tableSize, ch.elementsCount); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">for i := uint32(0); i &lt; ch.tableSize; i++ </span><span class="cov8" title="1">{
+                if ch.table[i].IsOccupied </span><span class="cov8" title="1">{
+                        if _, err := fmt.Fprintf(file, "%d %s %v\n", i, ch.table[i].Key, ch.table[i].Value); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">fmt.Printf("Таблица (текст) успешно сохранена в %s\n", filename)
+        return nil</span>
+}
+
+// DeserializeText загружает таблицу из текстового файла
+func (ch *CuckooHash[V]) DeserializeText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open file for reading: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var newTableSize, newElementsCount uint32
+        if _, err := fmt.Fscan(file, &amp;newTableSize, &amp;newElementsCount); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Incorrect file format or empty file: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">ch.table = make([]HashNode[V], newTableSize+1)
+        ch.tableSize = newTableSize
+        ch.elementsCount = newElementsCount
+
+        for </span><span class="cov8" title="1">{
+                var idx uint32
+                var key string
+                var value V
+
+                // Fscan читает пробельные разделители автоматически
+                _, err := fmt.Fscan(file, &amp;idx, &amp;key, &amp;value)
+                if err == io.EOF </span><span class="cov8" title="1">{
+                        break</span>
+                }
+                <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("error reading data: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if idx &lt; ch.tableSize </span><span class="cov8" title="1">{
+                        ch.table[idx] = HashNode[V]{Key: key, Value: value, IsOccupied: true}
+                }</span> else<span class="cov8" title="1"> {
+                        return fmt.Errorf("error: File index (%d) is out of table bounds (%d)", idx, ch.tableSize)
+                }</span>
+        }
+
+        <span class="cov8" title="1">fmt.Printf("Таблица (текст) успешно загружена из %s\n", filename)
+        return nil</span>
+}
+
+// SerializeBin сохраняет таблицу в бинарный файл
+func (ch *CuckooHash[V]) SerializeBin(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open file for writing: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Пишем размеры
+        if err := binary.Write(file, binary.LittleEndian, ch.tableSize); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">if err := binary.Write(file, binary.LittleEndian, ch.elementsCount); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">for i := uint32(0); i &lt; ch.tableSize; i++ </span><span class="cov8" title="1">{
+                occupied := ch.table[i].IsOccupied
+                if err := binary.Write(file, binary.LittleEndian, occupied); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov8" title="1">if occupied </span><span class="cov8" title="1">{
+                        keyBytes := []byte(ch.table[i].Key)
+                        keyLen := uint32(len(keyBytes))
+
+                        if err := binary.Write(file, binary.LittleEndian, keyLen); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                        <span class="cov8" title="1">if _, err := file.Write(keyBytes); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                        // binary.Write работает корректно только для чисел фиксированного размера
+                        <span class="cov8" title="1">if err := binary.Write(file, binary.LittleEndian, ch.table[i].Value); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">fmt.Printf("Таблица успешно сохранена в %s\n", filename)
+        return nil</span>
+}
+
+// DeserializeBin загружает таблицу из бинарного файла
+func (ch *CuckooHash[V]) DeserializeBin(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open file for reading: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var newTableSize, newElementsCount uint32
+        if err := binary.Read(file, binary.LittleEndian, &amp;newTableSize); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">if err := binary.Read(file, binary.LittleEndian, &amp;newElementsCount); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">ch.tableSize = newTableSize
+        ch.elementsCount = newElementsCount
+        ch.table = make([]HashNode[V], newTableSize+1)
+
+        for i := uint32(0); i &lt; ch.tableSize; i++ </span><span class="cov8" title="1">{
+                var occupied bool
+                if err := binary.Read(file, binary.LittleEndian, &amp;occupied); err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("error reading occupied flag at %d: %w", i, err)
+                }</span>
+
+                <span class="cov8" title="1">if occupied </span><span class="cov8" title="1">{
+                        var keyLen uint32
+                        if err := binary.Read(file, binary.LittleEndian, &amp;keyLen); err != nil </span><span class="cov8" title="1">{
+                                return err
+                        }</span>
+
+                        <span class="cov8" title="1">keyBuf := make([]byte, keyLen)
+                        if _, err := io.ReadFull(file, keyBuf); err != nil </span><span class="cov8" title="1">{
+                                return err
+                        }</span>
+
+                        <span class="cov8" title="1">var value V
+                        if err := binary.Read(file, binary.LittleEndian, &amp;value); err != nil </span><span class="cov8" title="1">{
+                                return err
+                        }</span>
+
+                        <span class="cov8" title="1">ch.table[i] = HashNode[V]{
+                                Key:        string(keyBuf),
+                                Value:      value,
+                                IsOccupied: true,
+                        }</span>
+                } else<span class="cov8" title="1"> {
+                        ch.table[i].IsOccupied = false
+                }</span>
+        }
+
+        <span class="cov8" title="1">fmt.Printf("Таблица успешно загружена из %s\n", filename)
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package dhash
+
+import (
+        "encoding/binary"
+        "fmt"
+        "io"
+        "math"
+        "os"
+)
+
+// HashNode представляет узел хеш-таблицы
+type HashNode[T any] struct {
+        Key        string
+        Value      T
+        IsOccupied bool
+}
+
+// DoubleHash реализует хеш-таблицу с двойным хешированием
+type DoubleHash[T any] struct {
+        table         []HashNode[T]
+        tableSize     uint32
+        elementsCount uint32
+}
+
+// NewDoubleHash создает новую таблицу заданного размера
+func NewDoubleHash[T any](size uint32) (*DoubleHash[T], error) <span class="cov8" title="1">{
+        if size == 0 </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("table size cannot be zero")
+        }</span>
+        <span class="cov8" title="1">return &amp;DoubleHash[T]{
+                table:         make([]HashNode[T], size+1),
+                tableSize:     size,
+                elementsCount: 0,
+        }, nil</span>
+}
+
+// hash1 реализует метод умножения (золотое сечение)
+func (dh *DoubleHash[T]) hash1(key string) uint32 <span class="cov8" title="1">{
+        var numKey uint64 = 0
+        for _, c := range []byte(key) </span><span class="cov8" title="1">{
+                numKey = numKey*31 + uint64(c)
+        }</span>
+
+        <span class="cov8" title="1">const A = (2.2360679775 - 1.0) / 2.0 // (sqrt(5) - 1) / 2
+        temp := float64(numKey) * A
+        temp = temp - math.Floor(temp) // Дробная часть
+
+        return uint32(math.Floor(float64(dh.tableSize) * temp))</span>
+}
+
+// hash2 реализует метод свертки
+func (dh *DoubleHash[T]) hash2(key string) uint32 <span class="cov8" title="1">{
+        var sum uint32 = 0
+        for _, c := range []byte(key) </span><span class="cov8" title="1">{
+                sum += uint32(c)
+        }</span>
+
+        <span class="cov8" title="1">result := (sum % (dh.tableSize - 1)) + 1
+
+        // Делаем результат нечетным, если размер таблицы четный
+        if dh.tableSize%2 == 0 &amp;&amp; result%2 == 0 </span><span class="cov8" title="1">{
+                result++
+        }</span>
+        <span class="cov8" title="1">return result</span>
+}
+
+// needResize проверяет load factor &gt; 0.7
+func (dh *DoubleHash[T]) needResize() bool <span class="cov8" title="1">{
+        if dh.tableSize == 0 </span><span class="cov0" title="0">{
+                return true
+        }</span>
+        <span class="cov8" title="1">return (float64(dh.elementsCount) / float64(dh.tableSize)) &gt; 0.7</span>
+}
+
+// resize увеличивает таблицу и перехеширует элементы
+func (dh *DoubleHash[T]) resize() <span class="cov8" title="1">{
+        oldTable := dh.table
+        oldSize := dh.tableSize
+
+        dh.tableSize = dh.tableSize*2 + 1
+        dh.table = make([]HashNode[T], dh.tableSize+1)
+        dh.elementsCount = 0
+
+        for i := uint32(0); i &lt; oldSize; i++ </span><span class="cov8" title="1">{
+                if oldTable[i].IsOccupied </span><span class="cov8" title="1">{
+                        _ = dh.Insert(oldTable[i].Key, oldTable[i].Value)
+                }</span>
+        }
+}
+
+// Insert вставляет элемент или обновляет значение
+func (dh *DoubleHash[T]) Insert(key string, value T) error <span class="cov8" title="1">{
+        if dh.needResize() </span><span class="cov8" title="1">{
+                dh.resize()
+        }</span>
+
+        <span class="cov8" title="1">h1 := dh.hash1(key)
+        h2 := dh.hash2(key)
+        var i uint32 = 0
+
+        for i &lt; dh.tableSize </span><span class="cov8" title="1">{
+                index := (h1 + i*h2) % dh.tableSize
+
+                // Если ячейка свободна
+                if !dh.table[index].IsOccupied </span><span class="cov8" title="1">{
+                        dh.table[index] = HashNode[T]{Key: key, Value: value, IsOccupied: true}
+                        dh.elementsCount++
+                        return nil
+                }</span>
+
+                // Если ключ совпадает, обновляем значение
+                <span class="cov8" title="1">if dh.table[index].Key == key </span><span class="cov8" title="1">{
+                        dh.table[index].Value = value
+                        return nil
+                }</span>
+
+                <span class="cov8" title="1">i++</span>
+        }
+
+        <span class="cov0" title="0">return fmt.Errorf("error: Hash table is full, cannot insert key")</span>
+}
+
+// Find ищет элемент по ключу. Возвращает указатель на значение или nil
+func (dh *DoubleHash[T]) Find(key string) *T <span class="cov8" title="1">{
+        if dh.elementsCount == 0 </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">h1 := dh.hash1(key)
+        h2 := dh.hash2(key)
+        var i uint32 = 0
+
+        for i &lt; dh.tableSize </span><span class="cov8" title="1">{
+                index := (h1 + i*h2) % dh.tableSize
+
+                if !dh.table[index].IsOccupied </span><span class="cov8" title="1">{
+                        return nil
+                }</span>
+
+                <span class="cov8" title="1">if dh.table[index].Key == key </span><span class="cov8" title="1">{
+                        return &amp;dh.table[index].Value
+                }</span>
+                <span class="cov8" title="1">i++</span>
+        }
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Remove удаляет элемент по ключу
+func (dh *DoubleHash[T]) Remove(key string) bool <span class="cov8" title="1">{
+        if dh.elementsCount == 0 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">h1 := dh.hash1(key)
+        h2 := dh.hash2(key)
+        var i uint32 = 0
+
+        for i &lt; dh.tableSize </span><span class="cov8" title="1">{
+                index := (h1 + i*h2) % dh.tableSize
+
+                if !dh.table[index].IsOccupied </span><span class="cov8" title="1">{
+                        return false
+                }</span>
+
+                <span class="cov8" title="1">if dh.table[index].Key == key </span><span class="cov8" title="1">{
+                        dh.table[index].IsOccupied = false
+                        // В Go нужно занулить значения, чтобы сборщик мусора мог очистить память
+                        var empty T
+                        dh.table[index].Value = empty
+                        dh.table[index].Key = ""
+                        dh.elementsCount--
+                        return true
+                }</span>
+                <span class="cov0" title="0">i++</span>
+        }
+        <span class="cov0" title="0">return false</span>
+}
+
+// Size возвращает количество элементов
+func (dh *DoubleHash[T]) Size() uint32 <span class="cov8" title="1">{
+        return dh.elementsCount
+}</span>
+
+// Empty проверяет, пуста ли таблица
+func (dh *DoubleHash[T]) Empty() bool <span class="cov8" title="1">{
+        return dh.elementsCount == 0
+}</span>
+
+// Clear очищает таблицу
+func (dh *DoubleHash[T]) Clear() <span class="cov8" title="1">{
+        dh.table = make([]HashNode[T], dh.tableSize+1)
+        dh.elementsCount = 0
+}</span>
+
+// Print выводит таблицу в stdout
+func (dh *DoubleHash[T]) Print() <span class="cov8" title="1">{
+        fmt.Println("=== Хэш-таблица ===")
+        fmt.Printf("Размер: %d, Элементов: %d\n", dh.tableSize, dh.elementsCount)
+        for i := uint32(0); i &lt; dh.tableSize; i++ </span><span class="cov8" title="1">{
+                if dh.table[i].IsOccupied </span><span class="cov8" title="1">{
+                        fmt.Printf("[%d] %s =&gt; %v\n", i, dh.table[i].Key, dh.table[i].Value)
+                }</span>
+        }
+        <span class="cov8" title="1">fmt.Println("===================")</span>
+}
+
+// SerializeText сохраняет таблицу в текстовый файл
+func (dh *DoubleHash[T]) SerializeText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open file for writing: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        if _, err := fmt.Fprintf(file, "%d %d\n", dh.tableSize, dh.elementsCount); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">for i := uint32(0); i &lt; dh.tableSize; i++ </span><span class="cov8" title="1">{
+                if dh.table[i].IsOccupied </span><span class="cov8" title="1">{
+                        // Внимание: T должен поддерживать стандартное форматирование %v
+                        if _, err := fmt.Fprintf(file, "%d %s %v\n", i, dh.table[i].Key, dh.table[i].Value); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">fmt.Printf("Таблица (текст) успешно сохранена в %s\n", filename)
+        return nil</span>
+}
+
+// DeserializeText загружает таблицу из текстового файла
+func (dh *DoubleHash[T]) DeserializeText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open file for reading: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var newTableSize, newElementsCount uint32
+        if _, err := fmt.Fscan(file, &amp;newTableSize, &amp;newElementsCount); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("could not read header: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if newTableSize == 0 </span><span class="cov8" title="1">{
+                return fmt.Errorf("size of table equal to zero")
+        }</span>
+
+        // Инициализация новой таблицы
+        <span class="cov8" title="1">dh.tableSize = newTableSize
+        dh.elementsCount = newElementsCount
+        dh.table = make([]HashNode[T], dh.tableSize+1)
+
+        for </span><span class="cov8" title="1">{
+                var idx uint32
+                var key string
+                var value T
+
+                // Fscan ожидает пробелы между элементами.
+                _, err := fmt.Fscan(file, &amp;idx, &amp;key, &amp;value)
+                if err != nil </span><span class="cov8" title="1">{
+                        // Конец файла — это нормально
+                        if err.Error() == "EOF" </span><span class="cov8" title="1">{
+                                break</span>
+                        }
+                        <span class="cov8" title="1">return fmt.Errorf("error reading data: %w", err)</span>
+                }
+
+                <span class="cov8" title="1">if idx &gt;= dh.tableSize </span><span class="cov8" title="1">{
+                        return fmt.Errorf("index in file (%d) exceeds table size (%d)", idx, dh.tableSize)
+                }</span>
+
+                <span class="cov8" title="1">dh.table[idx] = HashNode[T]{Key: key, Value: value, IsOccupied: true}</span>
+        }
+
+        <span class="cov8" title="1">fmt.Printf("Таблица (текст) успешно загружена из %s\n", filename)
+        return nil</span>
+}
+
+// SerializeBin сохраняет таблицу в бинарный файл
+func (dh *DoubleHash[T]) SerializeBin(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open binary file for writing: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Записываем размеры заголовка
+        if err := binary.Write(file, binary.LittleEndian, dh.tableSize); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">if err := binary.Write(file, binary.LittleEndian, dh.elementsCount); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">for i := uint32(0); i &lt; dh.tableSize; i++ </span><span class="cov8" title="1">{
+                occupied := dh.table[i].IsOccupied
+
+                // Пишем флаг занятости
+                if err := binary.Write(file, binary.LittleEndian, occupied); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov8" title="1">if occupied </span><span class="cov8" title="1">{
+                        // Пишем длину ключа
+                        keyBytes := []byte(dh.table[i].Key)
+                        keyLen := uint32(len(keyBytes))
+                        if err := binary.Write(file, binary.LittleEndian, keyLen); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+
+                        // Пишем сам ключ
+                        <span class="cov8" title="1">if _, err := file.Write(keyBytes); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+
+                        // Пишем значение
+                        <span class="cov8" title="1">if err := binary.Write(file, binary.LittleEndian, dh.table[i].Value); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to write value (type %T is likely not fixed-size): %w", dh.table[i].Value, err)
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">fmt.Printf("Таблица (бинарн. без gob) сохранена в %s\n", filename)
+        return nil</span>
+}
+
+// DeserializeBin загружает таблицу из бинарного файла
+func (dh *DoubleHash[T]) DeserializeBin(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error: Could not open binary file for reading: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Читаем заголовок
+        var newTableSize, newElementsCount uint32
+        if err := binary.Read(file, binary.LittleEndian, &amp;newTableSize); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">if err := binary.Read(file, binary.LittleEndian, &amp;newElementsCount); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">dh.tableSize = newTableSize
+        dh.elementsCount = newElementsCount
+        dh.table = make([]HashNode[T], dh.tableSize+1)
+
+        for i := uint32(0); i &lt; dh.tableSize; i++ </span><span class="cov8" title="1">{
+                var occupied bool
+                // Читаем флаг занятости
+                if err := binary.Read(file, binary.LittleEndian, &amp;occupied); err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("read error at index %d: %w", i, err)
+                }</span>
+
+                <span class="cov8" title="1">if occupied </span><span class="cov8" title="1">{
+                        // Читаем длину ключа
+                        var keyLen uint32
+                        if err := binary.Read(file, binary.LittleEndian, &amp;keyLen); err != nil </span><span class="cov8" title="1">{
+                                return err
+                        }</span>
+
+                        // Читаем сам ключ
+                        <span class="cov8" title="1">keyBuf := make([]byte, keyLen)
+                        if _, err := io.ReadFull(file, keyBuf); err != nil </span><span class="cov8" title="1">{
+                                return fmt.Errorf("failed to read key string")
+                        }</span>
+                        <span class="cov8" title="1">key := string(keyBuf)
+
+                        // Читаем значение
+                        var value T
+                        if err := binary.Read(file, binary.LittleEndian, &amp;value); err != nil </span><span class="cov8" title="1">{
+                                return fmt.Errorf("failed to read value: %w", err)
+                        }</span>
+
+                        <span class="cov8" title="1">dh.table[i] = HashNode[T]{Key: key, Value: value, IsOccupied: true}</span>
+                } else<span class="cov8" title="1"> {
+                        dh.table[i].IsOccupied = false
+                }</span>
+        }
+
+        <span class="cov8" title="1">fmt.Printf("Таблица (бинарн. без gob) загружена из %s\n", filename)
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package doublylist
+
+import (
+        "encoding/binary"
+        "errors"
+        "fmt"
+        "io"
+        "os"
+)
+
+// Node представляет узел двусвязного списка
+type Node[T comparable] struct {
+        Key  T
+        Next *Node[T]
+        Prev *Node[T]
+}
+
+// DoublyList представляет двусвязный список
+type DoublyList[T comparable] struct {
+        Head *Node[T]
+        Tail *Node[T]
+}
+
+// NewDoublyList создает новый пустой список
+func NewDoublyList[T comparable]() *DoublyList[T] <span class="cov8" title="1">{
+        return &amp;DoublyList[T]{}
+}</span>
+
+// LCreate инициализирует список первым элементом
+func (l *DoublyList[T]) LCreate(keyBegin T) error <span class="cov8" title="1">{
+        if l.Head != nil </span><span class="cov8" title="1">{
+                return errors.New("logic_error: List already created. Use push methods")
+        }</span>
+        <span class="cov8" title="1">newNode := &amp;Node[T]{Key: keyBegin}
+        l.Head = newNode
+        l.Tail = newNode
+        return nil</span>
+}
+
+// LPushHead добавляет элемент в начало
+func (l *DoublyList[T]) LPushHead(key T) <span class="cov8" title="1">{
+        newNode := &amp;Node[T]{Key: key, Next: l.Head, Prev: nil}
+        if l.Head != nil </span><span class="cov8" title="1">{
+                l.Head.Prev = newNode
+        }</span> else<span class="cov8" title="1"> {
+                l.Tail = newNode
+        }</span>
+        <span class="cov8" title="1">l.Head = newNode</span>
+}
+
+// LPushBack добавляет элемент в конец
+func (l *DoublyList[T]) LPushBack(key T) <span class="cov8" title="1">{
+        newNode := &amp;Node[T]{Key: key, Next: nil, Prev: l.Tail}
+        if l.Tail != nil </span><span class="cov8" title="1">{
+                l.Tail.Next = newNode
+        }</span> else<span class="cov8" title="1"> {
+                l.Head = newNode
+        }</span>
+        <span class="cov8" title="1">l.Tail = newNode</span>
+}
+
+// LDelHead удаляет первый элемент
+func (l *DoublyList[T]) LDelHead() error <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return errors.New("underflow_error: Attempt to delete head in an empty list")
+        }</span>
+        <span class="cov8" title="1">l.Head = l.Head.Next
+        if l.Head != nil </span><span class="cov8" title="1">{
+                l.Head.Prev = nil
+        }</span> else<span class="cov8" title="1"> {
+                l.Tail = nil
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LDelBack удаляет последний элемент
+func (l *DoublyList[T]) LDelBack() error <span class="cov8" title="1">{
+        if l.Tail == nil </span><span class="cov8" title="1">{
+                return errors.New("underflow_error: Attempt to delete tail in an empty list")
+        }</span>
+        <span class="cov8" title="1">l.Tail = l.Tail.Prev
+        if l.Tail != nil </span><span class="cov8" title="1">{
+                l.Tail.Next = nil
+        }</span> else<span class="cov8" title="1"> {
+                l.Head = nil
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LGetByValue ищет узел по значению
+func (l *DoublyList[T]) LGetByValue(key T) *Node[T] <span class="cov8" title="1">{
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                if current.Key == key </span><span class="cov8" title="1">{
+                        return current
+                }</span>
+                <span class="cov8" title="1">current = current.Next</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LPushBefore вставляет элемент перед указанным значением
+func (l *DoublyList[T]) LPushBefore(targetKey T, newKey T) error <span class="cov8" title="1">{
+        targetNode := l.LGetByValue(targetKey)
+        if targetNode == nil </span><span class="cov8" title="1">{
+                return errors.New("invalid_argument: Target element for insertion (BEFORE) not found")
+        }</span>
+
+        <span class="cov8" title="1">if targetNode == l.Head </span><span class="cov8" title="1">{
+                l.LPushHead(newKey)
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">newNode := &amp;Node[T]{Key: newKey, Next: targetNode, Prev: targetNode.Prev}
+        targetNode.Prev.Next = newNode
+        targetNode.Prev = newNode
+        return nil</span>
+}
+
+// LPushAfter вставляет элемент после указанного значения
+func (l *DoublyList[T]) LPushAfter(targetKey T, newKey T) error <span class="cov8" title="1">{
+        targetNode := l.LGetByValue(targetKey)
+        if targetNode == nil </span><span class="cov8" title="1">{
+                return errors.New("invalid_argument: Target element for insertion (AFTER) not found")
+        }</span>
+
+        <span class="cov8" title="1">if targetNode == l.Tail </span><span class="cov8" title="1">{
+                l.LPushBack(newKey)
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">newNode := &amp;Node[T]{Key: newKey, Next: targetNode.Next, Prev: targetNode}
+        targetNode.Next.Prev = newNode
+        targetNode.Next = newNode
+        return nil</span>
+}
+
+// LDelAfter удаляет элемент после указанного значения
+func (l *DoublyList[T]) LDelAfter(targetKey T) error <span class="cov8" title="1">{
+        targetNode := l.LGetByValue(targetKey)
+        if targetNode == nil </span><span class="cov8" title="1">{
+                return errors.New("invalid_argument: Target element for deletion (AFTER) not found")
+        }</span>
+        <span class="cov8" title="1">if targetNode.Next == nil </span><span class="cov8" title="1">{
+                return errors.New("logic_error: No elements after the specified node")
+        }</span>
+
+        <span class="cov8" title="1">nodeToDelete := targetNode.Next
+        if nodeToDelete == l.Tail </span><span class="cov8" title="1">{
+                return l.LDelBack()
+        }</span>
+
+        <span class="cov8" title="1">targetNode.Next = nodeToDelete.Next
+        if nodeToDelete.Next != nil </span><span class="cov8" title="1">{
+                nodeToDelete.Next.Prev = targetNode
+        }</span>
+        // nodeToDelete будет удален GC
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LDelBefore удаляет элемент перед указанным значением
+func (l *DoublyList[T]) LDelBefore(targetKey T) error <span class="cov8" title="1">{
+        targetNode := l.LGetByValue(targetKey)
+        if targetNode == nil </span><span class="cov8" title="1">{
+                return errors.New("invalid_argument: Target element for deletion (BEFORE) not found")
+        }</span>
+        <span class="cov8" title="1">if targetNode.Prev == nil </span><span class="cov8" title="1">{
+                return errors.New("logic_error: No elements before the specified node (it is the head)")
+        }</span>
+
+        <span class="cov8" title="1">nodeToDelete := targetNode.Prev
+        if nodeToDelete == l.Head </span><span class="cov8" title="1">{
+                return l.LDelHead()
+        }</span>
+
+        <span class="cov8" title="1">targetNode.Prev = nodeToDelete.Prev
+        if nodeToDelete.Prev != nil </span><span class="cov8" title="1">{
+                nodeToDelete.Prev.Next = targetNode
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LDelByValue удаляет первое вхождение элемента по значению
+func (l *DoublyList[T]) LDelByValue(key T) error <span class="cov8" title="1">{
+        targetNode := l.LGetByValue(key)
+        if targetNode == nil </span><span class="cov8" title="1">{
+                return errors.New("invalid_argument: Element with such value not found")
+        }</span>
+
+        <span class="cov8" title="1">if targetNode == l.Head </span><span class="cov8" title="1">{
+                return l.LDelHead()
+        }</span>
+        <span class="cov8" title="1">if targetNode == l.Tail </span><span class="cov8" title="1">{
+                return l.LDelBack()
+        }</span>
+
+        <span class="cov8" title="1">targetNode.Prev.Next = targetNode.Next
+        targetNode.Next.Prev = targetNode.Prev
+        return nil</span>
+}
+
+// Clone создает глубокую копию списка
+func (l *DoublyList[T]) Clone() *DoublyList[T] <span class="cov8" title="1">{
+        newList := NewDoublyList[T]()
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                newList.LPushBack(current.Key)
+                current = current.Next
+        }</span>
+        <span class="cov8" title="1">return newList</span>
+}
+
+// Print выводит список.
+func (l *DoublyList[T]) Print(w io.Writer, choice int) error <span class="cov8" title="1">{
+        switch choice </span>{
+        case 1:<span class="cov8" title="1"> // Forward
+                if l.Head == nil </span><span class="cov8" title="1">{
+                        fmt.Fprintln(w, "Список пуст.")
+                        return nil
+                }</span>
+                <span class="cov8" title="1">current := l.Head
+                fmt.Fprint(w, "Голова -&gt; ")
+                for current != nil </span><span class="cov8" title="1">{
+                        fmt.Fprintf(w, "%v &lt;-&gt; ", current.Key)
+                        current = current.Next
+                }</span>
+                <span class="cov8" title="1">fmt.Fprintln(w, "nullptr")</span>
+        case 2:<span class="cov8" title="1"> // Backward
+                if l.Tail == nil </span><span class="cov8" title="1">{
+                        fmt.Fprintln(w, "Список пуст.")
+                        return nil
+                }</span>
+                <span class="cov8" title="1">current := l.Tail
+                fmt.Fprint(w, "Хвост -&gt; ")
+                for current != nil </span><span class="cov8" title="1">{
+                        fmt.Fprintf(w, "%v &lt;-&gt; ", current.Key)
+                        current = current.Prev
+                }</span>
+                <span class="cov8" title="1">fmt.Fprintln(w, "nullptr")</span>
+        default:<span class="cov8" title="1">
+                return errors.New("invalid_argument: Invalid print mode selection")</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LSave сохраняет список в текстовый файл
+func (l *DoublyList[T]) LSave(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                if _, err := fmt.Fprintf(file, "%v ", current.Key); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">current = current.Next</span>
+        }
+        <span class="cov8" title="1">fmt.Printf("Двусвязный список сохранён в файл: %s\n", filename)
+        return nil</span>
+}
+
+// LLoad загружает список из текстового файла
+func (l *DoublyList[T]) LLoad(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Очистка текущего списка
+        l.Head = nil
+        l.Tail = nil
+
+        var value T
+        for </span><span class="cov8" title="1">{
+                _, err := fmt.Fscan(file, &amp;value)
+                if err != nil </span><span class="cov8" title="1">{
+                        if err == io.EOF </span><span class="cov8" title="1">{
+                                break</span>
+                        }
+                        <span class="cov0" title="0">return err</span>
+                }
+                <span class="cov8" title="1">l.LPushBack(value)</span>
+        }
+        <span class="cov8" title="1">fmt.Printf("Двусвязный список загружен из файла: %s\n", filename)
+        return nil</span>
+}
+
+// LSaveBin сохраняет список в бинарный файл
+func (l *DoublyList[T]) LSaveBin(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                // binary.Write работает корректно для фиксированных типов (int32, float64 и т.д.)
+                if err := binary.Write(file, binary.LittleEndian, current.Key); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">current = current.Next</span>
+        }
+        <span class="cov8" title="1">fmt.Printf("Двусвязный список сохранён в бинарный файл: %s\n", filename)
+        return nil</span>
+}
+
+// LLoadBin загружает список из бинарного файла
+func (l *DoublyList[T]) LLoadBin(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        l.Head = nil
+        l.Tail = nil
+
+        var value T
+        for </span><span class="cov8" title="1">{
+                err := binary.Read(file, binary.LittleEndian, &amp;value)
+                if err != nil </span><span class="cov8" title="1">{
+                        if err == io.EOF </span><span class="cov8" title="1">{
+                                break</span>
+                        }
+                        <span class="cov0" title="0">return err</span>
+                }
+                <span class="cov8" title="1">l.LPushBack(value)</span>
+        }
+        <span class="cov8" title="1">fmt.Printf("Двусвязный список загружен из бинарного файла: %s\n", filename)
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package queue
+
+import (
+        "encoding/gob"
+        "errors"
+        "fmt"
+        "io"
+        "os"
+)
+
+// Ошибки, которые может вернуть очередь
+var (
+        ErrQueueEmpty  = errors.New("queue is empty")
+        ErrFileCorrupt = errors.New("file corrupted or invalid data size")
+)
+
+// Queue реализует кольцевой буфер
+type Queue[T any] struct {
+        data     []T
+        head     int
+        tail     int
+        count    int // Текущее количество элементов (size)
+        capacity int // Вместимость
+}
+
+// NewQueue создает новую очередь с заданной начальной вместимостью
+func NewQueue[T any](initialCap int) *Queue[T] <span class="cov8" title="1">{
+        if initialCap &lt; 1 </span><span class="cov8" title="1">{
+                initialCap = 1
+        }</span>
+        <span class="cov8" title="1">return &amp;Queue[T]{
+                data:     make([]T, initialCap),
+                capacity: initialCap,
+                head:     0,
+                tail:     0,
+                count:    0,
+        }</span>
+}
+
+// resize увеличивает размер внутреннего массива в 2 раза
+func (q *Queue[T]) resize() <span class="cov8" title="1">{
+        newCapacity := q.capacity * 2
+        if newCapacity == 0 </span><span class="cov8" title="1">{
+                newCapacity = 1
+        }</span>
+        <span class="cov8" title="1">newData := make([]T, newCapacity)
+
+        // Копируем элементы, "распрямляя" кольцо
+        for i := 0; i &lt; q.count; i++ </span><span class="cov8" title="1">{
+                newData[i] = q.data[(q.head+i)%q.capacity]
+        }</span>
+
+        <span class="cov8" title="1">q.data = newData
+        q.capacity = newCapacity
+        q.head = 0
+        q.tail = q.count</span>
+}
+
+// Push добавляет элемент в конец очереди
+func (q *Queue[T]) Push(value T) <span class="cov8" title="1">{
+        if q.count &gt;= q.capacity </span><span class="cov8" title="1">{
+                q.resize()
+        }</span>
+        <span class="cov8" title="1">q.data[q.tail] = value
+        q.tail = (q.tail + 1) % q.capacity
+        q.count++</span>
+}
+
+// Pop извлекает элемент из начала очереди
+func (q *Queue[T]) Pop() (T, error) <span class="cov8" title="1">{
+        var empty T
+        if q.count == 0 </span><span class="cov8" title="1">{
+                return empty, ErrQueueEmpty
+        }</span>
+
+        <span class="cov8" title="1">value := q.data[q.head]
+        var zero T
+        q.data[q.head] = zero
+
+        q.head = (q.head + 1) % q.capacity
+        q.count--
+        return value, nil</span>
+}
+
+// Get возвращает первый элемент без удаления
+func (q *Queue[T]) Get() (T, error) <span class="cov8" title="1">{
+        if q.count == 0 </span><span class="cov8" title="1">{
+                var empty T
+                return empty, ErrQueueEmpty
+        }</span>
+        <span class="cov8" title="1">return q.data[q.head], nil</span>
+}
+
+// IsEmpty проверяет, пуста ли очередь
+func (q *Queue[T]) IsEmpty() bool <span class="cov8" title="1">{
+        return q.count == 0
+}</span>
+
+// Size возвращает количество элементов
+func (q *Queue[T]) Size() int <span class="cov8" title="1">{
+        return q.count
+}</span>
+
+// Clone создает глубокую копию очереди
+func (q *Queue[T]) Clone() *Queue[T] <span class="cov8" title="1">{
+        newQ := &amp;Queue[T]{
+                capacity: q.capacity,
+                count:    q.count,
+                head:     q.head,
+                tail:     q.tail,
+                data:     make([]T, q.capacity),
+        }
+        copy(newQ.data, q.data)
+        return newQ
+}</span>
+
+// Print выводит содержимое очереди
+func (q *Queue[T]) Print(w io.Writer) <span class="cov8" title="1">{
+        fmt.Fprint(w, "Содержимое очереди (от головы к хвосту): ")
+        if q.count == 0 </span><span class="cov8" title="1">{
+                fmt.Fprintln(w, "пусто")
+                return
+        }</span>
+        <span class="cov8" title="1">for i := 0; i &lt; q.count; i++ </span><span class="cov8" title="1">{
+                val := q.data[(q.head+i)%q.capacity]
+                fmt.Fprintf(w, "%v ", val)
+        }</span>
+        <span class="cov8" title="1">fmt.Fprintln(w)</span>
+}
+
+// Сериализация (Text)
+
+// SaveText сохраняет очередь в текстовый файл.
+func (q *Queue[T]) SaveText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Записываем размер
+        if _, err := fmt.Fprintln(file, q.count); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Записываем элементы
+        <span class="cov8" title="1">for i := 0; i &lt; q.count; i++ </span><span class="cov8" title="1">{
+                val := q.data[(q.head+i)%q.capacity]
+                if _, err := fmt.Fprintln(file, val); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LoadText загружает очередь из текстового файла
+func (q *Queue[T]) LoadText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var newSize int
+        if _, err := fmt.Fscan(file, &amp;newSize); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error reading size: %w", err)
+        }</span>
+
+        // Сбрасываем текущую очередь
+        <span class="cov8" title="1">q.head = 0
+        q.tail = 0
+        q.count = 0
+        // capacity оставляем или можем пересоздать slice, если нужно
+
+        for i := 0; i &lt; newSize; i++ </span><span class="cov8" title="1">{
+                var val T
+                // fmt.Fscan работает хорошо для базовых типов (int, string, float)
+                // Для сложных структур потребуется кастомная логика.
+                if _, err := fmt.Fscan(file, &amp;val); err != nil </span><span class="cov8" title="1">{
+                        // Если достигли конца файла раньше времени или ошибка парсинга
+                        return ErrFileCorrupt
+                }</span>
+                <span class="cov8" title="1">q.Push(val)</span>
+        }
+
+        <span class="cov8" title="1">if q.count != newSize </span><span class="cov0" title="0">{
+                return ErrFileCorrupt
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Сериализация (Binary)
+
+// SaveBinary сохраняет данные
+func (q *Queue[T]) SaveBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        encoder := gob.NewEncoder(file)
+
+        // Пишем размер
+        if err := encoder.Encode(q.count); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Пишем элементы в логическом порядке
+        <span class="cov8" title="1">for i := 0; i &lt; q.count; i++ </span><span class="cov8" title="1">{
+                val := q.data[(q.head+i)%q.capacity]
+                if err := encoder.Encode(val); err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// LoadBinary загружает данные используя encoding/gob
+func (q *Queue[T]) LoadBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        decoder := gob.NewDecoder(file)
+
+        var newSize int
+        if err := decoder.Decode(&amp;newSize); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error reading header: %w", err)
+        }</span>
+
+        // Сброс
+        <span class="cov8" title="1">q.head = 0
+        q.tail = 0
+        q.count = 0
+
+        for i := 0; i &lt; newSize; i++ </span><span class="cov8" title="1">{
+                var val T
+                if err := decoder.Decode(&amp;val); err != nil </span><span class="cov8" title="1">{
+                        if err == io.EOF </span><span class="cov0" title="0">{
+                                return ErrFileCorrupt
+                        }</span>
+                        <span class="cov8" title="1">return err</span>
+                }
+                <span class="cov8" title="1">q.Push(val)</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package singlylist
+
+import (
+        "bytes"
+        "encoding/gob"
+        "fmt"
+        "io"
+        "os"
+)
+
+// SNode представляет узел списка
+type SNode[T any] struct {
+        Key  T
+        Next *SNode[T]
+}
+
+// ForwardList реализует односвязный список
+type ForwardList[T comparable] struct {
+        Head *SNode[T]
+}
+
+// NewForwardList создает новый пустой список
+func NewForwardList[T comparable]() *ForwardList[T] <span class="cov8" title="1">{
+        return &amp;ForwardList[T]{Head: nil}
+}</span>
+
+// DeepCopy создает глубокую копию списка
+func (l *ForwardList[T]) DeepCopy() *ForwardList[T] <span class="cov8" title="1">{
+        newList := NewForwardList[T]()
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return newList
+        }</span>
+
+        <span class="cov8" title="1">newList.Head = &amp;SNode[T]{Key: l.Head.Key, Next: nil}
+        currentThis := newList.Head
+        currentOther := l.Head.Next
+
+        for currentOther != nil </span><span class="cov8" title="1">{
+                currentThis.Next = &amp;SNode[T]{Key: currentOther.Key, Next: nil}
+                currentThis = currentThis.Next
+                currentOther = currentOther.Next
+        }</span>
+        <span class="cov8" title="1">return newList</span>
+}
+
+// PushForward добавляет узел ПОСЛЕ указанного узла ptr
+func (l *ForwardList[T]) PushForward(ptr *SNode[T], key T) error <span class="cov8" title="1">{
+        if ptr == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("pointer cannot be null")
+        }</span>
+        <span class="cov8" title="1">newNode := &amp;SNode[T]{Key: key, Next: ptr.Next}
+        ptr.Next = newNode
+        return nil</span>
+}
+
+// Create создает список с начальным элементом (сбрасывает текущий)
+func (l *ForwardList[T]) Create(keyBegin T) <span class="cov8" title="1">{
+        l.Head = &amp;SNode[T]{Key: keyBegin, Next: nil}
+}</span>
+
+// Print выводит список в консоль
+func (l *ForwardList[T]) Print() <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                fmt.Println("Список пуст")
+                return
+        }</span>
+        <span class="cov8" title="1">current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                fmt.Printf("%v -&gt; ", current.Key)
+                current = current.Next
+        }</span>
+        <span class="cov8" title="1">fmt.Println("nil")</span>
+}
+
+// GetPrintString возвращает строковое представление (для тестов)
+func (l *ForwardList[T]) GetPrintString() string <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return "Список пуст\n"
+        }</span>
+        <span class="cov8" title="1">var buffer bytes.Buffer
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                buffer.WriteString(fmt.Sprintf("%v -&gt; ", current.Key))
+                current = current.Next
+        }</span>
+        <span class="cov8" title="1">buffer.WriteString("nil\n")
+        return buffer.String()</span>
+}
+
+// PushHead добавляет элемент в НАЧАЛО списка
+func (l *ForwardList[T]) PushHead(key T) <span class="cov8" title="1">{
+        newNode := &amp;SNode[T]{Key: key, Next: l.Head}
+        l.Head = newNode
+}</span>
+
+// PushBack добавляет элемент в КОНЕЦ списка
+func (l *ForwardList[T]) PushBack(key T) <span class="cov8" title="1">{
+        newNode := &amp;SNode[T]{Key: key, Next: nil}
+        if l.Head == nil </span><span class="cov8" title="1">{
+                l.Head = newNode
+                return
+        }</span>
+        <span class="cov8" title="1">current := l.Head
+        for current.Next != nil </span><span class="cov8" title="1">{
+                current = current.Next
+        }</span>
+        <span class="cov8" title="1">current.Next = newNode</span>
+}
+
+// PushBefore добавляет элемент ДО узла с заданным значением
+func (l *ForwardList[T]) PushBefore(targetKey T, newKey T) error <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("list is empty, cannot find element")
+        }</span>
+
+        <span class="cov8" title="1">if l.Head.Key == targetKey </span><span class="cov8" title="1">{
+                l.PushHead(newKey)
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">current := l.Head
+        for current.Next != nil &amp;&amp; current.Next.Key != targetKey </span><span class="cov8" title="1">{
+                current = current.Next
+        }</span>
+
+        <span class="cov8" title="1">if current.Next != nil </span><span class="cov8" title="1">{
+                return l.PushForward(current, newKey)
+        }</span>
+        <span class="cov8" title="1">return fmt.Errorf("target key not found")</span>
+}
+
+// DelHead удаляет первый элемент списка
+func (l *ForwardList[T]) DelHead() error <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("attempt to delete from an empty list")
+        }</span>
+        <span class="cov8" title="1">l.Head = l.Head.Next
+        return nil</span>
+}
+
+// DelBack удаляет последний элемент списка
+func (l *ForwardList[T]) DelBack() error <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("attempt to delete from an empty list")
+        }</span>
+
+        <span class="cov8" title="1">if l.Head.Next == nil </span><span class="cov8" title="1">{
+                l.Head = nil
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">current := l.Head
+        for current.Next.Next != nil </span><span class="cov8" title="1">{
+                current = current.Next
+        }</span>
+        <span class="cov8" title="1">current.Next = nil
+        return nil</span>
+}
+
+// DelAfter удаляет элемент ПОСЛЕ указанного узла
+func (l *ForwardList[T]) DelAfter(ptr *SNode[T]) error <span class="cov8" title="1">{
+        if ptr == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("pointer cannot be null")
+        }</span>
+        <span class="cov8" title="1">if ptr.Next == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("no element exists after the specified node")
+        }</span>
+        <span class="cov8" title="1">ptr.Next = ptr.Next.Next
+        return nil</span>
+}
+
+// DelBefore удаляет элемент ДО узла с заданным значением
+func (l *ForwardList[T]) DelBefore(targetKey T) error <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("list is empty")
+        }</span>
+        <span class="cov8" title="1">if l.Head.Key == targetKey </span><span class="cov8" title="1">{
+                return fmt.Errorf("cannot delete element before the head of the list")
+        }</span>
+        <span class="cov8" title="1">if l.Head.Next == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("list is too short or element not found")
+        }</span>
+        // Если целевой элемент - второй, нужно удалить голову
+        <span class="cov8" title="1">if l.Head.Next.Key == targetKey </span><span class="cov8" title="1">{
+                return l.DelHead()
+        }</span>
+
+        <span class="cov8" title="1">current := l.Head
+        found := false
+        // Ищем узел за два шага до целевого
+        for current.Next != nil &amp;&amp; current.Next.Next != nil </span><span class="cov8" title="1">{
+                if current.Next.Next.Key == targetKey </span><span class="cov8" title="1">{
+                        l.DelAfter(current)
+                        found = true
+                        return nil
+                }</span>
+                <span class="cov8" title="1">current = current.Next</span>
+        }
+
+        <span class="cov8" title="1">if !found </span><span class="cov8" title="1">{
+                return fmt.Errorf("target element not found")
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// DelByValue удаляет узел по значению (первое вхождение)
+func (l *ForwardList[T]) DelByValue(key T) error <span class="cov8" title="1">{
+        if l.Head == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("list is empty")
+        }</span>
+
+        <span class="cov8" title="1">if l.Head.Key == key </span><span class="cov8" title="1">{
+                return l.DelHead()
+        }</span>
+
+        <span class="cov8" title="1">current := l.Head
+        for current.Next != nil &amp;&amp; current.Next.Key != key </span><span class="cov0" title="0">{
+                current = current.Next
+        }</span>
+
+        <span class="cov8" title="1">if current.Next != nil </span><span class="cov8" title="1">{
+                current.Next = current.Next.Next
+                return nil
+        }</span>
+        <span class="cov8" title="1">return fmt.Errorf("element with specified value not found")</span>
+}
+
+// GetByValue ищет элемент по значению
+func (l *ForwardList[T]) GetByValue(key T) *SNode[T] <span class="cov8" title="1">{
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                if current.Key == key </span><span class="cov8" title="1">{
+                        return current
+                }</span>
+                <span class="cov8" title="1">current = current.Next</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Save сохраняет список в текстовый файл
+func (l *ForwardList[T]) Save(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error opening file for writing: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                if _, err := fmt.Fprintf(file, "%v ", current.Key); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">current = current.Next</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Load загружает список из текстового файла
+func (l *ForwardList[T]) Load(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error opening file for reading: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Очищаем список
+        l.Head = nil
+
+        var value T
+        first := true
+        for </span><span class="cov8" title="1">{
+                _, err := fmt.Fscan(file, &amp;value)
+                if err == io.EOF </span><span class="cov8" title="1">{
+                        break</span>
+                }
+                <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("invalid data format or read error")
+                }</span>
+
+                <span class="cov8" title="1">if first </span><span class="cov8" title="1">{
+                        l.Create(value)
+                        first = false
+                }</span> else<span class="cov8" title="1"> {
+                        l.PushBack(value)
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Serialize сохраняет список в бинарный формат (gob)
+func (l *ForwardList[T]) Serialize(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error opening file for writing: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var values []T
+        current := l.Head
+        for current != nil </span><span class="cov8" title="1">{
+                values = append(values, current.Key)
+                current = current.Next
+        }</span>
+
+        <span class="cov8" title="1">encoder := gob.NewEncoder(file)
+        if err := encoder.Encode(values); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("error writing binary data: %v", err)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Deserialize загружает список из бинарного формата (gob)
+func (l *ForwardList[T]) Deserialize(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("error opening file for reading: %v", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        l.Head = nil
+        var values []T
+        decoder := gob.NewDecoder(file)
+        if err := decoder.Decode(&amp;values); err != nil </span><span class="cov8" title="1">{
+                // Если файл пуст или EOF, это нормально, просто список будет пуст
+                if err == io.EOF </span><span class="cov8" title="1">{
+                        return nil
+                }</span>
+                <span class="cov8" title="1">return fmt.Errorf("error reading binary data: %v", err)</span>
+        }
+
+        <span class="cov8" title="1">for i, val := range values </span><span class="cov8" title="1">{
+                if i == 0 </span><span class="cov8" title="1">{
+                        l.Create(val)
+                }</span> else<span class="cov8" title="1"> {
+                        l.PushBack(val)
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package stack
+
+import (
+        "encoding/gob"
+        "errors"
+        "fmt"
+        "os"
+)
+
+// Stack реализует структуру данных стек
+type Stack[T any] struct {
+        data []T
+}
+
+// NewStack создает новый пустой стек.
+func NewStack[T any]() *Stack[T] <span class="cov8" title="1">{
+        return &amp;Stack[T]{
+                data: make([]T, 0, 1),
+        }
+}</span>
+
+// NewStackWithCapacity создает стек с заданной начальной емкостью.
+func NewStackWithCapacity[T any](cap int) (*Stack[T], error) <span class="cov8" title="1">{
+        if cap &lt;= 0 </span><span class="cov8" title="1">{
+                return nil, errors.New("initial capacity must be greater than 0")
+        }</span>
+        <span class="cov8" title="1">return &amp;Stack[T]{
+                data: make([]T, 0, cap),
+        }, nil</span>
+}
+
+// Push добавляет элемент в стек.
+func (s *Stack[T]) Push(value T) <span class="cov8" title="1">{
+        s.data = append(s.data, value)
+}</span>
+
+// Pop извлекает элемент с вершины стека.
+func (s *Stack[T]) Pop() (T, error) <span class="cov8" title="1">{
+        var zero T
+        if len(s.data) == 0 </span><span class="cov8" title="1">{
+                return zero, errors.New("stack underflow: cannot pop from an empty stack")
+        }</span>
+
+        <span class="cov8" title="1">index := len(s.data) - 1
+        val := s.data[index]
+
+        // Удаляем элемент из слайса (срезаем)
+        s.data = s.data[:index]
+
+        return val, nil</span>
+}
+
+// Size возвращает текущее количество элементов.
+func (s *Stack[T]) Size() int <span class="cov8" title="1">{
+        return len(s.data)
+}</span>
+
+// Print выводит содержимое стека в консоль.
+func (s *Stack[T]) Print() <span class="cov8" title="1">{
+        for _, v := range s.data </span><span class="cov8" title="1">{
+                fmt.Printf("%v ", v)
+        }</span>
+        <span class="cov8" title="1">fmt.Println()</span>
+}
+
+// Clone создает глубокую копию стека
+func (s *Stack[T]) Clone() *Stack[T] <span class="cov8" title="1">{
+        newData := make([]T, len(s.data), cap(s.data))
+        copy(newData, s.data)
+        return &amp;Stack[T]{data: newData}
+}</span>
+
+// SaveText сохраняет стек в текстовый файл
+func (s *Stack[T]) SaveText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("could not open file for writing: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Записываем размер
+        if _, err := fmt.Fprintln(file, len(s.data)); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Записываем данные через пробел
+        <span class="cov8" title="1">for _, v := range s.data </span><span class="cov8" title="1">{
+                if _, err := fmt.Fprintf(file, "%v ", v); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">fmt.Println("Стек сохранён в файл:", filename)
+        return nil</span>
+}
+
+// LoadText загружает стек из текстового файла
+func (s *Stack[T]) LoadText(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("could not open file for reading: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        var size int
+        if _, err := fmt.Fscan(file, &amp;size); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("failed to read stack size: %w", err)
+        }</span>
+
+        // Очищаем текущий стек и выделяем память
+        <span class="cov8" title="1">s.data = make([]T, 0, size)
+
+        for i := 0; i &lt; size; i++ </span><span class="cov8" title="1">{
+                var val T
+                // Fscan автоматически парсит типы, разделенные пробелами
+                if _, err := fmt.Fscan(file, &amp;val); err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("failed to read data at index %d: %w", i, err)
+                }</span>
+                <span class="cov8" title="1">s.Push(val)</span>
+        }
+
+        <span class="cov8" title="1">fmt.Println("Стек загружен из файла:", filename)
+        return nil</span>
+}
+
+// SaveBinary сохраняет стек в бинарном формате
+func (s *Stack[T]) SaveBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Create(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("could not open binary file for writing: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        encoder := gob.NewEncoder(file)
+        if err := encoder.Encode(s.data); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("failed to encode data: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">fmt.Println("Стек сохранён (bin):", filename)
+        return nil</span>
+}
+
+// LoadBinary загружает стек из бинарного файла
+func (s *Stack[T]) LoadBinary(filename string) error <span class="cov8" title="1">{
+        file, err := os.Open(filename)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("could not open binary file for reading: %w", err)
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        decoder := gob.NewDecoder(file)
+        var newData []T
+        if err := decoder.Decode(&amp;newData); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("failed to decode data: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">s.data = newData
+        fmt.Println("Стек загружен (bin):", filename)
+        return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
