@@ -1,5 +1,7 @@
 1. Update DBMS constructor, to fill all schema in schema.json from files. 
 2. Change base name of collections in DBMS constuctor from "users" and "products" to custom.
-3. Change random UUID generator from chrono to mt19773 and random_device()
+(3.) Change random UUID generator from chrono to mt19773 and random_device() 
 4. Update Collection constructor to fill files with context of schema.json
 5. Add way to make new collection besides editing schema.json
+(6.) try { in >> chunk; } catch(...) { continue; } ???? 
+(7.) return value == condition; // Простое равенство: {"status": "fail"} ?????

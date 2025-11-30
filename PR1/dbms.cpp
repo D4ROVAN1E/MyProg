@@ -5,10 +5,12 @@
 #include <filesystem>
 #include "json.hpp"
 #include <regex>
+#include <random>
 
 // Используем псевдоним для удобства
 using json = nlohmann::json;
 using namespace std;
+random_device rd;
 
 // Логика операторов и фильтрации
 
@@ -25,7 +27,7 @@ bool checkCondition(const json& value, const json& condition) {
         else if (op == "$lt") { if (value >= arg) return false; }
         else if (op == "$gte") { if (value < arg) return false; }
         else if (op == "$lte") { if (value > arg) return false; }
-        else if (op == "$in") { // 
+        else if (op == "$in") { 
             bool found = false;
             for (const auto& item : arg) {
                 if (item == value) { found = true; break; }
@@ -81,7 +83,8 @@ class Collection {
 
     // Генерация уникального ключа (UUID-like)
     string generateId() {
-        return to_string(chrono::system_clock::now().time_since_epoch().count()) + "_" + to_string(rand());
+        mt19937 gen(rd());
+        return to_string(chrono::system_clock::now().time_since_epoch().count()) + "_" + to_string(gen());
     }
 
     // Получение списка файлов данных отсортированных по номеру (1.json, 2.json...)
@@ -126,20 +129,21 @@ public:
         auto indexes = getFileIndexes();
         int lastIdx = indexes.back();
         string filePath = path + "/" + to_string(lastIdx) + ".json";
-
-        ifstream in(filePath);
+        
         json fileData;
-        if(in.peek() != ifstream::traits_type::eof()) in >> fileData;
-        in.close();
+        if (filesystem::file_size(filePath) > 0) {
+            ifstream in(filePath);
+            in >> fileData;
+            in.close();
+        }
 
         if (fileData.size() >= tuples_limit) {
             // Создаем новый файл
-            lastIdx++;
-            filePath = path + "/" + to_string(lastIdx) + ".json";
-            fileData = json::object(); 
+            filePath = path + "/" + to_string(++lastIdx) + ".json";
+            fileData = json::object();
         }
 
-        fileData[id] = document; // Храним как Map {id: doc} 
+        fileData[id] = document; // Храним как {id: doc} 
 
         ofstream out(filePath);
         out << fileData.dump(4);
@@ -151,12 +155,15 @@ public:
         json result = json::array();
         auto indexes = getFileIndexes();
 
-        // Чтение файлов последовательно (memory efficiency)
+        // Чтение файлов последовательно
         for (int idx : indexes) {
             ifstream in(path + "/" + to_string(idx) + ".json");
             json chunk;
             if (in.good()) {
-                try { in >> chunk; } catch(...) { continue; }
+                try { in >> chunk; } catch(...) {
+                    cerr << "Couldn't read file " + path + "/" + to_string(idx) + ".json" << endl;
+                    continue;
+                }
             }
             in.close();
 
@@ -165,11 +172,11 @@ public:
                 if (matchDocument(doc, query)) {
                     // Проекция
                     if (projection != nullptr && !projection.empty()) {
-                         json projectedDoc;
-                         for(const auto& field : projection) {
-                             if(doc.contains(field)) projectedDoc[field] = doc[field];
-                         }
-                         result.push_back(projectedDoc);
+                        json projectedDoc;
+                        for(const auto& field : projection) {
+                           if(doc.contains(field)) projectedDoc[field] = doc[field];
+                        }
+                        result.push_back(projectedDoc);
                     } else {
                         result.push_back(doc);
                     }
