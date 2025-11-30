@@ -1,7 +1,8 @@
-1. Update DBMS constructor, to fill all schema in schema.json from files. 
-2. Change base name of collections in DBMS constuctor from "users" and "products" to custom.
+(1.) Update DBMS constructor, to fill all schema in schema.json from files. ### Хранится для пункта 8
+(2.) Change base name of collections in DBMS constuctor from "users" and "products" to custom. ### Нет неоюходимости добавлять это во время исполнения программы
 (3.) Change random UUID generator from chrono to mt19773 and random_device() 
-4. Update Collection constructor to fill files with context of schema.json
-5. Add way to make new collection besides editing schema.json
+(4.) Update Collection constructor to fill files with context of schema.json ### Нет необходимости, потому что там хранятся только типы
+(5.) Add way to make new collection besides editing schema.json ### Нет необходимости данного действия в ТЗ
 (6.) try { in >> chunk; } catch(...) { continue; } ???? 
 (7.) return value == condition; // Простое равенство: {"status": "fail"} ?????
+8. Add type checker to compare it with schema
