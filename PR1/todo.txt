@@ -6,6 +6,6 @@
 (6.) try { in >> chunk; } catch(...) { continue; } ???? 
 (7.) return value == condition; // Простое равенство: {"status": "fail"} ?????
 (8.) Add type checker to compare it with schema
-9. Add error handling
-10. Change containers from stl to my own
+(9.) Add error handling
+(10.) Change containers from stl to my own
 11. Make parser to work with console
