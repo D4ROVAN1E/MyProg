@@ -1,4 +1,4 @@
-# Имена исходных файлов тестов
+# ТЕСТЫ
 TEST_SRCS = test_array.cpp \
             test_binary_tree.cpp \
             test_ch.cpp \
@@ -8,50 +8,86 @@ TEST_SRCS = test_array.cpp \
             test_singly_list.cpp \
             test_stack.cpp
 
-# Генерация имен исполняемых файлов (test_name.cpp -> t_name)
-EXECUTABLES = $(patsubst test_%.cpp, t_%, $(TEST_SRCS))
+# Исполняемые файлы тестов (test_name.cpp -> t_name)
+TEST_EXES = $(patsubst test_%.cpp, t_%, $(TEST_SRCS))
 
-# Компилятор и флаги
+# БЕНЧМАРКИ
+BENCH_SRCS = bench_array.cpp \
+             bench_biTree.cpp \
+             bench_ch.cpp \
+             bench_dh.cpp \
+             bench_dl.cpp \
+             bench_queue.cpp \
+             bench_sl.cpp \
+             bench_stack.cpp
+
+# Исполняемые файлы бенчмарков (bench_name.cpp -> b_name)
+BENCH_EXES = $(patsubst bench_%.cpp, b_%, $(BENCH_SRCS))
+
+# НАСТРОЙКИ КОМПИЛЯТОРА
 CXX = g++
-CXXFLAGS = --coverage
+# Путь к заголовкам Boost
+# BOOST_INC = -I "/mnt/c/local/boost_1_89_0"
+# Библиотеки Boost, необходимые для таймеров (только для бенчмарков)
+BOOST_LIBS = -lboost_timer -lboost_system -lboost_random
 
-# Основная цель (по умолчанию)
+# Флаги:
+# Для тестов нужно покрытие кода (--coverage)
+TEST_FLAGS = --coverage
+# Для бенчмарков критически важна оптимизация
+BENCH_FLAGS = -O3
+
+# ЦЕЛИ
+
+# Основная цель (по умолчанию запускает тесты и отчет)
 all: report
 
-# Компиляция: правило для создания t_name из test_name.cpp
-# $@ - имя цели (например, t_array)
-# $< - имя зависимости (например, test_array.cpp)
+# Сборка тестов
 t_%: test_%.cpp
-	$(CXX) $(CXXFLAGS) $< -o $@ -I "/mnt/c/local/boost_1_89_0"
+	$(CXX) $(TEST_FLAGS) $< -o $@ $(BOOST_INC)
 
-# Цель для компиляции всех файлов
-compile: $(EXECUTABLES)
+# Сборка бенчмарков
+b_%: bench_%.cpp
+	$(CXX) $(BENCH_FLAGS) $< -o $@ $(BOOST_INC) $(BOOST_LIBS)
 
-# Запуск тестов 
-run_tests: compile
-	@echo "--- Running Tests ---"
-	@for exe in $(EXECUTABLES); do \
-		echo "Running ./$$exe..."; \
+# Компиляция всего (и тесты, и бенчмарки)
+compile: $(TEST_EXES) $(BENCH_EXES)
+
+# Запуск тестов
+run_tests: $(TEST_EXES)
+	@echo "Running Unit Tests"
+	@for exe in $(TEST_EXES); do \
+		echo "Testing ./$$exe..."; \
 		./$$exe; \
 	done
 
-# Сбор покрытия, фильтрация и генерация HTML
+# Запуск бенчмарков
+bench: $(BENCH_EXES)
+	@echo "Running Benchmarks"
+	@for exe in $(BENCH_EXES); do \
+		echo "========================================"; \
+		echo "Benchmarking ./$$exe..."; \
+		./$$exe; \
+		echo ""; \
+	done
+
+# Генерация отчета о покрытии (только для тестов)
 report: run_tests
 	lcov --capture --directory . --output-file coverage.info
-
 	lcov --remove coverage.info \
 		'/mnt/c/msys64*' \
 		'/mnt/c/local/*' \
 		'/usr/*' \
 		'*/test_*.cpp' \
+		'*/bench_*.cpp' \
 		--output-file coverage_filtered.info
-
 	genhtml coverage_filtered.info --output-directory html_report
+	@echo "Report generated in html_report/index.html"
 
-# Очистка сгенерированных файлов
+# Очистка
 clean:
-	rm -f $(EXECUTABLES)
+	rm -f $(TEST_EXES) $(BENCH_EXES)
 	rm -f *.gcda *.gcno *.info
 	rm -rf html_report
 
-.PHONY: all compile run_tests report clean
+.PHONY: all compile run_tests bench report clean
