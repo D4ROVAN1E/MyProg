@@ -9,3 +9,4 @@
 (9.) Add error handling
 (10.) Change containers from stl to my own
 11. Make parser to work with console
+    Write errors for failed update

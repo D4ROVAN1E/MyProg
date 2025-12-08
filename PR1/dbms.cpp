@@ -19,7 +19,12 @@ struct Timestamp {
     int year, month, day, hour, minute, second;
 
     // Конструктор из строки
-    Timestamp(const string& ts) {
+    Timestamp(const string& ts) : year(0)
+                                , month(0)
+                                , day(0)
+                                , hour(0)
+                                , minute(0)
+                                , second(0) {
         if (sscanf(ts.c_str(), "%d-%d-%dT%d:%d:%d", &year, &month, &day, &hour, &minute, &second) != 6) { // Если успешно записаны не 6
             cerr << "Could't parse timestamp data" << endl;
         }
@@ -131,6 +136,7 @@ bool checkCondition(const json& value, const json& condition) {
         else if (op == "$lte") { if (value > arg) return false; }
         else if (op == "$in") { 
             bool found = false;
+            if (!arg.is_array()) return false;
             for (const auto& item : arg) {
                 if (item == value) { found = true; break; }
             }
@@ -249,11 +255,11 @@ public:
         }
     }
 
-    void insert(json document) {
+    string insert(json document) {
         // Проверка схемы перед вставкой
         if (!validateDocument(document, structure)) {
             cerr << "Error: Document structure or types do not match the schema in collection '" << name << "'." << endl;
-            return;
+            return "";
         }
 
         string id;
@@ -287,6 +293,7 @@ public:
         ofstream out(filePath);
         out << fileData.dump(4);
         out.close();
+        return id;
     }
 
     void insert_one(const json& document) {
@@ -557,196 +564,209 @@ public:
         }
         return nullptr;
     }
+
+    string getName() const { return schemaName; }
     
     ~DBMS() {
         for (auto& kv : collections) delete kv.second;
     }
 };
 
+class ConsoleParser {
+    DBMS& dbms;
+
+    // Структура для хранения разобранных аргументов
+    struct ParsedArgs {
+        json arg1 = nullptr;    // query или document
+        json arg2 = nullptr;    // updateOps или projection
+        bool multi = false;     // флаг для update/delete
+        bool hasArg2 = false;
+    };
+
+    // Безопасное разделение строки аргументов (учитывая вложенные JSON)
+    Array<string> splitArguments(string argsStr) {
+        Array<string> args;
+        string buffer;
+        int balanceBrace = 0;   // {}
+        int balanceBracket = 0; // []
+        
+        for (size_t i = 0; i < argsStr.length(); ++i) {
+            char c = argsStr[i];
+            
+            if (c == '{') balanceBrace++;
+            else if (c == '}') balanceBrace--;
+            else if (c == '[') balanceBracket++;
+            else if (c == ']') balanceBracket--;
+            
+            // Разделяем по запятой, только если мы не внутри объекта/массива
+            if (c == ',' && balanceBrace == 0 && balanceBracket == 0) {
+                // Триминг пробелов
+                size_t first = buffer.find_first_not_of(" \t");
+                size_t last = buffer.find_last_not_of(" \t");
+                if (first != string::npos) {
+                    args.push_back(buffer.substr(first, (last - first + 1)));
+                }
+                buffer = "";
+            } else {
+                buffer += c;
+            }
+        }
+        // Добавляем последний аргумент
+        size_t first = buffer.find_first_not_of(" \t");
+        size_t last = buffer.find_last_not_of(" \t");
+        if (first != string::npos) {
+            args.push_back(buffer.substr(first, (last - first + 1)));
+        }
+        
+        return args;
+    }
+
+    // Парсинг значений (True/False) и именованных параметров
+    ParsedArgs parseArgsInternal(const Array<string>& rawArgs) {
+        ParsedArgs res;
+        
+        // Используем GetSize() и доступ по индексу [i]
+        for (uint32_t i = 0; i < rawArgs.GetSize(); ++i) {
+            string current = rawArgs[i];
+            
+            // Обработка projection=...
+            if (current.rfind("projection=", 0) == 0) {
+                string val = current.substr(11);
+                try {
+                    res.arg2 = json::parse(val);
+                    res.hasArg2 = true;
+                } catch (...) { cerr << "Invalid projection JSON" << endl; }
+                continue;
+            }
+            
+            // Обработка multi=True / False
+            if (current.find("multi=") != string::npos) {
+                if (current.find("True") != string::npos || current.find("true") != string::npos) {
+                    res.multi = true;
+                } else {
+                    res.multi = false;
+                }
+                continue;
+            }
+
+            // Обычные JSON аргументы (позиционные)
+            try {
+                json j = json::parse(current);
+                if (i == 0) res.arg1 = j;
+                else if (i == 1) { res.arg2 = j; res.hasArg2 = true; }
+            } catch (json::parse_error& e) {
+                cerr << "JSON Parse Error at argument " << i+1 << ": " << e.what() << endl;
+            }
+        }
+        return res;
+    }
+
+public:
+    ConsoleParser(DBMS& db) : dbms(db) {}
+
+    void execute(const string& commandLine) {
+        // Защита от пустых строк
+        if (commandLine.empty()) return;
+
+        // Базовая валидация структуры: dbName.collName.method(args)
+        regex cmdPattern(R"(^(\w+)\.(\w+)\.(\w+)\((.*)\)$)");
+        smatch matches;
+        
+        if (!regex_match(commandLine, matches, cmdPattern)) {
+            cerr << "Syntax Error. Expected: db.collection.method(args)" << endl;
+            return;
+        }
+
+        string dbName = matches[1];
+        string colName = matches[2];
+        string method = matches[3];
+        string argsStr = matches[4];
+
+        // Проверка имени БД
+        if (dbName != dbms.getName()) {
+            cerr << "Error: Unknown database '" << dbName << "'" << endl;
+            return;
+        }
+
+        // Получение коллекции
+        Collection* col = dbms.getCollection(colName);
+        if (!col) {
+            cerr << "Error: Collection '" << colName << "' not found." << endl;
+            return;
+        }
+
+        // Парсинг аргументов с использованием Array
+        Array<string> rawArgs = splitArguments(argsStr);
+        ParsedArgs parsed = parseArgsInternal(rawArgs);
+
+        // Маршрутизация методов
+        try {
+            if (method == "find") {
+                json res = col->find(parsed.arg1, parsed.arg2);
+                cout << res.dump(4) << endl;
+            }
+            else if (method == "find_one") {
+                json res = col->find_one(parsed.arg1, parsed.arg2);
+                if (res != nullptr) cout << res.dump(4) << endl;
+                else cout << "null" << endl;
+            }
+            else if (method == "insert") {
+                if (parsed.arg1.is_null()) { cerr << "Insert requires a document." << endl; return; }
+                string id = col->insert(parsed.arg1);
+                if(!id.empty()) cout << "Inserted ID: " << id << endl;
+            }
+            else if (method == "insert_many") {
+                if (parsed.arg1.is_null() || !parsed.arg1.is_array()) { cerr << "insert_many requires an array." << endl; return; }
+                col->insert_many(parsed.arg1);
+            }
+            else if (method == "update") {
+                if (parsed.arg1.is_null() || !parsed.hasArg2) { cerr << "Update requires query and update operators." << endl; return; }
+                col->update(parsed.arg1, parsed.arg2, parsed.multi);
+            }
+            else if (method == "update_one") {
+                if (parsed.arg1.is_null() || !parsed.hasArg2) { cerr << "Update requires query and update operators." << endl; return; }
+                col->update(parsed.arg1, parsed.arg2, false);
+            }
+             else if (method == "update_many") {
+                if (parsed.arg1.is_null() || !parsed.hasArg2) { cerr << "Update requires query and update operators." << endl; return; }
+                col->update(parsed.arg1, parsed.arg2, true);
+            }
+            else if (method == "delete_one") {
+                col->remove(parsed.arg1, false);
+            }
+            else if (method == "delete_many") {
+                col->remove(parsed.arg1, true);
+            }
+            else {
+                cerr << "Unknown method: " << method << endl;
+            }
+        } catch (exception& e) {
+            cerr << "Execution Error: " << e.what() << endl;
+        }
+    }
+};
+
 int main() {
     setlocale(LC_ALL, "ru");
+    
     // Инициализация СУБД с конфигурацией
     DBMS db("schema.json");
+    ConsoleParser parser(db);
 
-    // Используем коллекцию 'users', так как большинство примеров в методичке связано с ней
-    Collection* users = db.getCollection("users");
-    if (!users) {
-        cerr << "Collection users not found" << endl;
-        return 1;
+    cout << "DBMS initialized. Database: " << db.getName() << endl;
+    cout << "Enter commands (e.g. " << db.getName() << ".users.find({})). Type 'exit' to quit." << endl;
+
+    string line;
+    while (true) {
+        cout << "> ";
+        if (!getline(cin, line)) break;
+        if (line == "exit") break;
+        
+        // Пропуск пустых строк
+        if (line.find_first_not_of(" \t\n\r") == string::npos) continue;
+
+        parser.execute(line);
     }
-
-    // Очистка коллекции перед началом тестов
-    users->delete_many({});
-
-    cout << "=== 1. INSERT (Вставка) ===" << endl;
-    
-    // 1.1 insert_one (вставка одного документа) [cite: 28, 30]
-    cout << "Inserting Alice..." << endl;
-    users->insert({
-        {"name", "alice"},
-        {"age", 25},
-        {"status", "active"},
-        {"score", 45},
-        {"hunted", "2025-02-12T12:00:30"}
-    });
-
-    // 1.2 insert_many (вставка нескольких документов) [cite: 6, 31, 33]
-    cout << "Inserting Bob, Carol, Dave, Eve..." << endl;
-    users->insert_many({
-        {
-            {"user", "bob"}, 
-            {"age", 30}, 
-            {"status", "fail"}, 
-            {"score", 20},
-            {"priority", "high"},
-            {"hunted", "2025-13-12T12:00:30"}
-        },
-        {
-            {"name", "carol"}, 
-            {"age", 20}, 
-            {"status", "warn"}, 
-            {"score", 95},
-            {"hunted", "hi"}
-        },
-        {
-            {"name", "dave"}, 
-            {"age", 40}, 
-            {"status", "active"}, 
-            {"score", 100}
-        },
-        {
-            {"name", "eve"}, 
-            {"age", 15}, 
-            {"status", "obsolete"}, 
-            {"score", 0}
-        }
-    });
-
-    users->insert({
-        {"name", "ivan"},
-        {"age", 60},
-        {"status", "best_worker"},
-        {"score", 2000}
-    });
-    
-    // Вывод всех документов [cite: 14, 15]
-    cout << "All users: " << users->find({}).dump(4) << endl;
-
-
-    cout << "\n=== 2. FIND (Поиск и Операторы сравнения) ===" << endl;
-
-    // 2.1 Простой фильтр (равно) [cite: 17, 42]
-    cout << "Find status='fail':" << endl;
-    cout << users->find({{"status", "fail"}}).dump(4) << endl;
-
-    // 2.2 Операторы сравнения $gt, $lt [cite: 19, 42]
-    cout << "Find score > 90 ($gt):" << endl;
-    cout << users->find({{"score", {{"$gt", 90}}}}).dump(4) << endl;
-
-    cout << "Find age < 25 ($lt):" << endl;
-    cout << users->find({{"age", {{"$lt", 25}}}}).dump(4) << endl;
-
-    // 2.3 Оператор $in (входит в список) [cite: 20, 42]
-    cout << "Find status in ['error', 'warn'] ($in):" << endl;
-    cout << users->find({{"status", {{"$in", {"error", "warn"}}}}}).dump(4) << endl;
-
-    // 2.4 Оператор $ne (не равно) [cite: 42]
-    cout << "Find user != 'alice' ($ne):" << endl;
-    // Ограничим вывод 1 элементом через find_one для краткости, проверяя логику
-    cout << users->find_one({{"name", {{"$ne", "alice"}}}}) << endl;
-
-
-    cout << "\n=== 3. LOGICAL OPERATORS (Логические операторы) ===" << endl;
-
-    // 3.1 Оператор $and [cite: 22, 44]
-    // Найти тех, у кого status=fail И priority=high
-    cout << "Find status='fail' AND priority='high' ($and):" << endl;
-    cout << users->find({
-        {"$and", {
-            {{"status", "fail"}},
-            {{"priority", "high"}}
-        }}
-    }).dump(4) << endl;
-
-    // 3.2 Оператор $or [cite: 44]
-    // Найти тех, у кого возраст < 20 ИЛИ возраст > 35
-    cout << "Find age < 20 OR age > 35 ($or):" << endl;
-    cout << users->find({
-        {"$or", {
-            {{"age", {{"$lt", 20}}}},
-            {{"age", {{"$gt", 35}}}}
-        }}
-    }).dump(4) << endl;
-
-    // 3.3 Оператор $not [cite: 44]
-    // Найти тех, у кого возраст НЕ больше 30 (т.е. <= 30)
-    cout << "Find age NOT > 30 ($not):" << endl;
-    cout << users->find({
-        {"age", {{"$not", {{"$gt", 30}}}}}
-    }).dump(4) << endl;
-
-
-    cout << "\n=== 4. PROJECTION (Проекция) ===" << endl;
-    
-    // 4.1 Проекция полей [cite: 13, 23, 24]
-    // Вывести только поля "user" и "status" для пользователя "alice"
-    cout << "Projection ['name', 'status'] for 'alice':" << endl;
-    cout << users->find({{"name", "alice"}}, {"name", "status"}).dump(4) << endl;
-
-
-    cout << "\n=== 5. FIND_ONE (Найти один) ===" << endl;
-    
-    // 5.1 Получение одного документа [cite: 25, 27]
-    cout << "Find one user with score=100:" << endl;
-    cout << users->find_one({{"score", 100}}).dump(4) << endl;
-
-
-    cout << "\n=== 6. UPDATE (Обновление) ===" << endl;
-
-    // 6.1 $set (установить значение) [cite: 36]
-    cout << "Update 'alice': set status='super_active' ($set)..." << endl;
-    users->update_one(
-        {{"name", "alice"}}, 
-        {{"$set", {{"status", "super_active"}}}}
-    );
-    cout << "Alice after update: " << users->find_one({{"name", "alice"}}).dump(4) << endl;
-
-    // 6.2 $inc (инкремент) [cite: 36]
-    // Увеличить score на 10 для всех, у кого score < 50
-    cout << "Update many: increment score by 10 where score < 50 ($inc)..." << endl;
-    users->update_many(
-        {{"score", {{"$lt", 50}}}},
-        {{"$inc", {{"score", 10}}}}
-    );
-    // Проверим Боба (было 20 -> станет 30) и Алису (было 45 -> станет 55)
-    cout << "Bob score: " << users->find_one({{"name", "bob"}}, {"score"}) << endl;
-    cout << "Alice score: " << users->find_one({{"name", "alice"}})["score"] << endl;
-
-    // 6.3 $push (добавление в массив) [cite: 9]
-    cout << "Update 'alice': push 'login' to tags ($push)..." << endl;
-    users->update_one(
-        {{"name", "alice"}},
-        {{"$push", {{"tags", "login"}}}}
-    );
-    cout << "Alice tags: " << users->find_one({{"name", "alice"}})["tags"] << endl;
-
-
-    cout << "\n=== 7. DELETE (Удаление) ===" << endl;
-
-    // 7.1 delete_one (удалить одного) [cite: 10, 39]
-    cout << "Deleting 'alice' (delete_one)..." << endl;
-    users->delete_one({{"name", "alice"}});
-    if (users->find_one({{"user", "alice"}}) == nullptr) {
-        cout << "Alice deleted successfully." << endl;
-    }
-
-    // 7.2 delete_many (удалить много по фильтру) [cite: 10, 40]
-    cout << "Deleting all users with status='obsolete' (delete_many)..." << endl;
-    users->delete_many({{"status", "obsolete"}}); // Удалит 'eve'
-    
-    // Проверка, что 'eve' удалена, а 'dave' (status: active) остался
-    cout << "Eve found? " << (users->find_one({{"name", "eve"}}) != nullptr) << endl;
-    cout << "Dave found? " << (users->find_one({{"name", "dave"}}) != nullptr) << endl;
 
     return 0;
 }
