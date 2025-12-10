@@ -4,13 +4,13 @@
 #include <filesystem>
 #include <regex>
 #include <random>
-#include <chrono> // Добавлено для генерации ID
-#include <cstdio> // для sscanf и sprintf
+#include <chrono> // Для генерации ID
+#include <cstdio> // Для sscanf и sprintf
 #include "json.hpp"
 #include "array.hpp"
 #include "dh.hpp"
 
-// Используем псевдоним для удобства
+// Псевдоним для удобства
 using json = nlohmann::json;
 using namespace std;
 random_device rd;
@@ -96,10 +96,10 @@ struct Timestamp {
     }
 };
 
-// Функция-обертка для валидации в Collection::validateDocument
+// Функция-обертка для валидации в validateDocument
 bool isValidTimestamp(const string& ts) {
     Timestamp t(ts);
-    // Проверяем формат через регулярку И логическую валидность даты
+    // Проверяем формат через паттерн и логическую валидность даты
     static const regex pattern(R"(^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$)");
     return regex_match(ts, pattern) && t.isValid();
 }
@@ -152,7 +152,7 @@ bool checkCondition(const json& value, const json& condition) {
 bool matchDocument(const json& doc, const json& query) {
     if (query.empty()) return true;
 
-    // Логические операторы верхнего уровня ($and, $or)
+    // Логические операторы верхнего уровня
     if (query.contains("$and")) {
         for (const auto& subQuery : query["$and"]) {
             if (!matchDocument(doc, subQuery)) return false;
@@ -357,7 +357,7 @@ public:
     }
 
     json find_one(const json& query, const json& projection = nullptr) {
-        // Получаем массив результатов (максимум 1 элемент благодаря true)
+        // Получаем массив результатов
         json result = find(query, projection, true);
         
         // Если массив пуст - документ не найден
@@ -522,10 +522,10 @@ public:
                     // Коллекция с вложенной структурой
                     {"products", {
                         {"name", "str"},
-                        {"specs", {             // Вложенный объект
+                        {"specs", {  // Вложенный объект
                             {"cpu", "str"},
                             {"ram", "int"},
-                            {"screen", {        // Двойная вложенность
+                            {"screen", {  // Двойная вложенность
                                 {"size", "int"},
                                 {"type", "str"}
                             }}
@@ -577,13 +577,14 @@ class ConsoleParser {
 
     // Структура для хранения разобранных аргументов
     struct ParsedArgs {
-        json arg1 = nullptr;    // query или document
-        json arg2 = nullptr;    // updateOps или projection
-        bool multi = false;     // флаг для update/delete
+        json arg1 = nullptr;  // query или document
+        json arg2 = nullptr;  // updateOps или projection
+        bool multi = false;   // флаг для update/delete
         bool hasArg2 = false;
+        bool parseError = false;
     };
 
-    // Безопасное разделение строки аргументов (учитывая вложенные JSON)
+    // Безопасное разделение строки аргументов
     Array<string> splitArguments(string argsStr) {
         Array<string> args;
         string buffer;
@@ -625,11 +626,10 @@ class ConsoleParser {
     ParsedArgs parseArgsInternal(const Array<string>& rawArgs) {
         ParsedArgs res;
         
-        // Используем GetSize() и доступ по индексу [i]
         for (uint32_t i = 0; i < rawArgs.GetSize(); ++i) {
             string current = rawArgs[i];
             
-            // Обработка projection=...
+            // Обработка projection=
             if (current.rfind("projection=", 0) == 0) {
                 string val = current.substr(11);
                 try {
@@ -639,7 +639,7 @@ class ConsoleParser {
                 continue;
             }
             
-            // Обработка multi=True / False
+            // Обработка multi=True/False
             if (current.find("multi=") != string::npos) {
                 if (current.find("True") != string::npos || current.find("true") != string::npos) {
                     res.multi = true;
@@ -649,13 +649,14 @@ class ConsoleParser {
                 continue;
             }
 
-            // Обычные JSON аргументы (позиционные)
+            // Обычные JSON аргументы
             try {
                 json j = json::parse(current);
                 if (i == 0) res.arg1 = j;
                 else if (i == 1) { res.arg2 = j; res.hasArg2 = true; }
             } catch (json::parse_error& e) {
                 cerr << "JSON Parse Error at argument " << i+1 << ": " << e.what() << endl;
+                res.parseError = true;
             }
         }
         return res;
@@ -695,15 +696,17 @@ public:
             return;
         }
 
-        // Парсинг аргументов с использованием Array
+        // Парсинг аргументов
         Array<string> rawArgs = splitArguments(argsStr);
         ParsedArgs parsed = parseArgsInternal(rawArgs);
 
-        // Маршрутизация методов
+        if (parsed.parseError) return;
+
         try {
             if (method == "find") {
                 json res = col->find(parsed.arg1, parsed.arg2);
-                cout << res.dump(4) << endl;
+                if (res != nullptr) cout << res.dump(4) << endl;
+                else cout << "null" << endl;
             }
             else if (method == "find_one") {
                 json res = col->find_one(parsed.arg1, parsed.arg2);

@@ -396,7 +396,7 @@ class DoubleHash {
                 // Записываем сам ключ
                 outFile.write(table[i].first.c_str(), keyLen);
 
-                // Записываем значение (работает корректно для POD-типов)
+                // Записываем значение
                 outFile.write(reinterpret_cast<const char*>(&table[i].second), sizeof(T));
             }
         }

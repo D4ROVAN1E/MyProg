@@ -124,7 +124,7 @@ class Array {
         return data[size - 1];
     }
 
-    // Очистка массива (но сохранение capacity)
+    // Очистка массива но сохранение capacity
     void clear() {
         size = 0; 
     }
