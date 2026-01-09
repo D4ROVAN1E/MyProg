@@ -253,14 +253,14 @@ class CuckooHash {
         }
 
         // Записываем заголовок
-        outFile << tableSize << " " << elementsCount << endl;
+        outFile << tableSize << " " << elementsCount << "\n";
 
         // Записываем только занятые ячейки
         for (uint32_t i = 0; i < tableSize; i++) {
             if (table[i].isOccupied) {
                 // Сохраняем индекс, чтобы при загрузке поместить элемент
                 // ровно в ту же позицию (важно для структуры Cuckoo Hash)
-                outFile << i << " " << table[i].key << " " << table[i].value << endl;
+                outFile << i << " " << table[i].key << " " << table[i].value << "\n";
             }
         }
 

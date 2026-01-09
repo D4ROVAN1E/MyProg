@@ -27,7 +27,7 @@ BENCH_EXES = $(patsubst bench_%.cpp, b_%, $(BENCH_SRCS))
 # НАСТРОЙКИ КОМПИЛЯТОРА
 CXX = g++
 # Путь к заголовкам Boost
-# BOOST_INC = -I "/mnt/c/local/boost_1_89_0"
+BOOST_INC = -I "/mnt/c/local/boost_1_89_0"
 # Библиотеки Boost, необходимые для таймеров (только для бенчмарков)
 BOOST_LIBS = -lboost_timer -lboost_system -lboost_random
 

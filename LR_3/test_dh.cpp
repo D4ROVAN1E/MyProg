@@ -1,7 +1,9 @@
 #define BOOST_TEST_MODULE DoubleHashTests
 #include <boost/test/included/unit_test.hpp>
+#include <random>
 #include <string>
-#include <cstdio> 
+#include <cstdio>
+#include <vector>
 #include "dh.hpp"
 
 // Вспомогательная структура для перехвата cout
@@ -19,6 +21,31 @@ struct CoutRedirect {
     streambuf* old;
 };
 
+random_device rd;
+
+auto generateKeys(uint32_t count) -> vector<string> {
+    vector<string> keys;
+    keys.reserve(count);
+
+    // Символы для ключей
+    static const char charset[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    mt19937 gen(rd());
+    uniform_int_distribution<> dist(0, sizeof(charset) - 2);
+
+    for (uint32_t i = 0; i < count; ++i) {
+        string s;
+        s.reserve(16);
+        for (uint32_t j = 0; j < 16; ++j) {
+            s += charset[dist(gen)];
+        }
+        keys.push_back(s);
+    }
+    return keys;
+}
 
 BOOST_AUTO_TEST_SUITE(DoubleHashSuite)
 
@@ -150,6 +177,37 @@ BOOST_AUTO_TEST_CASE(ResizeTest) {
     BOOST_CHECK_EQUAL(*dh.find("4"), 4);
 }
 
+BOOST_AUTO_TEST_CASE(HeavyLoadAndRemove) {
+    // Начинаем с очень маленького размера, чтобы быстро вызвать resize
+    DoubleHash<int> hash;
+    int n = 100000;
+    vector<string> keys = generateKeys(n);
+    for (uint32_t i = 0; i < n; ++i) {
+        hash.insert(keys[i], i);
+    }
+
+    BOOST_CHECK_EQUAL(hash.size(), n);
+
+    // Проверяем, что все элементы на месте после множественных resize
+    for(int i = 0; i < n; ++i) {
+        int* val = hash.find(keys[i]);
+        BOOST_REQUIRE_MESSAGE(val != nullptr, "Key not found: key" + to_string(i));
+        BOOST_CHECK_EQUAL(*val, i);
+    }
+
+    // Поиск не существующего ключа
+    int* val = hash.find("unused_key");
+    BOOST_CHECK_EQUAL(val, nullptr);
+
+    // Удаление большого количества ячеек
+    for (uint32_t i = 0; i < n / 2; ++i) {
+        hash.remove(keys[i]);
+    }
+
+    bool nullRemove = hash.remove("unused_key");
+    BOOST_CHECK_EQUAL(nullRemove, false);
+}
+
 // Тесты текстовой сериализации 
 BOOST_AUTO_TEST_CASE(TextSerializationTest) {
     string filename = "test_hash_dump.txt";
@@ -203,15 +261,15 @@ BOOST_AUTO_TEST_CASE(BinarySerializationTest) {
         BOOST_CHECK(dh_loaded.find("y") == nullptr);
     }
     
-    // Тест на чтение несуществующего бинарного файла
+    // Тест на чтение и запись несуществующего бинарного файла
     DoubleHash<double> bad_dh;
-    BOOST_CHECK_THROW(bad_dh.deserialize_bin("non_existent_bin.bin"), runtime_error);
+    BOOST_CHECK_THROW(bad_dh.deserialize_bin(""), runtime_error);
+    BOOST_CHECK_THROW(bad_dh.serialize_bin(""), runtime_error);
 
     remove(filename.c_str());
 }
 
 // Тест исключений ввода-вывода
-
 BOOST_AUTO_TEST_CASE(FileIOErrorTest) {
     DoubleHash<int> dh;
     dh.insert("a", 1);

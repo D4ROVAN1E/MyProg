@@ -8,7 +8,7 @@
 #include "ch.hpp"
 
 // Константы
-const uint32_t NUM_ELEMENTS = 10000;    // Количество элементов
+const uint32_t NUM_ELEMENTS = 25000;    // Количество элементов
 const uint32_t STRING_LEN = 6;          // Длина ключа-строки
 
 // Генератор случайных строк (ключей)
@@ -106,9 +106,8 @@ void bench_core_operations() {
 void bench_io() {
     cout << "\nBenchmark: I/O Operations (Text vs Binary)" << endl;
     
-    // Подготовим таблицу поменьше для IO тестов
-    uint32_t IO_SIZE = 50000;
-    CuckooHash<int> ht(IO_SIZE * 2); 
+    uint32_t IO_SIZE = 25000;
+    CuckooHash<int> ht(IO_SIZE);
     vector<string> keys = generateKeys(IO_SIZE);
     for(uint32_t i=0; i<IO_SIZE; ++i) ht.insert(keys[i], i);
 

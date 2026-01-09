@@ -17,11 +17,12 @@ struct HashNode {
     string key;
     T value;
     bool isOccupied;  // Занята ли ячейка
+    bool isDeleted;
 
-    HashNode() : key(""), value(T()), isOccupied(false) {}
+    HashNode() : key(""), value(T()), isOccupied(false), isDeleted(false) {}
 
     HashNode(const string& newKey, const T& newValue)
-        : key(newKey), value(newValue), isOccupied(true) {
+        : key(newKey), value(newValue), isOccupied(true), isDeleted(false) {
     }
 };
 
@@ -59,11 +60,6 @@ class DoubleHash {
         // Возвращаем нечётное число
         uint32_t result = (sum % (tableSize - 1)) + 1;
 
-        // Делаем результат нечётным, если размер таблицы чётный
-        if (tableSize % 2 == 0 && result % 2 == 0) {
-            result++;
-        }
-
         return result;
     }
 
@@ -73,6 +69,26 @@ class DoubleHash {
         return (static_cast<double>(elementsCount) / tableSize) > 0.7;
     }
 
+    // Вспомогательная функция проверки на простоту
+    [[nodiscard]] static bool isPrime(uint32_t n) {
+    if (n <= 1) return false;
+    if (n <= 3) return true;
+    if (n % 2 == 0 || n % 3 == 0) return false;
+    for (uint32_t i = 5; i * i <= n; i += 6) {
+        if (n % i == 0 || n % (i + 2) == 0) return false;
+    }
+    return true;
+    }
+
+    // Поиск следующего простого числа
+    [[nodiscard]] static uint32_t nextPrime(uint32_t n) {
+    if (n <= 1) return 2;
+    while (!isPrime(n)) {
+        n++;
+    }
+    return n;
+    }
+
     // Расширение таблицы при достижении порога загрузки
     void resize() {
         uint32_t oldSize = tableSize;
@@ -80,7 +96,7 @@ class DoubleHash {
 
         // Увеличиваем размер таблицы
         // Делаем нечётным для лучшего распределения
-        tableSize = tableSize * 2 + 1;
+        tableSize = nextPrime(tableSize * 2);
 
         // Создаём новую таблицу
         table = Array<HashNode<T>>(tableSize + 1);
@@ -154,27 +170,29 @@ class DoubleHash {
 
     // Вставка элемента
     void insert(const string& key, const T& value) {
-        if (needResize()) {
+        if (needResize())
             resize();
-        }
 
         uint32_t h1 = hash1(key);
         uint32_t h2 = hash2(key);
         uint32_t i = 0;
 
+        int32_t firstDeletedIndex = -1; // Запоминаем первое место, куда можно вставить
+
         while (i < tableSize) {
             uint32_t index = (h1 + i * h2) % tableSize;
 
-            // Если ячейка свободна или была удалена, вставляем
-            if (!table[index].isOccupied) {
-                table[index] = HashNode<T>(key, value);
-                elementsCount++;
+            // Нашли точное совпадение — обновляем
+            if (table[index].isOccupied && table[index].key == key) {
+                table[index].value = value;
                 return;
             }
 
-            // Если ключ уже существует, обновляем значение
-            if (table[index].key == key) {
-                table[index].value = value;
+            // Если ячейка свободна (и не удалена) — цепочка кончилась
+            if (!table[index].isOccupied && !table[index].isDeleted) {
+                // Вставляем в текущую пустую
+                table[index] = HashNode<T>(key, value);
+                elementsCount++;
                 return;
             }
 
@@ -197,7 +215,7 @@ class DoubleHash {
             uint32_t index = (h1 + i * h2) % tableSize;
 
             // Если ячейка никогда не использовалась, элемента нет
-            if (!table[index].isOccupied) {
+            if (!table[index].isOccupied && !table[index].isDeleted) {
                 return nullptr;
             }
 
@@ -223,15 +241,13 @@ class DoubleHash {
         while (i < tableSize) {
             uint32_t index = (h1 + i * h2) % tableSize;
 
-            if (!table[index].isOccupied) {
-                return false;
-            }
-
-            if (table[index].key == key && table[index].isOccupied) {
-                table[index].isOccupied = false;
-                elementsCount--;
-                return true;
-            }
+            // Если нашли совпадение и ячейка живая
+            if (table[index].isOccupied && table[index].key == key) {
+            table[index].isOccupied = false;
+            table[index].isDeleted = true;
+            elementsCount--;
+            return true;
+        }
 
             i++;
         }
@@ -289,15 +305,11 @@ class DoubleHash {
             throw runtime_error("Could not read data from file. Size of table equal to zero");
 
         // Пересоздаем таблицу
-        try {
-            table = Array<HashNode<T>>(newTableSize + 1);
-            for (uint32_t i = 0; i < newTableSize; i++) {
-                table[i] = HashNode<T>();
-            }
-            table.SetSize(newTableSize);
-        } catch (...) {
-            throw runtime_error("Error: Memory allocation failed during deserialization");
+        table = Array<HashNode<T>>(newTableSize + 1);
+        for (uint32_t i = 0; i < newTableSize; i++) {
+            table[i] = HashNode<T>();
         }
+        table.SetSize(newTableSize);
 
         tableSize = newTableSize;
         elementsCount = newElementsCount;
@@ -309,15 +321,6 @@ class DoubleHash {
 
         // Читаем данные
         while (inFile >> idx >> key >> value) {
-            
-            if (inFile.fail()) {
-                 throw runtime_error("Error: Corrupted data in file: " + filename);
-            }
-
-            if (idx >= tableSize) {
-                throw out_of_range("Error: Index in file (" + to_string(idx) + 
-                                        ") exceeds table size (" + to_string(tableSize) + ")");
-            }
             table[idx] = HashNode<T>(key, value);
         }
 
@@ -385,27 +388,13 @@ class DoubleHash {
             bool occupied = false;
             inFile.read(reinterpret_cast<char*>(&occupied), sizeof(bool));
 
-            if (inFile.fail()) {
-                throw runtime_error("Error: Unexpected end of file or read error");
-            }
-
             if (occupied) {
                 // Читаем длину ключа
                 uint32_t keyLen = 0;
                 inFile.read(reinterpret_cast<char*>(&keyLen), sizeof(keyLen));
 
-                // Защита от переполнения памяти при чтении длины строки
-                if (keyLen > 1000000) { // Разумный лимит
-                    throw length_error("Error: Key length in file seems too large (corrupted file?)");
-                }
-
                 char* keyBuf = new char[keyLen + 1];
                 inFile.read(keyBuf, keyLen);
-                
-                if (inFile.fail()) {
-                    delete[] keyBuf;
-                    throw runtime_error("Error: Failed to read key string");
-                }
                 
                 keyBuf[keyLen] = '\0';
                 string loadedKey(keyBuf);
@@ -414,10 +403,6 @@ class DoubleHash {
                 // Читаем значение
                 T loadedValue;
                 inFile.read(reinterpret_cast<char*>(&loadedValue), sizeof(T));
-
-                if (inFile.fail()) {
-                    throw runtime_error("Error: Failed to read value");
-                }
 
                 table[i] = HashNode<T>(loadedKey, loadedValue);
             } else {
