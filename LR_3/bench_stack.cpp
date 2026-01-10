@@ -3,19 +3,16 @@
 #include <string>
 #include <cstdio>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "stack.hpp"
 
 using namespace std;
 using namespace boost::timer;
-using namespace boost::random;
 
 // Количество операций (10 миллионов)
 const uint32_t NUM_ELEMENTS = 10000000; 
 
 void bench_push_pop() {
-    cout << "\nBenchmark: Push & Pop (LIFO Operations)" << endl;
+    cout << "\nBenchmark: Push & Pop" << endl;
     cout << "Количество элементов: " << NUM_ELEMENTS << endl;
     
     Stack<int> s;
@@ -32,21 +29,17 @@ void bench_push_pop() {
     // Тест SPOP
     cout << "[SPOP] Опустошение стека..." << endl;
     cpu_timer timerPop;
-    try {
-        for (uint32_t i = 0; i < NUM_ELEMENTS; ++i) {
-            s.SPOP();
-        }
-    } catch (const exception& e) {
-        cerr << "Error during pop: " << e.what() << endl;
+    for (uint32_t i = 0; i < NUM_ELEMENTS; ++i) {
+        s.SPOP();
     }
     timerPop.stop();
     cout << "  Время: " << timerPop.format();
 }
 
 void bench_io() {
-    cout << "\nBenchmark: I/O Operations (Text vs Binary)" << endl;
+    cout << "\nBenchmark: I/O Operations" << endl;
     
-    // Для IO берем меньше элементов (500k)
+    // Для IO берем меньше элементов
     const uint32_t IO_SIZE = 500000; 
     Stack<int> s;
     for (uint32_t i = 0; i < IO_SIZE; ++i) s.SPUSH(i);
@@ -91,7 +84,7 @@ void bench_io() {
 
 int main() {
     setlocale(LC_ALL, "");
-    cout << "=== Запуск Benchmarks для Stack ===" << endl;
+    cout << "Запуск Benchmarks для Stack" << endl;
 
     try {
         bench_push_pop();

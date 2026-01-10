@@ -2,14 +2,12 @@
 #include <vector>
 #include <string>
 #include <cstdio>
+#include <random>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "dh.hpp"
 
 using namespace std;
 using namespace boost::timer;
-using namespace boost::random;
 
 const uint32_t NUM_ELEMENTS = 100000;  // Количество элементов для теста
 const uint32_t STRING_LEN = 16;        // Длина ключа
@@ -25,9 +23,9 @@ auto generateKeys(uint32_t count) -> vector<string> {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
 
-    boost::random::random_device rd;
-    boost::random::mt19937 gen(rd());
-    boost::random::uniform_int_distribution<> dist(0, sizeof(charset) - 2);
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> dist(0, sizeof(charset) - 2);
 
     for (uint32_t i = 0; i < count; ++i) {
         string s;
@@ -56,7 +54,7 @@ void bench_core_operations() {
         hashTable.insert(keys[i], i);
     }
     timerInsert.stop();
-    cout << "  Время: " << timerInsert.format();
+    cout << " Время: " << timerInsert.format();
 
     // Поиск существующих
     cout << "[FIND HIT] Поиск всех ключей..." << endl;
@@ -68,7 +66,7 @@ void bench_core_operations() {
         if (val) sink += *val;
     }
     timerFind.stop();
-    cout << "  Время: " << timerFind.format();
+    cout << " Время: " << timerFind.format();
 
     // Поиск несуществующих
     // Генерируем ключи, которых точно нет.
@@ -100,7 +98,7 @@ void bench_core_operations() {
 }
 
 void bench_io_operations() {
-    cout << "\nBenchmark: DoubleHash I/O (Text vs Binary)" << endl;
+    cout << "\nBenchmark: DoubleHash I/O" << endl;
     
     // Используем меньший набор данных для IO
     uint32_t IO_SIZE = 50000;
@@ -134,8 +132,7 @@ void bench_io_operations() {
     tBS.stop();
     cout << tBS.format();
 
-    //BINARY LOAD
-    // Должно быть значительно быстрее, так как читаются сырые байты
+    //BINARY LOA
     cout << "[Binary Load] ";
     DoubleHash<int> htBin;
     cpu_timer tBL;
@@ -150,7 +147,7 @@ void bench_io_operations() {
 
 int main() {
 
-    cout << "Запуск Benchmarks для DoubleHash (Double Hashing)" << endl;
+    cout << "Запуск Benchmarks для DoubleHash" << endl;
     
     try {
         bench_core_operations();

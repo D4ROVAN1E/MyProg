@@ -2,9 +2,8 @@
 #include <vector>
 #include <string>
 #include <cstdio> 
+#include <random>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "binary_tree.hpp"
 
 using namespace std;
@@ -13,10 +12,9 @@ const uint32_t DATA_SIZE = 500000;
 
 // Генератор случайных чисел
 int getRandomInt() {
-    static boost::random::random_device rd;
-    static boost::random::mt19937 gen(rd());
-    // Диапазон шире, чтобы уменьшить кол-во дубликатов
-    static boost::random::uniform_int_distribution<> dist(1, 10000000); 
+    static random_device rd;
+    static mt19937 gen(rd());
+    static uniform_int_distribution<> dist(1, 10000000); 
     return dist(gen);
 }
 
@@ -27,11 +25,11 @@ void bench_insert() {
 
     // Генерируем данные заранее, чтобы не мерить время генерации
     vector<int> data(DATA_SIZE);
-    for(auto& val : data) val = getRandomInt();
+    for(int& val : data) val = getRandomInt();
 
     boost::timer::cpu_timer timer;
 
-    for (const auto& val : data) {
+    for (const int& val : data) {
         tree.TINSERT(val);
     }
 
@@ -57,17 +55,16 @@ void bench_full_check() {
     bool result = tree.TFULL(); 
 
     timer.stop();
-    cout << "Проверено узлов: " << DATA_SIZE << endl;
     cout << "Результат: " << timer.format() << endl;
     (void)result; // Подавляем предупреждение unused variable
 }
 
-// Тест ввода/вывода (Сравнение Text vs Binary)
+// Тест ввода/вывода
 void bench_io() {
-    cout << "\nBenchmark: I/O Operations (Text vs Binary)" << endl;
+    cout << "\nBenchmark: I/O Operations" << endl;
     
     // Используем меньший размер для IO тестов, чтобы не забивать диск
-    const uint32_t IO_SIZE = 100000; 
+    const uint32_t IO_SIZE = 100000;
     FullBinaryTree<int> tree;
     for (uint32_t i = 0; i < IO_SIZE; ++i) {
         tree.TINSERT(getRandomInt());
@@ -77,33 +74,32 @@ void bench_io() {
     string binFile = "tree_test.bin";
 
     // TEXT MODE
-    cout << "[Text Mode: TSAVE]" << endl;
+    cout << "[Text: TSAVE]" << endl;
     boost::timer::cpu_timer timerTxtSave;
     tree.TSAVE(txtFile);
     timerTxtSave.stop();
-    cout << "  Time: " << timerTxtSave.format();
+    cout << " Time: " << timerTxtSave.format();
 
-    cout << "[Text Mode: TLOAD]" << endl;
+    cout << "[Text: TLOAD]" << endl;
     FullBinaryTree<int> treeLoadTxt;
     boost::timer::cpu_timer timerTxtLoad;
     treeLoadTxt.TLOAD(txtFile);
     timerTxtLoad.stop();
-    cout << "  Time: " << timerTxtLoad.format();
-
+    cout << " Time: " << timerTxtLoad.format();
 
     // BINARY MODE
-    cout << "[Binary Mode: TSAVE_BINARY]" << endl;
+    cout << "[Binary: TSAVE_BINARY]" << endl;
     boost::timer::cpu_timer timerBinSave;
     tree.TSAVE_BINARY(binFile);
     timerBinSave.stop();
-    cout << "  Time: " << timerBinSave.format();
+    cout << " Time: " << timerBinSave.format();
 
-    cout << "[Binary Mode: TLOAD_BINARY]" << endl;
+    cout << "[Binary: TLOAD_BINARY]" << endl;
     FullBinaryTree<int> treeLoadBin;
     boost::timer::cpu_timer timerBinLoad;
     treeLoadBin.TLOAD_BINARY(binFile);
     timerBinLoad.stop();
-    cout << "  Time: " << timerBinLoad.format();
+    cout << " Time: " << timerBinLoad.format();
 
     // Очистка
     remove(txtFile.c_str());

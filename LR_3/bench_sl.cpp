@@ -2,34 +2,32 @@
 #include <vector>
 #include <string>
 #include <cstdio>
+#include <random>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "singly_list.hpp"
 
 using namespace std;
 using namespace boost::timer;
-using namespace boost::random;
 
 // Количество элементов.
 const uint32_t NUM_ELEMENTS = 30000; 
 
 // Генератор случайных чисел
 int getRandomInt() {
-    static boost::random::random_device rd;
-    static boost::random::mt19937 gen(rd());
-    static boost::random::uniform_int_distribution<> dist(1, 1000000);
+    static random_device rd;
+    static mt19937 gen(rd());
+    static uniform_int_distribution<> dist(1, 1000000);
     return dist(gen);
 }
 
-// Тест вставки: Начало vs Конец
+// Тест вставки
 void bench_push_comparison() {
-    cout << "\nBenchmark: Push Head vs Push Back" << endl;
+    cout << "\nBenchmark: Push Head and Push Back" << endl;
     cout << "Количество элементов: " << NUM_ELEMENTS << endl;
     
     // HEAD
     ForwardList<int> listHead;
-    cout << "[FPUSH_HEAD] Вставка в начало (O(1))..." << endl;
+    cout << "[FPUSH_HEAD] Вставка в начало ..." << endl;
     cpu_timer timerHead;
     for (uint32_t i = 0; i < NUM_ELEMENTS; ++i) {
         listHead.FPUSH_HEAD(i);
@@ -39,7 +37,7 @@ void bench_push_comparison() {
 
     // BACK
     ForwardList<int> listBack;
-    cout << "[FPUSH_BACK] Вставка в конец (O(N) каждая -> итого O(N^2))..." << endl;
+    cout << "[FPUSH_BACK] Вставка в конец ..." << endl;
     cpu_timer timerBack;
     for (uint32_t i = 0; i < NUM_ELEMENTS; ++i) {
         listBack.FPUSH_BACK(i);
@@ -47,12 +45,11 @@ void bench_push_comparison() {
     timerBack.stop();
     cout << "  Время: " << timerBack.format();
     
-    // Результат listBack должен быть в тысячи раз медленнее listHead
 }
 
-// Тест удаления: Начало vs Конец
+// Тест удаления
 void bench_del_comparison() {
-    cout << "\nBenchmark: Delete Head vs Delete Back" << endl;
+    cout << "\nBenchmark: Delete Head andd Delete Back" << endl;
     
     // Подготовим два одинаковых списка
     ForwardList<int> list1;
@@ -63,7 +60,7 @@ void bench_del_comparison() {
     }
 
     // DEL HEAD
-    cout << "[FDEL_HEAD] Удаление с головы (O(1))..." << endl;
+    cout << "[FDEL_HEAD] Удаление с головы ..." << endl;
     cpu_timer timerHead;
     while (list1.GetHead() != nullptr) {
         list1.FDEL_HEAD();
@@ -72,7 +69,7 @@ void bench_del_comparison() {
     cout << "  Время: " << timerHead.format();
 
     // DEL BACK
-    cout << "[FDEL_BACK] Удаление с хвоста (O(N) каждое)..." << endl;
+    cout << "[FDEL_BACK] Удаление с хвоста ..." << endl;
     cpu_timer timerBack;
     while (list2.GetHead() != nullptr) {
         list2.FDEL_BACK();
@@ -97,21 +94,16 @@ void bench_find_insert() {
     for (int i = 0; i < 1000; ++i) {
         // Ищем элементы ближе к концу списка, чтобы спровоцировать долгий поиск
         int target = i * 5; 
-        try {
-            list.FPUSH_BEFORE(target, -1);
-        } catch (...) {
-        }
+        list.FPUSH_BEFORE(target, -1);
     }
     timer.stop();
-    cout << "  Операций: 1000" << endl;
     cout << "  Время: " << timer.format();
 }
 
 // Тест ввода-вывода (IO)
 void bench_io() {
-    cout << "\nBenchmark: I/O Operations (Text vs Binary)" << endl;
+    cout << "\nBenchmark: I/O Operations" << endl;
     
-    // Увеличим размер для IO
     const uint32_t IO_SIZE = 50000;
     ForwardList<int> list;
     for (uint32_t i = 0; i < IO_SIZE; ++i) {
@@ -158,7 +150,7 @@ void bench_io() {
 
 int main() {
     setlocale(LC_ALL, "");
-    cout << "Запуск Benchmarks для ForwardList (Singly Linked List)" << endl;
+    cout << "Запуск Benchmarks для ForwardList" << endl;
 
     try {
         bench_push_comparison();

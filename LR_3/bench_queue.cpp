@@ -3,13 +3,10 @@
 #include <string>
 #include <cstdio>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "queue.hpp"
 
 using namespace std;
 using namespace boost::timer;
-using namespace boost::random;
 
 // Количество операций для нагрузочных тестов
 const uint32_t NUM_OPS = 10000000; 
@@ -40,16 +37,13 @@ void bench_growth_drain() {
 }
 
 void bench_circular_buffer() {
-    cout << "\nBenchmark: Circular Buffer Logic (Ping-Pong)" << endl;
-    cout << "Сценарий: Очередь держится на размере ~5000, но индексы двигаются." << endl;
+    cout << "\nBenchmark: Circular Buffer Logic" << endl;
     
     // Предзаполняем очередь, чтобы она не была пустой
     Queue<int> q;
     const int STABLE_SIZE = 5000;
     for (int i = 0; i < STABLE_SIZE; ++i) q.QPUSH(i);
-
-    // Замеряем сценарий "Постоянный поток": 
-    // Пришел пакет -> Обработан пакет. Размер не меняется, но массив прокручивается.
+ 
     cpu_timer timerCircle;
     
     for (uint32_t i = 0; i < NUM_OPS; ++i) {
@@ -63,9 +57,8 @@ void bench_circular_buffer() {
 }
 
 void bench_io() {
-    cout << "\nBenchmark: I/O Operations (Text vs Binary)" << endl;
+    cout << "\nBenchmark: I/O Operations" << endl;
     
-    // Для IO берем меньше элементов, чтобы не создавать гигантские файлы
     const uint32_t IO_SIZE = 500000; 
     Queue<int> q;
     for (uint32_t i = 0; i < IO_SIZE; ++i) q.QPUSH(i);

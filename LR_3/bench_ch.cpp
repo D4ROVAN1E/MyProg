@@ -2,14 +2,13 @@
 #include <vector>
 #include <string>
 #include <cstdio>
+#include <random>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "ch.hpp"
 
 // Константы
-const uint32_t NUM_ELEMENTS = 25000;    // Количество элементов
-const uint32_t STRING_LEN = 6;          // Длина ключа-строки
+const uint32_t NUM_ELEMENTS = 25000;  // Количество элементов
+const uint32_t STRING_LEN = 6;  // Длина ключа-строки
 
 // Генератор случайных строк (ключей)
 // Генерируем заранее, чтобы не включать это время в замер хэш-таблицы
@@ -22,9 +21,9 @@ vector<string> generateKeys(uint32_t count) {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
 
-    boost::random::random_device rd;
-    boost::random::mt19937 gen(rd());
-    boost::random::uniform_int_distribution<> dist(0, sizeof(alphanum) - 2);
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> dist(0, sizeof(alphanum) - 2);
 
     for (uint32_t i = 0; i < count; ++i) {
         string s;
@@ -104,7 +103,7 @@ void bench_core_operations() {
 }
 
 void bench_io() {
-    cout << "\nBenchmark: I/O Operations (Text vs Binary)" << endl;
+    cout << "\nBenchmark: I/O Operations" << endl;
     
     uint32_t IO_SIZE = 25000;
     CuckooHash<int> ht(IO_SIZE);

@@ -2,29 +2,27 @@
 #include <vector>
 #include <string>
 #include <cstdio>
+#include <random>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "doubly_list.hpp"
 
 using namespace std;
 using namespace boost::timer;
-using namespace boost::random;
 
 // Количество элементов для основных тестов
 const uint32_t NUM_ELEMENTS = 100000; 
 
 // Генератор случайных чисел
 int getRandomInt() {
-    static boost::random::random_device rd;
-    static boost::random::mt19937 gen(rd());
-    static boost::random::uniform_int_distribution<> dist(1, 1000000);
+    static random_device rd;
+    static mt19937 gen(rd());
+    static uniform_int_distribution<> dist(1, 1000000);
     return dist(gen);
 }
 
-// Тест вставки в начало и конец (O(1))
+// Тест вставки в начало и конец 
 void bench_push_ends() {
-    cout << "\nBenchmark: Push Head vs Push Back (O(1))" << endl;
+    cout << "\nBenchmark: Push Head and Push Back " << endl;
     
     DoublyList<int> listHead;
     cout << "[LPUSH_HEAD] Вставка " << NUM_ELEMENTS << " элементов в начало..." << endl;
@@ -47,8 +45,7 @@ void bench_push_ends() {
 
 // Тест поиска и вставки в середину
 void bench_middle_operations() {
-    cout << "\nBenchmark: Middle Operations (Search + Insert)" << endl;
-    cout << "Примечание: LPUSH_AFTER выполняет линейный поиск O(N)." << endl;
+    cout << "\nBenchmark: Middle Operations Search + Insert" << endl;
 
     // Создаем список поменьше
     uint32_t SMALL_SIZE = 10000;
@@ -71,7 +68,7 @@ void bench_middle_operations() {
 
 // Тест поиска (LGET_BY_VALUE)
 void bench_search() {
-    cout << "\nBenchmark: LGET_BY_VALUE (Linear Search)" << endl;
+    cout << "\nBenchmark: LGET_BY_VALUE" << endl;
     
     DoublyList<int> list;
     // Заполняем
@@ -97,7 +94,7 @@ void bench_search() {
 
 // Тест ввода-вывода (IO)
 void bench_io() {
-    cout << "\nBenchmark: I/O Operations (Text vs Binary)" << endl;
+    cout << "\nBenchmark: I/O Operations" << endl;
     
     DoublyList<int> list;
     for (uint32_t i = 0; i < NUM_ELEMENTS; ++i) {

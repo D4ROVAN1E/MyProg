@@ -1,22 +1,21 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <random>
 #include <boost/timer/timer.hpp>
-#include <boost/random.hpp>
-#include <boost/random/random_device.hpp>
 #include "array.hpp"
 
 using namespace std;
 
 // Константы для тестов
-const uint32_t SMALL_DATA_SIZE = 10000;
+const uint32_t SMALL_DATA_SIZE = 100000;
 const uint32_t LARGE_DATA_SIZE = 1000000;
 
 // Генератор случайных чисел
 int getRandomInt() {
-    static boost::random::random_device rd;
-    static boost::random::mt19937 gen(rd());
-    static boost::random::uniform_int_distribution<> dist(1, 100000);
+    static random_device rd;
+    static mt19937 gen(rd());
+    static uniform_int_distribution<> dist(1, 100000);
     return dist(gen);
 }
 
@@ -50,12 +49,12 @@ void bench_insert_middle() {
     boost::timer::cpu_timer timer;
 
     // Вставляем 1000 элементов всегда в середину
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         arr.MPUSH_BY_IND(arr.GetSize() / 2, getRandomInt());
     }
 
     timer.stop();
-    cout << "Вставок выполнено: 1000 (в массив размером ~" << SMALL_DATA_SIZE << ")" << endl;
+    cout << "Вставок выполнено: 10000 (в массив размером ~" << SMALL_DATA_SIZE << ")" << endl;
     cout << "Результат: " << timer.format() << endl;
 }
 
@@ -83,7 +82,7 @@ void bench_access() {
 }
 
 void bench_binary_io() {
-    cout << "\nBenchmark: Binary Save/Load (IO Operations)" << endl;
+    cout << "\nBenchmark: Binary Save/Load" << endl;
     Array<int> arr;
     for (uint32_t i = 0; i < LARGE_DATA_SIZE; ++i) {
         arr.MPUSH_BACK(i);
@@ -108,7 +107,7 @@ void bench_binary_io() {
 }
 
 int main() {
-    cout << "Запуск Benchmarks для Array<T> с использованием Boost" << endl;
+    cout << "Запуск Benchmarks для Array<T>" << endl;
     
     try {
         bench_push_back();
