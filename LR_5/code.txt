@@ -1,0 +1,333 @@
+#include <QApplication>
+#include <QWidget>
+#include <QPainter>
+#include <QMouseEvent>
+#include <QMessageBox>
+#include <QInputDialog>
+#include <vector>
+#include <ctime>
+#include <cstdlib>
+#include <queue>
+
+using namespace std;
+
+// ==========================================
+// GAME MODEL (Логика игры)
+// Паттерн: Model (отделяет данные от отображения)
+// ==========================================
+
+struct Cell {
+    bool hasMine = false;
+    bool isOpen = false;
+    bool isFlagged = false;
+    int neighborMines = 0;
+};
+
+class GameModel {
+public:
+    int rows;
+    int cols;
+    int totalMines;
+    bool gameOver;
+    bool victory;
+    vector<vector<Cell>> grid;
+
+    GameModel() : rows(10), cols(10), totalMines(10), gameOver(false), victory(false) {
+        // Инициализируем сетку сразу, чтобы избежать вылетов при раннем выходе
+        grid.resize(rows, vector<Cell>(cols));
+    }
+
+    // Инициализация новой игры
+    void startNewGame(int r, int c, int m) {
+        rows = r;
+        cols = c;
+        totalMines = m;
+        gameOver = false;
+        victory = false;
+
+        // Очистка и создание сетки
+        grid.assign(rows, vector<Cell>(cols));
+
+        generateMines();
+        calculateNeighbors();
+    }
+
+    // Открытие ячейки (Левая кнопка мыши)
+    // Возвращает true, если игра продолжается, false если взрыв
+    bool openCell(int r, int c) {
+        if (gameOver || r < 0 || r >= rows || c < 0 || c >= cols) return true;
+        Cell &cell = grid[r][c];
+
+        if (cell.isFlagged || cell.isOpen) return true;
+
+        cell.isOpen = true;
+
+        if (cell.hasMine) {
+            gameOver = true;
+            victory = false;
+            return false; // Взрыв
+        }
+
+        // Если мин рядом нет, запускаем "Flood Fill" (Заливка)
+        if (cell.neighborMines == 0) {
+            floodFill(r, c);
+        }
+
+        checkWinCondition();
+        return true;
+    }
+
+    // Установка флага (Правая кнопка мыши)
+    void toggleFlag(int r, int c) {
+        if (gameOver || r < 0 || r >= rows || c < 0 || c >= cols) return;
+        Cell &cell = grid[r][c];
+
+        if (!cell.isOpen) {
+            cell.isFlagged = !cell.isFlagged;
+            checkWinCondition();
+        }
+    }
+
+    int getMinesLeft() const {
+        int flags = 0;
+        for (const auto &row : grid) {
+            for (const auto &cell : row) {
+                if (cell.isFlagged) flags++;
+            }
+        }
+        return totalMines - flags;
+    }
+
+private:
+    void generateMines() {
+        int minesPlaced = 0;
+        srand(time(0));
+        while (minesPlaced < totalMines) {
+            int r = rand() % rows;
+            int c = rand() % cols;
+            if (!grid[r][c].hasMine) {
+                grid[r][c].hasMine = true;
+                minesPlaced++;
+            }
+        }
+    }
+
+    void calculateNeighbors() {
+        for (int r = 0; r < rows; ++r) {
+            for (int c = 0; c < cols; ++c) {
+                if (grid[r][c].hasMine) continue;
+                int count = 0;
+                for (int dr = -1; dr <= 1; ++dr) {
+                    for (int dc = -1; dc <= 1; ++dc) {
+                        int nr = r + dr;
+                        int nc = c + dc;
+                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc].hasMine) {
+                            count++;
+                        }
+                    }
+                }
+                grid[r][c].neighborMines = count;
+            }
+        }
+    }
+
+    // Алгоритм поиска в ширину (или глубину) для открытия пустых областей
+    void floodFill(int r, int c) {
+        for (int dr = -1; dr <= 1; ++dr) {
+            for (int dc = -1; dc <= 1; ++dc) {
+                int nr = r + dr;
+                int nc = c + dc;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                    if (!grid[nr][nc].isOpen && !grid[nr][nc].hasMine) {
+                        openCell(nr, nc); // Рекурсивный вызов (или можно через очередь)
+                    }
+                }
+            }
+        }
+    }
+
+    // Проверка условий победы по ТЗ:
+    // 1. Открыты все безопасные
+    // 2. ИЛИ помечены флагами все мины (и только мины)
+    void checkWinCondition() {
+        int coveredSafeCells = 0;
+        int correctlyFlaggedMines = 0;
+        int totalFlags = 0;
+
+        for (int r = 0; r < rows; ++r) {
+            for (int c = 0; c < cols; ++c) {
+                const Cell &cell = grid[r][c];
+                if (!cell.hasMine && !cell.isOpen) coveredSafeCells++;
+                if (cell.isFlagged) totalFlags++;
+                if (cell.hasMine && cell.isFlagged) correctlyFlaggedMines++;
+            }
+        }
+
+        // Условие 1: Открыты все безопасные ячейки
+        if (coveredSafeCells == 0) {
+            victory = true;
+            gameOver = true;
+            return;
+        }
+
+        // Условие 2: Флагов ровно столько, сколько мин, и все они на минах
+        if (totalFlags == totalMines && correctlyFlaggedMines == totalMines) {
+            victory = true;
+            gameOver = true;
+        }
+    }
+};
+
+// ==========================================
+// GAME WIDGET (Интерфейс)
+// Паттерн: View (Отрисовка и обработка ввода)
+// ==========================================
+
+class MinesweeperWidget : public QWidget {
+    GameModel model;
+    const int cellSize = 30; // Размер клетки в пикселях
+
+public:
+    MinesweeperWidget(QWidget *parent = nullptr) : QWidget(parent) {
+        setWindowTitle("Сапёр (Minesweeper OOP)");
+
+        // Убираем кнопку "Развернуть" (Maximize), оставляем только Свернуть и Закрыть
+        setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
+
+        // Настройка параметров игры при запуске
+        configureGame();
+    }
+
+protected:
+    // Обработка отрисовки (вызывается системой при обновлении окна)
+    void paintEvent(QPaintEvent *event) override {
+        Q_UNUSED(event);
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        for (int r = 0; r < model.rows; ++r) {
+            for (int c = 0; c < model.cols; ++c) {
+                drawCell(painter, r, c);
+            }
+        }
+    }
+
+    // Обработка нажатий мыши
+    void mousePressEvent(QMouseEvent *event) override {
+        if (model.gameOver) {
+            askToRestart();
+            return;
+        }
+
+        // Вычисляем, на какую клетку нажали
+        int c = event->x() / cellSize;
+        int r = event->y() / cellSize;
+
+        if (event->button() == Qt::LeftButton) {
+            model.openCell(r, c);
+        } else if (event->button() == Qt::RightButton) {
+            model.toggleFlag(r, c);
+        }
+
+        // Перерисовываем поле
+        update();
+
+        if (model.gameOver) {
+            showGameOverMessage();
+        }
+    }
+
+private:
+    void configureGame() {
+        bool ok;
+        int mines = QInputDialog::getInt(this, "Настройки", "Количество мин:", 10, 1, 50, 1, &ok);
+
+        // 2) Если нажали Cancel (или закрыли окно), выходим из программы
+        if (!ok) {
+            exit(0);
+        }
+
+        model.startNewGame(10, 10, mines); // Размер поля фиксируем 10x10 для простоты
+
+        // 1) Делаем окно фиксированного размера (статичным)
+        setFixedSize(model.cols * cellSize, model.rows * cellSize);
+    }
+
+    void drawCell(QPainter &painter, int r, int c) {
+        Cell cell = model.grid[r][c];
+        QRect rect(c * cellSize, r * cellSize, cellSize, cellSize);
+
+        // ВАЖНОЕ ИСПРАВЛЕНИЕ:
+        // Всегда сбрасываем цвет пера на черный перед рисованием границ клетки.
+        // Иначе, если предыдущая клетка была с красным флагом, этот цвет "протечет" сюда.
+        painter.setPen(Qt::black);
+
+        // Рисуем фон
+        if (cell.isOpen) {
+            painter.setBrush(Qt::lightGray);
+        } else {
+            painter.setBrush(QColor(200, 200, 255)); // Закрытая клетка - голубоватая
+        }
+        painter.drawRect(rect);
+
+        // Рисуем содержимое
+        if (cell.isOpen) {
+            if (cell.hasMine) {
+                painter.setBrush(Qt::red);
+                painter.drawEllipse(rect.adjusted(5, 5, -5, -5)); // Рисуем мину кружочком
+            } else if (cell.neighborMines > 0) {
+                painter.setPen(Qt::black);
+                painter.drawText(rect, Qt::AlignCenter, QString::number(cell.neighborMines));
+            }
+        } else if (cell.isFlagged) {
+            painter.setPen(Qt::red);
+            painter.drawText(rect, Qt::AlignCenter, "F");
+        }
+    }
+
+    void showGameOverMessage() {
+        QString msg;
+        if (model.victory) {
+            msg = QString("Победа!\nВсего мин: %1").arg(model.totalMines);
+        } else {
+            // При проигрыше показываем статистику
+            int foundMines = 0;
+            for(const auto& row : model.grid) {
+                for(const auto& cell : row) {
+                    if(cell.hasMine && cell.isFlagged) foundMines++;
+                }
+            }
+            msg = QString("Вы проиграли.\nНайдено мин: %1\nВсего мин: %2")
+                    .arg(foundMines).arg(model.totalMines);
+
+            // Открываем всё поле, чтобы показать мины
+            for(auto& row : model.grid) {
+                for(auto& cell : row) cell.isOpen = true;
+            }
+            update(); // Перерисовать, чтобы игрок увидел мины
+        }
+
+        QMessageBox::information(this, "Конец игры", msg);
+    }
+
+    void askToRestart() {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Новая игра", "Хотите сыграть еще раз?",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            configureGame();
+            update();
+        } else {
+            QApplication::quit();
+        }
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+
+    MinesweeperWidget window;
+    window.show();
+
+    return app.exec();
+}
